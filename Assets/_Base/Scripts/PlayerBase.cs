@@ -2,128 +2,133 @@ using UnityEngine;
 
 public class PlayerBase : MonoBehaviour
 {
-    [Header("플레이어 기본 스탯")]
-    public int preformance = 0;
-    public float kindness = 0.0f;
-    public float stress = 0.0f;
-    public float reliability = 0.0f;
-    public int pay = 0;
+    [Header("플레이어 기본 정보")]
+    [SerializeField] private int playerLevel = 1;
+    [SerializeField] private PlayerStats baseStats;
 
-    
     [Header("승진 조건")]
-    public int[] promotion = { 30 };
-    [SerializeField]
-    private int promotion_index = 0;
+    [SerializeField] private int[] promotions = { 30 };
+    [SerializeField] private int promotionIndex = 0;
 
-    [SerializeField]
-    private int goalpreformance = 0;
+    [Header("일일 목표 성과")]
+    [SerializeField] private int goalPerformance = 0;
 
-    //플레이어 스탯
-    public enum playerStat
+    public int PlayerLevel => playerLevel;
+    public int Performance => baseStats.Performance;
+    public float Kindness => baseStats.Kindness;
+    public float Stress => baseStats.Stress;
+    public float Reliability => baseStats.Reliability;
+    public int Pay => baseStats.Pay;
+
+    public enum PlayerStat
     {
         Kindness,
         Stress,
         Reliability
     }
-    //플레이 엔딩 조건
-    public enum playerEnding
+
+    public enum PlayerEnding
     {
-        Ending,
+        NormalEnding,
         Unkindness,
         Stressfull,
-        preformanceless
+        PerformanceLess
     }
 
-    //스탯 플러스
-    public void statPlus(playerStat stat, int amount)
+    public void AddStat(PlayerStat stat, int amount)
     {
+        baseStats.AddStat(stat, amount);
+
         switch (stat)
         {
-            case playerStat.Kindness:
-                kindness += 0.05f * (float)amount;
-                break;
-            case playerStat.Stress:
-                stress += 0.05f * (float)amount;
-                if (stress >= 1.0f) Endingcheck(playerEnding.Stressfull);
-                break;
-            case playerStat.Reliability:
-                reliability += 0.05f * (float)amount;
-                break;
-            default:
+            case PlayerStat.Stress:
+                if (baseStats.Stress >= 1.0f)
+                {
+                    CheckEnding(PlayerEnding.Stressfull);
+                }
                 break;
         }
     }
 
-    //스탯 마이너스
-    public void statMinus(playerStat stat, int amount)
+    public void SubtractStat(PlayerStat stat, int amount)
     {
+        baseStats.SubtractStat(stat, amount);
+
         switch (stat)
         {
-            case playerStat.Kindness:
-                kindness -= 0.05f * (float)amount;
-                if (kindness <= 0.0f) Endingcheck(playerEnding.Unkindness);
-                break;
-            case playerStat.Stress:
-                stress -= 0.05f * (float)amount;
-                break;
-            case playerStat.Reliability:
-                reliability -= 0.05f * (float)amount;
-                break;
-            default:
+            case PlayerStat.Kindness:
+                if (baseStats.Kindness <= 0.0f)
+                {
+                    CheckEnding(PlayerEnding.Unkindness);
+                }
                 break;
         }
     }
 
-    //성과 갱신
-    public void setPreformance(int amount)
+    public void AddPerformance(int amount)
     {
-        if(preformance + amount <= 0)
+        if (!baseStats.TryAddPerformance(amount))
         {
             Debug.Log("성과 미달");
             return;
         }
 
-        preformance += amount;
-
-        //승진 확인
-        PromotionCheck();
+        CheckPromotion();
     }
 
-    //급여 갱신
-    public void setpay(int amount)
+    public void AddPay(int amount)
     {
-        if(pay + amount < 0)
+        if (!baseStats.TryAddPay(amount))
         {
             Debug.Log("소지금 부족");
             return;
         }
+    }
 
-        pay += amount;
-    }
-    //승진 확인
-    public void PromotionCheck()
+    public void CheckPromotion()
     {
-        //if : Promotion[Promotion_index] <= preformance ? Promotion_index++ : Promotion_index
-    }
-    //일일 목표 성과 달성 확인
-    public void PreformanceCheck()
-    {
-        //if : goalpreformance > preformance ? Endingcheck(playerEnding.preformanceless) : 목표 갱신
-    }
-    //엔딩 확인
-    public void Endingcheck(playerEnding endingN)
-    {
-        switch(endingN)
+        if (promotions == null || promotions.Length == 0)
+            return;
+
+        if (promotionIndex < promotions.Length && baseStats.Performance >= promotions[promotionIndex])
         {
-            case playerEnding.Ending:
+            promotionIndex++;
+            playerLevel++;
+
+            Debug.Log($"승진 완료! 현재 레벨 : {playerLevel}");
+        }
+    }
+
+    public void CheckPerformanceGoal()
+    {
+        if (baseStats.Performance < goalPerformance)
+        {
+            CheckEnding(PlayerEnding.PerformanceLess);
+        }
+        else
+        {
+            Debug.Log("일일 목표 성과 달성");
+        }
+    }
+
+    public void CheckEnding(PlayerEnding endingType)
+    {
+        switch (endingType)
+        {
+            case PlayerEnding.NormalEnding:
+                Debug.Log("기본 엔딩");
                 break;
-            case playerEnding.preformanceless:
+
+            case PlayerEnding.PerformanceLess:
+                Debug.Log("성과 부족 엔딩");
                 break;
-            case playerEnding.Stressfull:
+
+            case PlayerEnding.Stressfull:
+                Debug.Log("스트레스 과다 엔딩");
                 break;
-            case playerEnding.Unkindness:
-                break;
-            default:
+
+            case PlayerEnding.Unkindness:
+                Debug.Log("친절도 부족 엔딩");
                 break;
         }
     }
