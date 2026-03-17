@@ -2,8 +2,7 @@ using UnityEngine;
 using SM = UnityEngine.SceneManagement.SceneManager;
 
 public class SceneManager : MonoBehaviour
-{
-   
+{   
     public static SceneManager Instance;
 
     private void Awake()
@@ -21,10 +20,31 @@ public class SceneManager : MonoBehaviour
     }
 
     /// <summary>
-    /// TitleScene(0) -> MainScene(1) 이동
+    /// -> MainScene(2)
+    /// moning -> working
     /// </summary>
     public void GoToMainScene()
     {
+        SM.LoadScene(2);
+    }
+
+    /// <summary>
+    /// -> HomeScene(1)
+    /// startbutton = scene move
+    /// working ending -> moning
+    /// </summary>
+    public void GoToHomeScene()
+    {
         SM.LoadScene(1);
+    }
+
+
+    /// <summary>
+    /// -> TilteScene(0)
+    /// 게임 종료 or 게임 오버
+    /// </summary>
+    public void GoTotileScene()
+    {
+        SM.LoadScene(0);
     }
 }
