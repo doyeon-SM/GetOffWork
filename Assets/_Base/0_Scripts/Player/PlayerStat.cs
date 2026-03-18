@@ -19,78 +19,94 @@ public struct PlayerStats
     public PlayerStats(int performance, float kindness, float stress, float reliability, int pay)
     {
         this.performance = performance;
-        this.kindness = kindness;
-        this.stress = stress;
-        this.reliability = reliability;
+        this.kindness = Mathf.Clamp01(kindness);
+        this.stress = Mathf.Clamp01(stress);
+        this.reliability = Mathf.Clamp01(reliability);
         this.pay = pay;
     }
 
-    public void AddStat(PlayerBase.PlayerStat stat, int amount)
+    public PlayerStats WithAddedStat(PlayerBase.PlayerStat stat, int amount)
     {
         float value = 0.05f * amount;
 
         switch (stat)
         {
             case PlayerBase.PlayerStat.Kindness:
-                kindness += value;
-                kindness = Mathf.Clamp01(kindness);
-                break;
+                return new PlayerStats(performance, kindness + value, stress, reliability, pay);
 
             case PlayerBase.PlayerStat.Stress:
-                stress += value;
-                stress = Mathf.Clamp01(stress);
-                break;
+                return new PlayerStats(performance, kindness, stress + value, reliability, pay);
 
             case PlayerBase.PlayerStat.Reliability:
-                reliability += value;
-                reliability = Mathf.Clamp01(reliability);
-                break;
+                return new PlayerStats(performance, kindness, stress, reliability + value, pay);
+
+            default:
+                return this;
         }
     }
 
-    public void SubtractStat(PlayerBase.PlayerStat stat, int amount)
+    public PlayerStats WithSubtractedStat(PlayerBase.PlayerStat stat, int amount)
     {
         float value = 0.05f * amount;
 
         switch (stat)
         {
             case PlayerBase.PlayerStat.Kindness:
-                kindness -= value;
-                kindness = Mathf.Clamp01(kindness);
-                break;
+                return new PlayerStats(performance, kindness - value, stress, reliability, pay);
 
             case PlayerBase.PlayerStat.Stress:
-                stress -= value;
-                stress = Mathf.Clamp01(stress);
-                break;
+                return new PlayerStats(performance, kindness, stress - value, reliability, pay);
 
             case PlayerBase.PlayerStat.Reliability:
-                reliability -= value;
-                reliability = Mathf.Clamp01(reliability);
-                break;
+                return new PlayerStats(performance, kindness, stress, reliability - value, pay);
+
+            default:
+                return this;
         }
     }
 
-    public bool TryAddPerformance(int amount)
+    public bool CanAddPerformance(int amount)
     {
-        if (performance + amount <= 0)
-            return false;
-
-        performance += amount;
-        return true;
+        return performance + amount >= 0;
     }
 
-    public bool TryAddPay(int amount)
+    public PlayerStats WithAddedPerformance(int amount)
     {
-        if (pay + amount < 0)
-            return false;
-
-        pay += amount;
-        return true;
+        return new PlayerStats(performance + amount, kindness, stress, reliability, pay);
     }
 
-    public void SetPerformanceGoal(int value)
+    public bool CanAddPay(int amount)
     {
-        performance = value;
+        return pay + amount >= 0;
+    }
+
+    public PlayerStats WithAddedPay(int amount)
+    {
+        return new PlayerStats(performance, kindness, stress, reliability, pay + amount);
+    }
+
+    public PlayerStats WithPerformance(int value)
+    {
+        return new PlayerStats(value, kindness, stress, reliability, pay);
+    }
+
+    public PlayerStats WithKindness(float value)
+    {
+        return new PlayerStats(performance, value, stress, reliability, pay);
+    }
+
+    public PlayerStats WithStress(float value)
+    {
+        return new PlayerStats(performance, kindness, value, reliability, pay);
+    }
+
+    public PlayerStats WithReliability(float value)
+    {
+        return new PlayerStats(performance, kindness, stress, value, pay);
+    }
+
+    public PlayerStats WithPay(int value)
+    {
+        return new PlayerStats(performance, kindness, stress, reliability, value);
     }
 }

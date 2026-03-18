@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class PlayerBase : MonoBehaviour
 {
+    public static PlayerBase Instance { get; private set; }
+
     [Header("플레이어 기본 정보")]
     [SerializeField] private int playerLevel = 1;
     [SerializeField] private PlayerStats baseStats;
@@ -19,6 +21,8 @@ public class PlayerBase : MonoBehaviour
     public float Stress => baseStats.Stress;
     public float Reliability => baseStats.Reliability;
     public int Pay => baseStats.Pay;
+    public int GoalPerformance => goalPerformance;
+    public PlayerStats CurrentStats => baseStats;
 
     public enum PlayerStat
     {
@@ -35,54 +39,72 @@ public class PlayerBase : MonoBehaviour
         PerformanceLess
     }
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    public void InitializeForNewGame(PlayerStats initialStats, int startLevel = 1, int startGoalPerformance = 0)
+    {
+        playerLevel = startLevel;
+        promotionIndex = 0;
+        goalPerformance = Mathf.Max(0, startGoalPerformance);
+        baseStats = initialStats;
+    }
+
+    public void ApplyFullStats(PlayerStats stats)
+    {
+        baseStats = stats;
+    }
+
     public void AddStat(PlayerStat stat, int amount)
     {
-        baseStats.AddStat(stat, amount);
-
-        switch (stat)
-        {
-            case PlayerStat.Stress:
-                if (baseStats.Stress >= 1.0f)
-                {
-                    CheckEnding(PlayerEnding.Stressfull);
-                }
-                break;
-        }
+        baseStats = baseStats.WithAddedStat(stat, amount);
+        ValidateImmediateEndingByStat(stat);
     }
 
     public void SubtractStat(PlayerStat stat, int amount)
     {
-        baseStats.SubtractStat(stat, amount);
-
-        switch (stat)
-        {
-            case PlayerStat.Kindness:
-                if (baseStats.Kindness <= 0.0f)
-                {
-                    CheckEnding(PlayerEnding.Unkindness);
-                }
-                break;
-        }
+        baseStats = baseStats.WithSubtractedStat(stat, amount);
+        ValidateImmediateEndingByStat(stat);
     }
 
-    public void AddPerformance(int amount)
+    public bool AddPerformance(int amount)
     {
-        if (!baseStats.TryAddPerformance(amount))
+        if (!baseStats.CanAddPerformance(amount))
         {
             Debug.Log("성과 미달");
-            return;
+            CheckEnding(PlayerEnding.PerformanceLess);
+            return false;
         }
 
+        baseStats = baseStats.WithAddedPerformance(amount);
         CheckPromotion();
+        return true;
     }
 
-    public void AddPay(int amount)
+    public bool AddPay(int amount)
     {
-        if (!baseStats.TryAddPay(amount))
+        if (!baseStats.CanAddPay(amount))
         {
             Debug.Log("소지금 부족");
-            return;
+            return false;
         }
+
+        baseStats = baseStats.WithAddedPay(amount);
+        return true;
+    }
+
+    public void SetGoalPerformance(int value)
+    {
+        goalPerformance = Mathf.Max(0, value);
     }
 
     public void CheckPromotion()
@@ -90,24 +112,40 @@ public class PlayerBase : MonoBehaviour
         if (promotions == null || promotions.Length == 0)
             return;
 
-        if (promotionIndex < promotions.Length && baseStats.Performance >= promotions[promotionIndex])
+        while (promotionIndex < promotions.Length &&
+               baseStats.Performance >= promotions[promotionIndex])
         {
             promotionIndex++;
             playerLevel++;
-
             Debug.Log($"승진 완료! 현재 레벨 : {playerLevel}");
         }
     }
 
-    public void CheckPerformanceGoal()
+    public bool CheckPerformanceGoal()
     {
         if (baseStats.Performance < goalPerformance)
         {
             CheckEnding(PlayerEnding.PerformanceLess);
+            return false;
         }
-        else
+
+        Debug.Log("일일 목표 성과 달성");
+        return true;
+    }
+
+    private void ValidateImmediateEndingByStat(PlayerStat stat)
+    {
+        switch (stat)
         {
-            Debug.Log("일일 목표 성과 달성");
+            case PlayerStat.Kindness:
+                if (baseStats.Kindness <= 0.0f)
+                    CheckEnding(PlayerEnding.Unkindness);
+                break;
+
+            case PlayerStat.Stress:
+                if (baseStats.Stress >= 1.0f)
+                    CheckEnding(PlayerEnding.Stressfull);
+                break;
         }
     }
 
@@ -118,15 +156,12 @@ public class PlayerBase : MonoBehaviour
             case PlayerEnding.NormalEnding:
                 Debug.Log("기본 엔딩");
                 break;
-
             case PlayerEnding.PerformanceLess:
                 Debug.Log("성과 부족 엔딩");
                 break;
-
             case PlayerEnding.Stressfull:
                 Debug.Log("스트레스 과다 엔딩");
                 break;
-
             case PlayerEnding.Unkindness:
                 Debug.Log("친절도 부족 엔딩");
                 break;

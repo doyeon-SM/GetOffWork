@@ -1,9 +1,9 @@
 using UnityEngine;
-using SM = UnityEngine.SceneManagement.SceneManager;
+using UnitySceneManager = UnityEngine.SceneManagement.SceneManager;
 
-public class SceneManager : MonoBehaviour
+public class GameSceneManager : MonoBehaviour
 {   
-    public static SceneManager Instance;
+    public static GameSceneManager Instance;
 
     private void Awake()
     {
@@ -25,7 +25,7 @@ public class SceneManager : MonoBehaviour
     /// </summary>
     public void GoToMainScene()
     {
-        SM.LoadScene(2);
+        UnitySceneManager.LoadScene(2);
     }
 
     /// <summary>
@@ -35,16 +35,15 @@ public class SceneManager : MonoBehaviour
     /// </summary>
     public void GoToHomeScene()
     {
-        SM.LoadScene(1);
+        UnitySceneManager.LoadScene(1);
     }
 
-
     /// <summary>
-    /// -> TilteScene(0)
+    /// -> TitleScene(0)
     /// 게임 종료 or 게임 오버
     /// </summary>
     public void GoTotileScene()
     {
-        SM.LoadScene(0);
+        UnitySceneManager.LoadScene(0);
     }
 }

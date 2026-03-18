@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4531427199575318723
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 951778358674733465}
+  - component: {fileID: 8472623082277902148}
+  m_Layer: 0
+  m_Name: ServiceDeskManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &951778358674733465
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4531427199575318723}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.994, y: -0.46539, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8472623082277902148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4531427199575318723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0609f106e6a93c49ae50386b7650b46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ServiceDeskManager
+  playerBase: {fileID: 0}
+  currentComplaint:
+    complaintType: 0
+    applicantType: 0
+    deliveryType: 0
+    idCardSubmitted: 0
+    selfPhotoChecked: 0
+    selfIdChecked: 0
+    selfAddressChecked: 0
+    proxyPhotoChecked: 0
+    proxyIdChecked: 0
+    proxyAddressChecked: 0
+    targetPhotoChecked: 0
+    targetIdChecked: 0
+    targetAddressChecked: 0
+    phoneNumberReceived: 0
+    emailReceived: 0
+    maxPatience: 30
+    currentPatience: 30
