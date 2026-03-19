@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class UITitleController : MonoBehaviour
 {
+    [Header("Option UI")]
+    [SerializeField] private UIOption optionUI_prefab;
+    [SerializeField] private Transform uiRoot;
+
+    private UIOption currentOptionUI;
+
     public void OnClickStartButton()
     {
         if (GameFlowManager.Instance == null)
@@ -16,5 +22,18 @@ public class UITitleController : MonoBehaviour
     public void OnClickQuitButton()
     {
         Application.Quit();
+    }
+
+    public void OpenOptionUIButton()
+    {
+        if(currentOptionUI == null)
+        {
+            currentOptionUI = Instantiate(optionUI_prefab, uiRoot);
+            currentOptionUI.gameObject.SetActive(true);
+        }
+        else
+        {
+            currentOptionUI.Open();
+        }
     }
 }
