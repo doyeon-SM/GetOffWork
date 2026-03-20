@@ -16,13 +16,13 @@ public class GameFlowManager : MonoBehaviour
     [SerializeField] private MorningAction selectedMorningAction = MorningAction.None;
 
     [Header("플레이어 저장 데이터")]
-    [SerializeField] private PlayerStats savedPlayerStats = new PlayerStats(0, 0.5f, 0.2f, 0.2f, 0);
+    [SerializeField] private PlayerStat savedPlayerStats = new PlayerStat(0, 0.5f, 0.2f, 0.2f, 0);
     [SerializeField] private int savedPlayerLevel = 1;
     [SerializeField] private int savedGoalPerformance = 0;
 
     public int CurrentDay => currentDay;
     public MorningAction SelectedMorningAction => selectedMorningAction;
-    public PlayerStats SavedPlayerStats => savedPlayerStats;
+    public PlayerStat SavedPlayerStats => savedPlayerStats;
     public int SavedPlayerLevel => savedPlayerLevel;
     public int SavedGoalPerformance => savedGoalPerformance;
 
@@ -43,7 +43,7 @@ public class GameFlowManager : MonoBehaviour
         currentDay = 1;
         selectedMorningAction = MorningAction.None;
 
-        savedPlayerStats = new PlayerStats(
+        savedPlayerStats = new PlayerStat(
             performance: 0,
             kindness: 0.5f,
             stress: 0.2f,

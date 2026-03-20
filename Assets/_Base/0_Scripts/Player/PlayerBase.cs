@@ -6,7 +6,7 @@ public class PlayerBase : MonoBehaviour
 
     [Header("플레이어 기본 정보")]
     [SerializeField] private int playerLevel = 1;
-    [SerializeField] private PlayerStats baseStats;
+    [SerializeField] private PlayerStat baseStats;
 
     [Header("승진 조건")]
     [SerializeField] private int[] promotions = { 30 };
@@ -22,9 +22,9 @@ public class PlayerBase : MonoBehaviour
     public float Reliability => baseStats.Reliability;
     public int Pay => baseStats.Pay;
     public int GoalPerformance => goalPerformance;
-    public PlayerStats CurrentStats => baseStats;
+    public PlayerStat CurrentStats => baseStats;
 
-    public enum PlayerStat
+    public enum Stat
     {
         Kindness,
         Stress,
@@ -51,7 +51,7 @@ public class PlayerBase : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void InitializeForNewGame(PlayerStats initialStats, int startLevel = 1, int startGoalPerformance = 0)
+    public void InitializeForNewGame(PlayerStat initialStats, int startLevel = 1, int startGoalPerformance = 0)
     {
         playerLevel = startLevel;
         promotionIndex = 0;
@@ -59,18 +59,18 @@ public class PlayerBase : MonoBehaviour
         baseStats = initialStats;
     }
 
-    public void ApplyFullStats(PlayerStats stats)
+    public void ApplyFullStats(PlayerStat stats)
     {
         baseStats = stats;
     }
 
-    public void AddStat(PlayerStat stat, int amount)
+    public void AddStat(Stat stat, int amount)
     {
         baseStats = baseStats.WithAddedStat(stat, amount);
         ValidateImmediateEndingByStat(stat);
     }
 
-    public void SubtractStat(PlayerStat stat, int amount)
+    public void SubtractStat(Stat stat, int amount)
     {
         baseStats = baseStats.WithSubtractedStat(stat, amount);
         ValidateImmediateEndingByStat(stat);
@@ -133,16 +133,16 @@ public class PlayerBase : MonoBehaviour
         return true;
     }
 
-    private void ValidateImmediateEndingByStat(PlayerStat stat)
+    private void ValidateImmediateEndingByStat(Stat stat)
     {
         switch (stat)
         {
-            case PlayerStat.Kindness:
+            case Stat.Kindness:
                 if (baseStats.Kindness <= 0.0f)
                     CheckEnding(PlayerEnding.Unkindness);
                 break;
 
-            case PlayerStat.Stress:
+            case Stat.Stress:
                 if (baseStats.Stress >= 1.0f)
                     CheckEnding(PlayerEnding.Stressfull);
                 break;

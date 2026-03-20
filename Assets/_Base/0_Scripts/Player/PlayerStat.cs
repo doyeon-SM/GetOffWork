@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Serializable]
-public struct PlayerStats
+public struct PlayerStat
 {
     [Header("플레이어 기본 스탯")]
     [SerializeField] private int performance;
@@ -16,7 +16,7 @@ public struct PlayerStats
     public float Reliability => reliability;
     public int Pay => pay;
 
-    public PlayerStats(int performance, float kindness, float stress, float reliability, int pay)
+    public PlayerStat(int performance, float kindness, float stress, float reliability, int pay)
     {
         this.performance = performance;
         this.kindness = Mathf.Clamp01(kindness);
@@ -25,40 +25,40 @@ public struct PlayerStats
         this.pay = pay;
     }
 
-    public PlayerStats WithAddedStat(PlayerBase.PlayerStat stat, int amount)
+    public PlayerStat WithAddedStat(PlayerBase.Stat stat, int amount)
     {
         float value = 0.05f * amount;
 
         switch (stat)
         {
-            case PlayerBase.PlayerStat.Kindness:
-                return new PlayerStats(performance, kindness + value, stress, reliability, pay);
+            case PlayerBase.Stat.Kindness:
+                return new PlayerStat(performance, kindness + value, stress, reliability, pay);
 
-            case PlayerBase.PlayerStat.Stress:
-                return new PlayerStats(performance, kindness, stress + value, reliability, pay);
+            case PlayerBase.Stat.Stress:
+                return new PlayerStat(performance, kindness, stress + value, reliability, pay);
 
-            case PlayerBase.PlayerStat.Reliability:
-                return new PlayerStats(performance, kindness, stress, reliability + value, pay);
+            case PlayerBase.Stat.Reliability:
+                return new PlayerStat(performance, kindness, stress, reliability + value, pay);
 
             default:
                 return this;
         }
     }
 
-    public PlayerStats WithSubtractedStat(PlayerBase.PlayerStat stat, int amount)
+    public PlayerStat WithSubtractedStat(PlayerBase.Stat stat, int amount)
     {
         float value = 0.05f * amount;
 
         switch (stat)
         {
-            case PlayerBase.PlayerStat.Kindness:
-                return new PlayerStats(performance, kindness - value, stress, reliability, pay);
+            case PlayerBase.Stat.Kindness:
+                return new PlayerStat(performance, kindness - value, stress, reliability, pay);
 
-            case PlayerBase.PlayerStat.Stress:
-                return new PlayerStats(performance, kindness, stress - value, reliability, pay);
+            case PlayerBase.Stat.Stress:
+                return new PlayerStat(performance, kindness, stress - value, reliability, pay);
 
-            case PlayerBase.PlayerStat.Reliability:
-                return new PlayerStats(performance, kindness, stress, reliability - value, pay);
+            case PlayerBase.Stat.Reliability:
+                return new PlayerStat(performance, kindness, stress, reliability - value, pay);
 
             default:
                 return this;
@@ -70,9 +70,9 @@ public struct PlayerStats
         return performance + amount >= 0;
     }
 
-    public PlayerStats WithAddedPerformance(int amount)
+    public PlayerStat WithAddedPerformance(int amount)
     {
-        return new PlayerStats(performance + amount, kindness, stress, reliability, pay);
+        return new PlayerStat(performance + amount, kindness, stress, reliability, pay);
     }
 
     public bool CanAddPay(int amount)
@@ -80,33 +80,33 @@ public struct PlayerStats
         return pay + amount >= 0;
     }
 
-    public PlayerStats WithAddedPay(int amount)
+    public PlayerStat WithAddedPay(int amount)
     {
-        return new PlayerStats(performance, kindness, stress, reliability, pay + amount);
+        return new PlayerStat(performance, kindness, stress, reliability, pay + amount);
     }
 
-    public PlayerStats WithPerformance(int value)
+    public PlayerStat WithPerformance(int value)
     {
-        return new PlayerStats(value, kindness, stress, reliability, pay);
+        return new PlayerStat(value, kindness, stress, reliability, pay);
     }
 
-    public PlayerStats WithKindness(float value)
+    public PlayerStat WithKindness(float value)
     {
-        return new PlayerStats(performance, value, stress, reliability, pay);
+        return new PlayerStat(performance, value, stress, reliability, pay);
     }
 
-    public PlayerStats WithStress(float value)
+    public PlayerStat WithStress(float value)
     {
-        return new PlayerStats(performance, kindness, value, reliability, pay);
+        return new PlayerStat(performance, kindness, value, reliability, pay);
     }
 
-    public PlayerStats WithReliability(float value)
+    public PlayerStat WithReliability(float value)
     {
-        return new PlayerStats(performance, kindness, stress, value, pay);
+        return new PlayerStat(performance, kindness, stress, value, pay);
     }
 
-    public PlayerStats WithPay(int value)
+    public PlayerStat WithPay(int value)
     {
-        return new PlayerStats(performance, kindness, stress, reliability, value);
+        return new PlayerStat(performance, kindness, stress, reliability, value);
     }
 }

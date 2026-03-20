@@ -202,15 +202,15 @@ public class ServiceDeskManager : MonoBehaviour
         if (result.PerformanceDelta != 0)
             playerBase.AddPerformance(result.PerformanceDelta);
 
-        ApplyStatDelta(PlayerBase.PlayerStat.Kindness, result.KindnessDelta);
-        ApplyStatDelta(PlayerBase.PlayerStat.Stress, result.StressDelta);
-        ApplyStatDelta(PlayerBase.PlayerStat.Reliability, result.ReliabilityDelta);
+        ApplyStatDelta(PlayerBase.Stat.Kindness, result.KindnessDelta);
+        ApplyStatDelta(PlayerBase.Stat.Stress, result.StressDelta);
+        ApplyStatDelta(PlayerBase.Stat.Reliability, result.ReliabilityDelta);
 
         if (result.PayDelta != 0)
             playerBase.AddPay(result.PayDelta);
     }
 
-    private void ApplyStatDelta(PlayerBase.PlayerStat stat, int delta)
+    private void ApplyStatDelta(PlayerBase.Stat stat, int delta)
     {
         if (playerBase == null || delta == 0)
             return;
@@ -230,8 +230,8 @@ public class ServiceDeskManager : MonoBehaviour
         if (playerBase != null)
         {
             playerBase.AddPerformance(-2);
-            playerBase.AddStat(PlayerBase.PlayerStat.Stress, 2);
-            playerBase.SubtractStat(PlayerBase.PlayerStat.Kindness, 1);
+            playerBase.AddStat(PlayerBase.Stat.Stress, 2);
+            playerBase.SubtractStat(PlayerBase.Stat.Kindness, 1);
         }
 
         ScheduleNextCustomer();
