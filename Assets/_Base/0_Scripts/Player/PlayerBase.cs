@@ -1,4 +1,10 @@
 using UnityEngine;
+public enum Stat
+{
+    Kindness,
+    Stress,
+    Reliability
+}
 
 public class PlayerBase : MonoBehaviour
 {
@@ -24,12 +30,7 @@ public class PlayerBase : MonoBehaviour
     public int GoalPerformance => goalPerformance;
     public PlayerStat CurrentStats => baseStats;
 
-    public enum Stat
-    {
-        Kindness,
-        Stress,
-        Reliability
-    }
+    
 
     public enum PlayerEnding
     {
@@ -70,11 +71,6 @@ public class PlayerBase : MonoBehaviour
         ValidateImmediateEndingByStat(stat);
     }
 
-    public void SubtractStat(Stat stat, int amount)
-    {
-        baseStats = baseStats.WithSubtractedStat(stat, amount);
-        ValidateImmediateEndingByStat(stat);
-    }
 
     public bool AddPerformance(int amount)
     {

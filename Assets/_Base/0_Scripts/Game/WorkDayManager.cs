@@ -162,7 +162,6 @@ public class WorkDayManager : MonoBehaviour
         if (playerBase == null)
             return;
 
-        playerBase.SubtractStat(PlayerBase.Stat.Stress, amount);
     }
 
     public void ApplyLunchChoice_IncreaseKindness(int amount)
@@ -172,7 +171,7 @@ public class WorkDayManager : MonoBehaviour
         if (playerBase == null)
             return;
 
-        playerBase.AddStat(PlayerBase.Stat.Kindness, amount);
+        playerBase.AddStat(Stat.Kindness, amount);
     }
 
     public void ApplyLunchChoice_IncreaseReliability(int amount)
@@ -182,7 +181,7 @@ public class WorkDayManager : MonoBehaviour
         if (playerBase == null)
             return;
 
-        playerBase.AddStat(PlayerBase.Stat.Reliability, amount);
+        playerBase.AddStat(Stat.Reliability, amount);
     }
 
     private void FinishDay()

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2305158966336689649}
   - component: {fileID: 693011176043471586}
+  - component: {fileID: -5289471087827840877}
   m_Layer: 0
   m_Name: PlayerManager
   m_TagString: Untagged
@@ -44,8 +45,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb24ec3878c33645862b5f8e8dec5d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerBase
-  preformance: 0
-  kindness: 0
-  stress: 0
-  reliability: 0
-  pay: 0
+  playerLevel: 1
+  baseStats:
+    performance: 0
+    kindness: 0
+    stress: 0
+    reliability: 0
+    pay: 0
+  promotions: 1e000000
+  promotionIndex: 0
+  goalPerformance: 0
+--- !u!114 &-5289471087827840877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029370242473136789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e34a816a842b1af4e829a4a81974dddc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  playerBase: {fileID: 693011176043471586}
+  ownedItems: []

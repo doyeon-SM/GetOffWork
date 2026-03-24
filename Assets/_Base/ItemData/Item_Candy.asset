@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24f41ab9983f5124fbeb328693534431, type: 3}
+  m_Name: Item_Candy
+  m_EditorClassIdentifier: Assembly-CSharp::ItemBase
+  itemId: Candy
+  itemName: "\uC0AC\uD0D5"
+  description: "\uBBFC\uC6D0\uC778\uC5D0\uAC8C \uC18C\uC18C\uD558\uAC8C \uC81C\uACF5\uD560
+    \uC218 \uC788\uB294 \uC0AC\uD0D5\uC774\uB2E4"
+  icon: {fileID: -3366272070310193754, guid: 441bc93690cc2324baaef2ae433f5955, type: 3}
+  price: 1000
+  maxCount: 1
+  effects:
+  - effectType: 0
+    value: 5

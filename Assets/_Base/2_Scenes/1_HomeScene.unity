@@ -559,10 +559,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIHomeController
   goToWorkButton: {fileID: 717424546}
   convenienceButton: {fileID: 220685144}
-  backgroundImage: {fileID: 0}
+  backgroundImage: {fileID: 1454349380}
   background_morning: {fileID: -464625614829397841, guid: 9c9eb312c92ddff4fad8b35fe7ba63aa, type: 3}
   background_store: {fileID: -4945275021317072096, guid: 38f950661579a0045b20a5fb271435b8, type: 3}
   background_street: {fileID: -4273377687230910344, guid: 692fed92f76b8414c91bbcab7c320c89, type: 3}
+  playerBase: {fileID: 0}
+  playerInventory: {fileID: 0}
   convenienceStoreUIPrefab: {fileID: 3411882640159006598, guid: 25a77fc0bbfa81d4ab2d6e0266b8ca55, type: 3}
   uiSpawnRoot: {fileID: 950124159}
   disabledButtonAlpha: 0.5
@@ -782,7 +784,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 1500, y: 900}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1287017130
 GameObject:

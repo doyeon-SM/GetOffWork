@@ -25,40 +25,20 @@ public struct PlayerStat
         this.pay = pay;
     }
 
-    public PlayerStat WithAddedStat(PlayerBase.Stat stat, int amount)
+    public PlayerStat WithAddedStat(Stat stat, int amount)
     {
         float value = 0.05f * amount;
 
         switch (stat)
         {
-            case PlayerBase.Stat.Kindness:
+            case Stat.Kindness:
                 return new PlayerStat(performance, kindness + value, stress, reliability, pay);
 
-            case PlayerBase.Stat.Stress:
+            case Stat.Stress:
                 return new PlayerStat(performance, kindness, stress + value, reliability, pay);
 
-            case PlayerBase.Stat.Reliability:
+            case Stat.Reliability:
                 return new PlayerStat(performance, kindness, stress, reliability + value, pay);
-
-            default:
-                return this;
-        }
-    }
-
-    public PlayerStat WithSubtractedStat(PlayerBase.Stat stat, int amount)
-    {
-        float value = 0.05f * amount;
-
-        switch (stat)
-        {
-            case PlayerBase.Stat.Kindness:
-                return new PlayerStat(performance, kindness - value, stress, reliability, pay);
-
-            case PlayerBase.Stat.Stress:
-                return new PlayerStat(performance, kindness, stress - value, reliability, pay);
-
-            case PlayerBase.Stat.Reliability:
-                return new PlayerStat(performance, kindness, stress, reliability - value, pay);
 
             default:
                 return this;

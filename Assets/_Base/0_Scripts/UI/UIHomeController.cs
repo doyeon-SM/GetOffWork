@@ -17,6 +17,8 @@ public class UIHomeController : MonoBehaviour
     [SerializeField] private Sprite background_street; // 거리
 
     [Header("편의점 UI")]
+    [SerializeField] private PlayerBase playerBase;
+    [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private GameObject convenienceStoreUIPrefab;
     [SerializeField] private Transform uiSpawnRoot; // 보통 Home Canvas
 
@@ -96,14 +98,20 @@ public class UIHomeController : MonoBehaviour
         currentStoreUIInstance = Instantiate(convenienceStoreUIPrefab, parent);
 
         UIStore storeUI = currentStoreUIInstance.GetComponent<UIStore>();
+        playerBase = FindFirstObjectByType<PlayerBase>().GetComponent<PlayerBase>();
+        playerInventory = FindFirstObjectByType<PlayerInventory>().GetComponent<PlayerInventory>();
         if (storeUI != null)
         {
-            storeUI.Initialize(this);
+            storeUI.Initialize(this, playerInventory, playerBase);
         }
         else
         {
             Debug.LogWarning("편의점 UI 프리팹에 ConvenienceStoreUI 스크립트가 없습니다.");
         }
+        if (playerBase == null)
+            Debug.Log("Player Base Null");
+        if (playerInventory == null)
+            Debug.Log("Player Inventory Null");
     }
 
     /// <summary>
