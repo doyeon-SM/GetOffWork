@@ -30,7 +30,6 @@ public class PlayerBase : MonoBehaviour
     public int GoalPerformance => goalPerformance;
     public PlayerStat CurrentStats => baseStats;
 
-    
 
     public enum PlayerEnding
     {
@@ -58,6 +57,23 @@ public class PlayerBase : MonoBehaviour
         promotionIndex = 0;
         goalPerformance = Mathf.Max(0, startGoalPerformance);
         baseStats = initialStats;
+    }
+
+    public int GetMaxPerformance()
+    {
+        if(promotions == null)
+        {
+            Debug.Log("[Error] promotions null");
+            return -999;
+        }
+        if (promotionIndex <= 0 || promotions != null)
+        {
+            return promotions[0];
+        }
+        else
+        {
+            return promotions[promotionIndex];
+        }
     }
 
     public void ApplyFullStats(PlayerStat stats)

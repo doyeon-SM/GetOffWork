@@ -52,7 +52,7 @@ public class GameFlowManager : MonoBehaviour
         );
 
         savedPlayerLevel = 1;
-        savedGoalPerformance = 0;
+        savedGoalPerformance = 10;
 
         if (GameSceneManager.Instance == null)
         {
