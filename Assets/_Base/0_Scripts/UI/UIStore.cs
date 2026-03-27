@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 using TMPro;
 
 public class UIStore : MonoBehaviour
@@ -9,7 +10,7 @@ public class UIStore : MonoBehaviour
     [SerializeField] private TMP_Text playerPayText;
 
     [Header("상점 아이템 설정")]
-    [SerializeField] private ItemBase[] storeItems = new ItemBase[4];
+    [SerializeField] private List<ItemBase> storeItems = new List<ItemBase>();
     [SerializeField] private UIStoreItemSlot[] itemSlots = new UIStoreItemSlot[4];
 
     private UIHomeController uihomecontroller;
@@ -41,7 +42,7 @@ public class UIStore : MonoBehaviour
             if (itemSlots[i] == null)
                 continue;
 
-            if (i < storeItems.Length && storeItems[i] != null)
+            if (i < storeItems.Count && storeItems[i] != null)
             {
                 itemSlots[i].gameObject.SetActive(true);
                 itemSlots[i].Setup(storeItems[i], this, i);

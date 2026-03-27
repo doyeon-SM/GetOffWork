@@ -17,14 +17,14 @@ public class GameFlowManager : MonoBehaviour
 
     [Header("플레이어 저장 데이터")]
     [SerializeField] private PlayerStat savedPlayerStats = new PlayerStat(0, 0.5f, 0.2f, 0.2f, 0);
-    [SerializeField] private int savedPlayerLevel = 1;
-    [SerializeField] private int savedGoalPerformance = 0;
+    [SerializeField] private int PlayerLevel = 1;
+    [SerializeField] private int DayGoalPerformance = 10;
 
     public int CurrentDay => currentDay;
     public MorningAction SelectedMorningAction => selectedMorningAction;
     public PlayerStat SavedPlayerStats => savedPlayerStats;
-    public int SavedPlayerLevel => savedPlayerLevel;
-    public int SavedGoalPerformance => savedGoalPerformance;
+    public int SavedPlayerLevel => PlayerLevel;
+    public int SavedGoalPerformance => DayGoalPerformance;
 
     private void Awake()
     {
@@ -51,8 +51,8 @@ public class GameFlowManager : MonoBehaviour
             pay: 0
         );
 
-        savedPlayerLevel = 1;
-        savedGoalPerformance = 10;
+        PlayerLevel = 1;
+        DayGoalPerformance = 10;
 
         if (GameSceneManager.Instance == null)
         {
@@ -113,8 +113,8 @@ public class GameFlowManager : MonoBehaviour
             return;
 
         savedPlayerStats = playerBase.CurrentStats;
-        savedPlayerLevel = playerBase.PlayerLevel;
-        savedGoalPerformance = playerBase.GoalPerformance;
+        PlayerLevel = playerBase.PlayerLevel;
+        DayGoalPerformance = playerBase.GoalPerformance;
     }
 
     public void ApplySavedStateToPlayer(PlayerBase playerBase)
@@ -122,6 +122,6 @@ public class GameFlowManager : MonoBehaviour
         if (playerBase == null)
             return;
 
-        playerBase.InitializeForNewGame(savedPlayerStats, savedPlayerLevel, savedGoalPerformance);
+        playerBase.InitializeForNewGame(savedPlayerStats, PlayerLevel, DayGoalPerformance);
     }
 }

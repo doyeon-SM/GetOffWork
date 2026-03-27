@@ -12,6 +12,7 @@ public class UIPlayerStat : MonoBehaviour
     [SerializeField] private Slider performanceSlider;
     [SerializeField] private RectTransform goalMarker;
     [SerializeField] private TMP_Text performanceText;
+    [SerializeField] private RectTransform sliderFillRect;
 
     [Header("Stat Text UI")]
     [SerializeField] private TMP_Text kindnessText;
@@ -19,23 +20,19 @@ public class UIPlayerStat : MonoBehaviour
     [SerializeField] private TMP_Text reliabilityText;
     [SerializeField] private TMP_Text payText;
 
-    private RectTransform sliderFillRect;
+    
 
-    private void Start()
-    {
-        RefreshUI();
-    }
 
     private void Awake()
     {
-        if(playerbase == null)
-            playerbase = FindFirstObjectByType<PlayerBase>().GetComponent<PlayerBase>();
+        playerbase = PlayerBase.Instance;
+        playerInventory = PlayerInventory.Instance;        
+    }
 
-        if(playerInventory ==null)
-            playerInventory = FindFirstObjectByType<PlayerInventory>().GetComponent<PlayerInventory>();
-
-        if (performanceSlider != null && performanceSlider.fillRect != null)
-            sliderFillRect = performanceSlider.fillRect.parent.GetComponent<RectTransform>();
+    private void OnGUI()
+    {
+        //playerbase.DebugLogStat();
+        RefreshUI();
     }
 
     private void RefreshUI()
@@ -52,9 +49,12 @@ public class UIPlayerStat : MonoBehaviour
         int currentPerformance = playerbase.Performance;
         int maxPerformance = playerbase.GetMaxPerformance();
         int goalPerformance = playerbase.GoalPerformance;
+        //Debug.Log($"currentPerformance : {currentPerformance} | max : {maxPerformance} | goal : {goalPerformance}");
 
         currentPerformance = Mathf.Clamp(currentPerformance, 0, maxPerformance);
         goalPerformance = Mathf.Clamp(goalPerformance, 0, maxPerformance);
+
+        //Debug.Log($"currentPerformance : {currentPerformance} | max : {maxPerformance} | goal : {goalPerformance}");
 
         if (performanceSlider != null)
         {
@@ -80,16 +80,16 @@ public class UIPlayerStat : MonoBehaviour
     private void UpdateGoalMarker(int goal, int max)
     {
         if (goalMarker == null || sliderFillRect == null || max <= 0)
+        {
+            Debug.Log($"[Error] {goalMarker} | {sliderFillRect} | {max}");
             return;
+        }
         float ratio = (float)goal / max;
         ratio = Mathf.Clamp01(ratio);
-
         float width = sliderFillRect.rect.width;
-        float xPos = (width * ratio) - (width * 0.5f);
 
-        Vector2 anchoredPos = goalMarker.anchoredPosition;
-        anchoredPos.x = xPos;
-        goalMarker.anchoredPosition = anchoredPos;
+        float x =  width * 0.5f - width* ratio;
+        goalMarker.anchoredPosition = new Vector2(x, goalMarker.anchoredPosition.y);
     }
     private string ToPercent(float v)
     {

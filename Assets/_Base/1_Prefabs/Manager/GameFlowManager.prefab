@@ -46,3 +46,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowManager
   currentDay: 1
   selectedMorningAction: 0
+  savedPlayerStats:
+    performance: 0
+    kindness: 0.5
+    stress: 0.2
+    reliability: 0.2
+    pay: 0
+  PlayerLevel: 1
+  DayGoalPerformance: 10

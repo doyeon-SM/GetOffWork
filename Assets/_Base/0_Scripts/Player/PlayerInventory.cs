@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
+    public static PlayerInventory Instance { get; private set; }
+
     [SerializeField] private PlayerBase playerBase;
     [SerializeField] private List<PlayerItemData> ownedItems = new List<PlayerItemData>();
 
@@ -12,6 +14,14 @@ public class PlayerInventory : MonoBehaviour
     {
         if (playerBase == null)
             playerBase = GetComponent<PlayerBase>();
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
     }
 
     public int GetItemCount(ItemBase itemBase)

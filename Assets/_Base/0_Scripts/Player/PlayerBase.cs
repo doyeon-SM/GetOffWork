@@ -19,7 +19,7 @@ public class PlayerBase : MonoBehaviour
     [SerializeField] private int promotionIndex = 0;
 
     [Header("일일 목표 성과")]
-    [SerializeField] private int goalPerformance = 0;
+    [SerializeField] private int goalPerformance = 10;
 
     public int PlayerLevel => playerLevel;
     public int Performance => baseStats.Performance;
@@ -61,19 +61,14 @@ public class PlayerBase : MonoBehaviour
 
     public int GetMaxPerformance()
     {
-        if(promotions == null)
+        if (promotions == null || promotions.Length == 0)
         {
-            Debug.Log("[Error] promotions null");
-            return -999;
+            Debug.LogError("[PlayerBase] promotions가 비어 있습니다.");
+            return 0;
         }
-        if (promotionIndex <= 0 || promotions != null)
-        {
-            return promotions[0];
-        }
-        else
-        {
-            return promotions[promotionIndex];
-        }
+
+        int index = Mathf.Clamp(promotionIndex, 0, promotions.Length - 1);
+        return promotions[index];
     }
 
     public void ApplyFullStats(PlayerStat stats)
@@ -159,6 +154,13 @@ public class PlayerBase : MonoBehaviour
                     CheckEnding(PlayerEnding.Stressfull);
                 break;
         }
+    }
+
+    public void DebugLogStat()
+    {
+        Debug.Log($"Player Level : {playerLevel}");
+        Debug.Log($"Player Stat : P{Performance} / K{Kindness} / S{Stress} / R{Reliability} / P{Pay}");
+        Debug.Log($"Player Goal : M{promotions[promotionIndex]} | D{goalPerformance}");
     }
 
     public void CheckEnding(PlayerEnding endingType)
