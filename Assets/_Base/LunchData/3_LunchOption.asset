@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fec741c552bc40f40b824548fa2450f5, type: 3}
+  m_Name: 3_LunchOption
+  m_EditorClassIdentifier: Assembly-CSharp::LunchOptionData
+  optionName: "\uC2E0\uB8B0\uB3C4"
+  description: "\uADF8\uB0E5 \uC2E0\uB8B0\uB3C4"
+  statChanges:
+  - stat: 2
+    amount: 10

@@ -46,6 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorkDayManager
   playerBase: {fileID: 0}
   serviceDeskManager: {fileID: 0}
-  morningDuration: 90
-  lunchDuration: 15
-  afternoonDuration: 90
+  morningDuration: 300
+  afternoonDuration: 300
+  clockText: {fileID: 0}
