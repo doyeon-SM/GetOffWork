@@ -45,6 +45,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ServiceDeskManager
   playerBase: {fileID: 0}
+  minCustomerDelay: 2
+  maxCustomerDelay: 6
   currentComplaint:
     complaintType: 0
     applicantType: 0
@@ -63,3 +65,5 @@ MonoBehaviour:
     emailReceived: 0
     maxPatience: 30
     currentPatience: 30
+  waitingCountText: {fileID: 0}
+  showDebugLog: 1
