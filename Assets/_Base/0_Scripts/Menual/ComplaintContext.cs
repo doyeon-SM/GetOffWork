@@ -17,6 +17,7 @@ public class ComplaintContext
 
     public enum DeliveryType
     {
+        None,
         Print,
         Mobile
     }
@@ -24,25 +25,29 @@ public class ComplaintContext
     [Header("민원 기본 정보")]
     public ComplaintType complaintType = ComplaintType.FullID;
     public ApplicantType applicantType = ApplicantType.Self;
-    public DeliveryType deliveryType = DeliveryType.Print;
+    public DeliveryType requestedDeliveryType = DeliveryType.None;
+
+    [Header("민원 대상 정보")]
+    public string applicantRecordId; // 창구에 온 사람
+    public string targetRecordId;    // 발급 대상자 (본인발급이면 applicant와 동일 가능)
 
     [Header("진행 상태")]
-    public bool idCardSubmitted;
+    public bool idCardSpawned;
+    public bool idCardInspected;
+    public bool monitorOpened;
+    public bool searchedByInputId;
+    public bool recordCompared;
+    public bool addressMatched;
+    public bool deliveryAsked;
+    public bool documentPrinted;
+    public bool documentSent;
+    public bool rejected;
+    public bool completed;
 
-    public bool selfPhotoChecked;
-    public bool selfIdChecked;
-    public bool selfAddressChecked;
-
-    public bool proxyPhotoChecked;
-    public bool proxyIdChecked;
-    public bool proxyAddressChecked;
-
-    public bool targetPhotoChecked;
-    public bool targetIdChecked;
-    public bool targetAddressChecked;
-
-    public bool phoneNumberReceived;
-    public bool emailReceived;
+    [Header("조회 결과")]
+    public string searchedInputId;
+    public string lastPlayerMessage;
+    public string lastCustomerMessage;
 
     [Header("민원인 인내심")]
     public float maxPatience = 30f;
@@ -51,5 +56,15 @@ public class ComplaintContext
     public void ResetPatience()
     {
         currentPatience = maxPatience;
+    }
+
+    public string EffectiveTargetRecordId
+    {
+        get
+        {
+            if (applicantType == ApplicantType.Self)
+                return applicantRecordId;
+            return targetRecordId;
+        }
     }
 }

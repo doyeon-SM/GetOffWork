@@ -3,12 +3,12 @@ using System.Collections.Generic;
 public abstract class Manual
 {
     protected ComplaintContext context;
-    protected List<QuestionData> questionList = new List<QuestionData>();
+    protected List<QuestionData> commandList = new();
 
     protected bool isCompleted;
     protected int wrongCount;
 
-    public IReadOnlyList<QuestionData> QuestionList => questionList;
+    public IReadOnlyList<QuestionData> CommandList => commandList;
     public bool IsCompleted => isCompleted;
     public int WrongCount => wrongCount;
 
@@ -17,16 +17,17 @@ public abstract class Manual
         context = newContext;
         isCompleted = false;
         wrongCount = 0;
-        questionList.Clear();
-        BuildQuestionList();
+        commandList.Clear();
+        BuildCommandList();
     }
 
-    protected abstract void BuildQuestionList();
+    protected abstract void BuildCommandList();
 
-    public abstract ResponseResult AskQuestion(string questionId);
+    public abstract ResponseResult Execute(string commandId, string payload = null);
 
     protected ResponseResult WrongResponse(
-        string message,
+        string playerMessage,
+        string customerMessage = "",
         int performancePenalty = 0,
         int kindnessPenalty = 0,
         int stressIncrease = 0,
@@ -38,7 +39,8 @@ public abstract class Manual
         return ResponseResult.Create(
             isValid: false,
             isCompleted: false,
-            message: message,
+            playerMessage: playerMessage,
+            customerMessage: customerMessage,
             performanceDelta: performancePenalty,
             kindnessDelta: kindnessPenalty,
             stressDelta: stressIncrease,
@@ -48,8 +50,13 @@ public abstract class Manual
     }
 
     protected ResponseResult CorrectResponse(
-        string message,
+        string playerMessage,
+        string customerMessage = "",
         bool completeNow = false,
+        bool shouldSpawnIdCard = false,
+        bool shouldOpenIdCardDetail = false,
+        bool shouldOpenMonitor = false,
+        bool shouldRefreshMonitorData = false,
         int performanceReward = 0,
         int kindnessReward = 0,
         int stressDelta = 0,
@@ -62,7 +69,12 @@ public abstract class Manual
         return ResponseResult.Create(
             isValid: true,
             isCompleted: completeNow,
-            message: message,
+            playerMessage: playerMessage,
+            customerMessage: customerMessage,
+            shouldSpawnIdCard: shouldSpawnIdCard,
+            shouldOpenIdCardDetail: shouldOpenIdCardDetail,
+            shouldOpenMonitor: shouldOpenMonitor,
+            shouldRefreshMonitorData: shouldRefreshMonitorData,
             performanceDelta: performanceReward,
             kindnessDelta: kindnessReward,
             stressDelta: stressDelta,

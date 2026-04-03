@@ -3,12 +3,20 @@ using System;
 [Serializable]
 public struct QuestionData
 {
-    public string QuestionId;
-    public string DisplayText;
-
-    public QuestionData(string questionId, string displayText)
+    public enum CommandVisualType
     {
-        QuestionId = questionId;
+        QuestionButton,
+        ActionButton
+    }
+
+    public string CommandId;
+    public string DisplayText;
+    public CommandVisualType VisualType;
+
+    public QuestionData(string commandId, string displayText, CommandVisualType visualType = CommandVisualType.QuestionButton)
+    {
+        CommandId = commandId;
         DisplayText = displayText;
+        VisualType = visualType;
     }
 }

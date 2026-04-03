@@ -13,13 +13,15 @@ public class ServiceDeskManager : MonoBehaviour
     [Header("플레이어")]
     [SerializeField] private PlayerBase playerBase;
 
+    [Header("주민 데이터")]
+    [SerializeField] private UserRecordDatabase userDatabase;
+
     [Header("랜덤 손님 대기 시간")]
     [SerializeField] private float minCustomerDelay = 2f;
     [SerializeField] private float maxCustomerDelay = 6f;
 
     [Header("현재 민원")]
     [SerializeField] private ComplaintContext currentComplaint;
-
 
     [Header("디버그")]
     [SerializeField] private bool showDebugLog = true;
@@ -30,7 +32,6 @@ public class ServiceDeskManager : MonoBehaviour
     private bool isWorking;
     private float nextCustomerTimer;
     private DeskState deskState = DeskState.Idle;
-
     private int spawnedCustomerCountToday;
 
     public ComplaintContext CurrentComplaint => currentComplaint;
@@ -38,20 +39,29 @@ public class ServiceDeskManager : MonoBehaviour
     public bool IsWorking => isWorking;
     public bool HasActiveCustomer => currentComplaint != null && currentManual != null;
     public int WaitingCount => waitingQueue.Count;
+    public UserRecordDatabase UserDatabase => userDatabase;
 
-    // PlayerBase 실제 필드명에 맞게 수정
     public int MaxCustomerPerDay => playerBase != null ? playerBase.PlayerLevel * 3 : 0;
     public bool HasReachedDailyLimit => spawnedCustomerCountToday >= MaxCustomerPerDay;
 
-    // UI 이벤트
     public event Action<int> OnWaitingQueueChanged;
     public event Action<ComplaintContext> OnCustomerCalled;
     public event Action OnCustomerCleared;
     public event Action<bool> OnWorkStateChanged;
 
+    public event Action<string> OnPlayerText;
+    public event Action<string> OnCustomerText;
+    public event Action<ComplaintContext> OnSpawnIdCardRequested;
+    public event Action<ComplaintContext> OnOpenIdCardDetailRequested;
+    public event Action<ComplaintContext> OnOpenMonitorRequested;
+    public event Action<ComplaintContext> OnMonitorRefreshRequested;
+
     private void Awake()
     {
         ResolvePlayerBase();
+
+        if (userDatabase != null)
+            userDatabase.BuildCache();
     }
 
     private void Start()
@@ -65,13 +75,10 @@ public class ServiceDeskManager : MonoBehaviour
         if (!isWorking)
             return;
 
-        // 현재 민원 처리 중이어도 대기자 추가
         UpdateWaitingArrival();
 
         if (deskState == DeskState.ServingCustomer)
-        {
             UpdateCurrentCustomerPatience();
-        }
     }
 
     public void SetPlayerBase(PlayerBase player)
@@ -87,9 +94,17 @@ public class ServiceDeskManager : MonoBehaviour
         playerBase = PlayerBase.Instance;
 
         if (playerBase == null)
-        {
             Debug.LogError("PlayerBase Instance가 없습니다!");
-        }
+    }
+
+    public bool TryGetResidentRecord(string recordId, out UserRecordData record)
+    {
+        record = null;
+
+        if (userDatabase == null || string.IsNullOrWhiteSpace(recordId))
+            return false;
+
+        return userDatabase.TryGetRecord(recordId, out record);
     }
 
     public void BeginWorkPhase()
@@ -140,13 +155,9 @@ public class ServiceDeskManager : MonoBehaviour
             EnqueueNextCustomer();
 
             if (!HasReachedDailyLimit)
-            {
                 ScheduleNextCustomerArrival();
-            }
             else if (showDebugLog)
-            {
                 Debug.Log("하루 최대 민원인 수에 도달하여 더 이상 대기자를 생성하지 않습니다.");
-            }
         }
     }
 
@@ -179,10 +190,7 @@ public class ServiceDeskManager : MonoBehaviour
 
         if (showDebugLog)
         {
-            Debug.Log(
-                $"대기열 추가 / 현재 대기자 수: {waitingQueue.Count} / " +
-                $"오늘 생성 수: {spawnedCustomerCountToday}/{MaxCustomerPerDay}"
-            );
+            Debug.Log($"대기열 추가 / 현재 대기자 수: {waitingQueue.Count} / 오늘 생성 수: {spawnedCustomerCountToday}/{MaxCustomerPerDay}");
         }
     }
 
@@ -239,8 +247,7 @@ public class ServiceDeskManager : MonoBehaviour
         switch (complaint.complaintType)
         {
             case ComplaintContext.ComplaintType.FullID:
-                return new M_ID();
-
+                return new M_FullID(userDatabase);
             default:
                 return null;
         }
@@ -255,9 +262,25 @@ public class ServiceDeskManager : MonoBehaviour
             ? ComplaintContext.ApplicantType.Self
             : ComplaintContext.ApplicantType.Proxy;
 
-        complaint.deliveryType = UnityEngine.Random.value > 0.5f
+        complaint.requestedDeliveryType = UnityEngine.Random.value > 0.5f
             ? ComplaintContext.DeliveryType.Print
             : ComplaintContext.DeliveryType.Mobile;
+
+        if (userDatabase != null && userDatabase.Records != null && userDatabase.Records.Count > 0)
+        {
+            int applicantIndex = UnityEngine.Random.Range(0, userDatabase.Records.Count);
+            complaint.applicantRecordId = userDatabase.Records[applicantIndex].recordId;
+
+            if (complaint.applicantType == ComplaintContext.ApplicantType.Self)
+            {
+                complaint.targetRecordId = complaint.applicantRecordId;
+            }
+            else
+            {
+                int targetIndex = UnityEngine.Random.Range(0, userDatabase.Records.Count);
+                complaint.targetRecordId = userDatabase.Records[targetIndex].recordId;
+            }
+        }
 
         complaint.maxPatience = UnityEngine.Random.Range(20f, 40f);
         complaint.currentPatience = complaint.maxPatience;
@@ -265,9 +288,7 @@ public class ServiceDeskManager : MonoBehaviour
         return complaint;
     }
 
-    
-
-    public void SubmitQuestion(string questionId)
+    public void ExecuteCommand(string commandId, string payload = null)
     {
         if (!isWorking)
             return;
@@ -278,16 +299,50 @@ public class ServiceDeskManager : MonoBehaviour
         if (currentManual == null || currentComplaint == null)
             return;
 
-        ResponseResult result = currentManual.AskQuestion(questionId);
+        ResponseResult result = currentManual.Execute(commandId, payload);
+
+        if (commandId == ManualCommandIds.AskSubmitId && result.IsValid)
+        {
+            // 신분증 제시 요청 직후 실제 제출 상태 반영
+            currentManual.Execute(ManualCommandIds.SpawnIdCard);
+            currentComplaint.idCardSpawned = true;
+        }
+
         ApplyResponseResult(result);
+        DispatchUIResult(result);
 
         if (showDebugLog)
-            Debug.Log(result.Message);
+        {
+            if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
+                Debug.Log($"Player: {result.PlayerMessage}");
+
+            if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
+                Debug.Log($"Customer: {result.CustomerMessage}");
+        }
 
         if (result.IsCompleted)
-        {
             FinishCurrentCustomer();
-        }
+    }
+
+    private void DispatchUIResult(ResponseResult result)
+    {
+        if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
+            OnPlayerText?.Invoke(result.PlayerMessage);
+
+        if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
+            OnCustomerText?.Invoke(result.CustomerMessage);
+
+        if (result.ShouldSpawnIdCard)
+            OnSpawnIdCardRequested?.Invoke(currentComplaint);
+
+        if (result.ShouldOpenIdCardDetail)
+            OnOpenIdCardDetailRequested?.Invoke(currentComplaint);
+
+        if (result.ShouldOpenMonitor)
+            OnOpenMonitorRequested?.Invoke(currentComplaint);
+
+        if (result.ShouldRefreshMonitorData)
+            OnMonitorRefreshRequested?.Invoke(currentComplaint);
     }
 
     private void UpdateCurrentCustomerPatience()
@@ -298,9 +353,7 @@ public class ServiceDeskManager : MonoBehaviour
         currentComplaint.currentPatience -= Time.deltaTime;
 
         if (currentComplaint.currentPatience <= 0f)
-        {
             HandlePatienceExpired();
-        }
     }
 
     private void ApplyResponseResult(ResponseResult result)

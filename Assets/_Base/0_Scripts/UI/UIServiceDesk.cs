@@ -1,8 +1,6 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
-using System.Collections.Generic;
 
 public class UIServiceDesk : MonoBehaviour
 {
@@ -10,9 +8,6 @@ public class UIServiceDesk : MonoBehaviour
 
     [Header("대기열 UI")]
     [SerializeField] private TMP_Text waitingCountText;
-
-    [Header("민원인 이미지 후보")]
-    [SerializeField] private List<Sprite> customerSpriteList = new List<Sprite>();
 
     [Header("민원인 UI")]
     [SerializeField] private Image customerImage;
@@ -56,7 +51,7 @@ public class UIServiceDesk : MonoBehaviour
 
     private void HandleCustomerCalled(ComplaintContext complaint)
     {
-        ShowCustomerImage(GetRandomCustomerSprite());
+        ShowCustomerImage(GetCustomerPortrait(complaint));
     }
 
     private void HandleCustomerCleared()
@@ -102,12 +97,17 @@ public class UIServiceDesk : MonoBehaviour
         if (customerImageRoot != null)
             customerImageRoot.SetActive(false);
     }
-    private Sprite GetRandomCustomerSprite()
+
+    private Sprite GetCustomerPortrait(ComplaintContext complaint)
     {
-        if (customerSpriteList == null || customerSpriteList.Count == 0)
+        if (serviceDeskManager == null || complaint == null)
             return null;
 
-        int index = UnityEngine.Random.Range(0, customerSpriteList.Count);
-        return customerSpriteList[index];
+        if (serviceDeskManager.TryGetResidentRecord(complaint.applicantRecordId, out UserRecordData record))
+        {
+            return record != null ? record.portrait : null;
+        }
+
+        return null;
     }
 }

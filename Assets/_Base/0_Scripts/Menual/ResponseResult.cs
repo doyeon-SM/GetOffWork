@@ -5,7 +5,13 @@ public struct ResponseResult
 {
     public bool IsValid;
     public bool IsCompleted;
-    public string Message;
+    public string PlayerMessage;
+    public string CustomerMessage;
+
+    public bool ShouldSpawnIdCard;
+    public bool ShouldOpenIdCardDetail;
+    public bool ShouldOpenMonitor;
+    public bool ShouldRefreshMonitorData;
 
     public int PerformanceDelta;
     public int KindnessDelta;
@@ -16,7 +22,12 @@ public struct ResponseResult
     public static ResponseResult Create(
         bool isValid,
         bool isCompleted,
-        string message,
+        string playerMessage = "",
+        string customerMessage = "",
+        bool shouldSpawnIdCard = false,
+        bool shouldOpenIdCardDetail = false,
+        bool shouldOpenMonitor = false,
+        bool shouldRefreshMonitorData = false,
         int performanceDelta = 0,
         int kindnessDelta = 0,
         int stressDelta = 0,
@@ -27,7 +38,12 @@ public struct ResponseResult
         {
             IsValid = isValid,
             IsCompleted = isCompleted,
-            Message = message,
+            PlayerMessage = playerMessage,
+            CustomerMessage = customerMessage,
+            ShouldSpawnIdCard = shouldSpawnIdCard,
+            ShouldOpenIdCardDetail = shouldOpenIdCardDetail,
+            ShouldOpenMonitor = shouldOpenMonitor,
+            ShouldRefreshMonitorData = shouldRefreshMonitorData,
             PerformanceDelta = performanceDelta,
             KindnessDelta = kindnessDelta,
             StressDelta = stressDelta,
