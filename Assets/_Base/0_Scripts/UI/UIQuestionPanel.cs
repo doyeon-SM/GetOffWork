@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIManualPanel : MonoBehaviour
+public class UIQuestionPanel : MonoBehaviour
 {
     [SerializeField] private ServiceDeskManager serviceDeskManager;
 
@@ -85,5 +85,29 @@ public class UIManualPanel : MonoBehaviour
     {
         if (root != null)
             root.SetActive(false);
+    }
+    public void Toggle()
+    {
+        if (root == null)
+            return;
+
+        bool isActive = root.activeSelf;
+
+        if (isActive)
+        {
+            Hide();
+        }
+        else
+        {
+            if (serviceDeskManager == null || serviceDeskManager.CurrentManual == null)
+                return;
+
+            RebuildButtons();
+            Show();
+        }
+    }
+    public bool IsOpen()
+    {
+        return root != null && root.activeSelf;
     }
 }

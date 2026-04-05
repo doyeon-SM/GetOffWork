@@ -10,7 +10,7 @@ public class UIServiceDesk : MonoBehaviour
     [SerializeField] private TMP_Text waitingCountText;
 
     [Header("민원인 UI")]
-    [SerializeField] private Image customerImage;
+    //[SerializeField] private Image customerImage;
     [SerializeField] private GameObject customerImageRoot;
 
     private void Awake()
@@ -71,31 +71,41 @@ public class UIServiceDesk : MonoBehaviour
     private void SetWaitingCount(int count)
     {
         if (waitingCountText != null)
-            waitingCountText.text = count.ToString();
+            waitingCountText.text = "대기자 : " + count.ToString();
     }
 
     private void ShowCustomerImage(Sprite sprite)
     {
-        if (customerImage != null)
+        /*if (customerImage != null)
         {
             customerImage.sprite = sprite;
             customerImage.enabled = sprite != null;
-        }
+        }*/
 
         if (customerImageRoot != null)
+        {
             customerImageRoot.SetActive(sprite != null);
+            SpriteRenderer sr = customerImageRoot.GetComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.enabled = sprite != null;
+        }
     }
 
     private void HideCustomerImage()
     {
-        if (customerImage != null)
+        /*if (customerImage != null)
         {
             customerImage.sprite = null;
             customerImage.enabled = false;
-        }
+        }*/
 
         if (customerImageRoot != null)
+        {
             customerImageRoot.SetActive(false);
+            SpriteRenderer sr = customerImageRoot.GetComponent<SpriteRenderer>();
+            sr.sprite = null;
+            sr.enabled = false;
+        }
     }
 
     private Sprite GetCustomerPortrait(ComplaintContext complaint)

@@ -125,4 +125,5 @@ public class UIMonitorView : MonoBehaviour
         if (addressText != null)
             addressText.text = record.address;
     }
+
 }
