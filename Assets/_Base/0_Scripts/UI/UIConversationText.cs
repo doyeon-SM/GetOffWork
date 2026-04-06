@@ -5,7 +5,7 @@ public class UIConversationText : MonoBehaviour
 {
     [SerializeField] private ServiceDeskManager serviceDeskManager;
 
-    [Header("�ؽ�Ʈ")]
+    [Header("텍스트")]
     [SerializeField] private TMP_Text playerText;
     [SerializeField] private TMP_Text customerText;
 
@@ -13,40 +13,41 @@ public class UIConversationText : MonoBehaviour
     {
         if (serviceDeskManager == null)
             serviceDeskManager = FindFirstObjectByType<ServiceDeskManager>();
-
         ClearAll();
     }
 
     private void OnEnable()
     {
-        if (serviceDeskManager == null)
-            return;
-
-        serviceDeskManager.OnPlayerText += HandlePlayerText;
-        serviceDeskManager.OnCustomerText += HandleCustomerText;
-        serviceDeskManager.OnCustomerCleared += HandleCustomerCleared;
+        if (serviceDeskManager == null) return;
+        serviceDeskManager.OnPlayerText       += HandlePlayerText;
+        serviceDeskManager.OnCustomerText     += HandleCustomerText;
+        serviceDeskManager.OnCustomerOpening  += HandleCustomerOpening;
+        serviceDeskManager.OnCustomerCleared  += HandleCustomerCleared;
     }
 
     private void OnDisable()
     {
-        if (serviceDeskManager == null)
-            return;
-
-        serviceDeskManager.OnPlayerText -= HandlePlayerText;
-        serviceDeskManager.OnCustomerText -= HandleCustomerText;
-        serviceDeskManager.OnCustomerCleared -= HandleCustomerCleared;
+        if (serviceDeskManager == null) return;
+        serviceDeskManager.OnPlayerText       -= HandlePlayerText;
+        serviceDeskManager.OnCustomerText     -= HandleCustomerText;
+        serviceDeskManager.OnCustomerOpening  -= HandleCustomerOpening;
+        serviceDeskManager.OnCustomerCleared  -= HandleCustomerCleared;
     }
 
     private void HandlePlayerText(string message)
     {
-        if (playerText != null)
-            playerText.text = message;
+        if (playerText != null) playerText.text = message;
     }
 
     private void HandleCustomerText(string message)
     {
-        if (customerText != null)
-            customerText.text = message;
+        if (customerText != null) customerText.text = message;
+    }
+
+    /// <summary>입장 대사 — 현재는 customerText에 동일하게 표시</summary>
+    private void HandleCustomerOpening(string message)
+    {
+        if (customerText != null) customerText.text = message;
     }
 
     private void HandleCustomerCleared()
@@ -56,10 +57,7 @@ public class UIConversationText : MonoBehaviour
 
     private void ClearAll()
     {
-        if (playerText != null)
-            playerText.text = string.Empty;
-
-        if (customerText != null)
-            customerText.text = string.Empty;
+        if (playerText != null)   playerText.text   = string.Empty;
+        if (customerText != null) customerText.text = string.Empty;
     }
 }

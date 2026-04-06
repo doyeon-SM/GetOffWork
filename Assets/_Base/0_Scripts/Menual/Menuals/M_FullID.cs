@@ -1,5 +1,21 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// ì£¼ë¯¼ë“±ë¡ë“±ë³¸/ì´ˆë³¸ ë°œê¸‰ ë©”ë‰´ì–¼ (FullID).
+///
+/// RequiredSteps ìˆœì„œ:
+///   1. AskSubmitId        (ì‹ ë¶„ì¦ ì œì‹œ ìš”ì²­)   â€” ìˆœì„œ ê°•ì œ
+///   2. OpenIdCardDetail   (ì‹ ë¶„ì¦ í™•ì¸)         â€” ìˆœì„œ ê°•ì œ
+///   3. OpenMonitor        (ëª¨ë‹ˆí„° ì—´ê¸°)         â€” ìˆœì„œ ê°•ì œ
+///   4. SearchRecordByInput(ID ì¡°íšŒ)             â€” ìˆœì„œ ê°•ì œ
+///   5. CompareCardAndMonitor (ë¹„êµ)             â€” ìˆœì„œ ê°•ì œ
+///   6. AskPrintOrMobile   (ì „ë‹¬ ë°©ì‹ ì§ˆë¬¸)      â€” ìˆœì„œ ê°•ì œ
+///   7. PrintDocument / SendMobile (ì „ë‹¬)        â€” ìˆœì„œ ê°•ì œ
+///      RejectAddressMismatch (ë°˜ë ¤)             â€” ìˆœì„œ ê°•ì œ, ì£¼ì†Œ ë¶ˆì¼ì¹˜ ì‹œ ëŒ€ì²´ ê²½ë¡œ
+///
+/// SpawnIdCardëŠ” AskSubmitId ì²˜ë¦¬ í›„ ë‚´ë¶€ì ìœ¼ë¡œ ìë™ í˜¸ì¶œë˜ëŠ” ì‹œìŠ¤í…œ ëª…ë ¹ì´ë¯€ë¡œ
+/// RequiredStepsì— í¬í•¨í•˜ì§€ ì•ŠëŠ”ë‹¤(UI ë²„íŠ¼ ì—†ìŒ, Queue ê¸°ë¡ ì—†ìŒ).
+/// </summary>
 public class M_FullID : Manual
 {
     private readonly UserRecordDatabase userDatabase;
@@ -9,96 +25,159 @@ public class M_FullID : Manual
         userDatabase = database;
     }
 
+    // â”€â”€ UI ë²„íŠ¼ ëª©ë¡ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     protected override void BuildCommandList()
     {
         commandList = new List<QuestionData>
         {
-            new QuestionData(ManualCommandIds.AskSubmitId, "½ÅºĞÁõ Á¦½Ã"),
-            new QuestionData(ManualCommandIds.AskPrintOrMobile, "ÀÎ¼â ¿©ºÎ ¹¯±â"),
-            new QuestionData(ManualCommandIds.RejectAddressMismatch, "ÁÖ¼Ò ºÒÀÏÄ¡ ¹İ·Á", QuestionData.CommandVisualType.ActionButton)
+            new QuestionData(ManualCommandIds.AskSubmitId,           "ì‹ ë¶„ì¦ ì œì‹œ ìš”ì²­"),
+            new QuestionData(ManualCommandIds.AskPrintOrMobile,      "ì¸ì‡„/ì „ì ì „ë‹¬ ì§ˆë¬¸"),
+            new QuestionData(ManualCommandIds.RejectAddressMismatch, "ì£¼ì†Œ ë¶ˆì¼ì¹˜ ë°˜ë ¤",
+                             QuestionData.CommandVisualType.ActionButton),
         };
     }
 
-    public override string GetManualTitle()
+    // â”€â”€ ë©”ë‰´ì–¼ ì ˆì°¨ ì •ì˜ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    protected override void BuildSteps()
     {
-        return "FULLID º»ÀÎ/´ë¸® ¹ß±Ş ¸Ş´º¾ó";
+        // Self(ë³¸ì¸): ì„±ê³¼ +3 / Proxy(ëŒ€ë¦¬): ì„±ê³¼ +6
+        int perfReward = context.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
+
+        requiredSteps = new List<ManualStepEntry>
+        {
+            // 1. ì‹ ë¶„ì¦ ì œì‹œ ìš”ì²­
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.AskSubmitId,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(reliability: 1, stress: 1),
+                orderPenalty:     new StepPenalty(kindness: 1),
+                completionReward: default
+            ),
+
+            // 2. ì‹ ë¶„ì¦ í™•ì¸ (ì—´ëŒ)
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.OpenIdCardDetail,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(reliability: 2),
+                orderPenalty:     new StepPenalty(reliability: 1),
+                completionReward: default
+            ),
+
+            // 3. ëª¨ë‹ˆí„° ì—´ê¸°
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.OpenMonitor,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(reliability: 1),
+                orderPenalty:     new StepPenalty(kindness: 1),
+                completionReward: default
+            ),
+
+            // 4. ID ì¡°íšŒ
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.SearchRecordByInput,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(reliability: 2, performance: 1),
+                orderPenalty:     new StepPenalty(reliability: 1),
+                completionReward: default
+            ),
+
+            // 5. ì¹´ë“œ-ëª¨ë‹ˆí„° ë¹„êµ
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.CompareCardAndMonitor,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(reliability: 3, performance: 2),
+                orderPenalty:     new StepPenalty(reliability: 2),
+                completionReward: default
+            ),
+
+            // 6. ì „ë‹¬ ë°©ì‹ ì§ˆë¬¸
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.AskPrintOrMobile,
+                isOrdered:        true,
+                omissionPenalty:  new StepPenalty(kindness: 1),
+                orderPenalty:     new StepPenalty(kindness: 1),
+                completionReward: default
+            ),
+
+            // 7-A. ì¸ì‡„ ì „ë‹¬ (PrintDocument) â€” ì„ íƒ ê²½ë¡œ
+            //      ì „ì ì „ë‹¬(SendMobile)ì€ ë³„ë„ entry. í‰ê°€ ì‹œ ë‘˜ ì¤‘ í•˜ë‚˜ë§Œ ìˆ˜í–‰í•˜ë©´ ì •ìƒ.
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.PrintDocument,
+                isOrdered:        true,
+                omissionPenalty:  default,          // SendMobileì´ ìˆìœ¼ë©´ íŒ¨ë„í‹° ì—†ìŒ (í‰ê°€ê¸°ê°€ ì²˜ë¦¬)
+                orderPenalty:     new StepPenalty(reliability: 1),
+                completionReward: new StepReward(performance: perfReward, reliability: 1)
+            ),
+
+            // 7-B. ì „ì ì „ë‹¬ (SendMobile) â€” ì„ íƒ ê²½ë¡œ
+            new ManualStepEntry(
+                commandId:        ManualCommandIds.SendMobile,
+                isOrdered:        true,
+                omissionPenalty:  default,
+                orderPenalty:     new StepPenalty(reliability: 1),
+                completionReward: new StepReward(performance: perfReward, reliability: 1)
+            ),
+        };
     }
 
+    // â”€â”€ Execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public override ResponseResult Execute(string commandId, string payload = null)
     {
         if (isCompleted || context.completed)
-            return WrongResponse("ÀÌ¹Ì ÀÀ´ë°¡ ¿Ï·áµÇ¾ú½À´Ï´Ù.");
+            return WrongOrder("ì´ë¯¸ ë¯¼ì›ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.");
 
         switch (commandId)
         {
-            case ManualCommandIds.AskSubmitId:
-                return HandleAskSubmitId();
-
-            case ManualCommandIds.SpawnIdCard:
-                return HandleSpawnIdCard();
-
-            case ManualCommandIds.OpenIdCardDetail:
-                return HandleOpenIdCardDetail();
-
-            case ManualCommandIds.OpenMonitor:
-                return HandleOpenMonitor();
-
-            case ManualCommandIds.SearchRecordByInput:
-                return HandleSearchRecordByInput(payload);
-
-            case ManualCommandIds.CompareCardAndMonitor:
-                return HandleCompareCardAndMonitor();
-
-            case ManualCommandIds.AskPrintOrMobile:
-                return HandleAskPrintOrMobile();
-
-            case ManualCommandIds.SelectPrint:
-                return HandleSelectPrint();
-
-            case ManualCommandIds.SelectMobile:
-                return HandleSelectMobile();
-
-            case ManualCommandIds.PrintDocument:
-                return HandlePrintDocument();
-
-            case ManualCommandIds.SendMobile:
-                return HandleSendMobile();
-
-            case ManualCommandIds.RejectAddressMismatch:
-                return HandleRejectAddressMismatch();
-
-            default:
-                return WrongResponse("¾Ë ¼ö ¾ø´Â ¸í·ÉÀÔ´Ï´Ù.");
+            case ManualCommandIds.AskSubmitId:          return HandleAskSubmitId();
+            case ManualCommandIds.SpawnIdCard:           return HandleSpawnIdCard();
+            case ManualCommandIds.OpenIdCardDetail:      return HandleOpenIdCardDetail();
+            case ManualCommandIds.OpenMonitor:           return HandleOpenMonitor();
+            case ManualCommandIds.SearchRecordByInput:   return HandleSearchRecordByInput(payload);
+            case ManualCommandIds.CompareCardAndMonitor: return HandleCompareCardAndMonitor();
+            case ManualCommandIds.AskPrintOrMobile:      return HandleAskPrintOrMobile();
+            case ManualCommandIds.SelectPrint:           return HandleSelectPrint();
+            case ManualCommandIds.SelectMobile:          return HandleSelectMobile();
+            case ManualCommandIds.PrintDocument:         return HandlePrintDocument();
+            case ManualCommandIds.SendMobile:            return HandleSendMobile();
+            case ManualCommandIds.RejectAddressMismatch: return HandleRejectAddressMismatch();
+            default:                                     return WrongOrder("ì•Œ ìˆ˜ ì—†ëŠ” ëª…ë ¹ì…ë‹ˆë‹¤.");
         }
     }
 
+    // â”€â”€ í•¸ë“¤ëŸ¬ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
     private ResponseResult HandleAskSubmitId()
     {
-        context.lastPlayerMessage = "½ÅºĞÁõÀ» º¸¿©ÁÖ¼¼¿ä.";
-        context.lastCustomerMessage = "³×, ¿©±â ÀÖ½À´Ï´Ù.";
+        RecordAction(ManualCommandIds.AskSubmitId);
+
+        context.lastPlayerMessage   = "ì‹ ë¶„ì¦ì„ ì œì‹œí•´ì£¼ì„¸ìš”.";
+        context.lastCustomerMessage = "ë„¤, ì—¬ê¸° ìˆìŠµë‹ˆë‹¤.";
 
         return CorrectResponse(
-            playerMessage: context.lastPlayerMessage,
+            playerMessage:   context.lastPlayerMessage,
             customerMessage: context.lastCustomerMessage,
             shouldSpawnIdCard: true
         );
     }
 
+    // SpawnIdCardëŠ” ServiceDeskManagerê°€ AskSubmitId ì²˜ë¦¬ í›„ ë‚´ë¶€ í˜¸ì¶œí•˜ëŠ” ì‹œìŠ¤í…œ ëª…ë ¹.
+    // í”Œë ˆì´ì–´ í–‰ë™ì´ ì•„ë‹ˆë¯€ë¡œ RecordActionì„ í˜¸ì¶œí•˜ì§€ ì•ŠëŠ”ë‹¤.
     private ResponseResult HandleSpawnIdCard()
     {
         context.idCardSpawned = true;
-        return CorrectResponse("½ÅºĞÁõÀÌ Á¦ÃâµÇ¾ú½À´Ï´Ù.");
+        return CorrectResponse("ì‹ ë¶„ì¦ì´ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.");
     }
 
     private ResponseResult HandleOpenIdCardDetail()
     {
         if (!context.idCardSpawned)
-            return WrongResponse("½ÅºĞÁõÀÌ ¾ÆÁ÷ Á¦ÃâµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            return WrongOrder("ì‹ ë¶„ì¦ì„ ë¨¼ì € ë°›ì•„ì•¼ í•©ë‹ˆë‹¤.");
 
+        RecordAction(ManualCommandIds.OpenIdCardDetail);
         context.idCardInspected = true;
 
         return CorrectResponse(
-            playerMessage: "½ÅºĞÁõ Á¤º¸¸¦ È®ÀÎÇÕ´Ï´Ù.",
+            playerMessage:          "ì‹ ë¶„ì¦ ì •ë³´ë¥¼ í™•ì¸í•©ë‹ˆë‹¤.",
             shouldOpenIdCardDetail: true
         );
     }
@@ -106,11 +185,13 @@ public class M_FullID : Manual
     private ResponseResult HandleOpenMonitor()
     {
         if (!context.idCardSpawned)
-            return WrongResponse("¸ÕÀú ½ÅºĞÁõÀ» Á¦Ãâ¹Ş¾Æ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ì‹ ë¶„ì¦ì„ ë°›ì•„ì•¼ í•©ë‹ˆë‹¤.");
 
+        RecordAction(ManualCommandIds.OpenMonitor);
         context.monitorOpened = true;
+
         return CorrectResponse(
-            playerMessage: "Àü»ê È­¸éÀ» ¿±´Ï´Ù.",
+            playerMessage:     "ëª¨ë‹ˆí„° í™”ë©´ì„ ì—½ë‹ˆë‹¤.",
             shouldOpenMonitor: true
         );
     }
@@ -118,24 +199,26 @@ public class M_FullID : Manual
     private ResponseResult HandleSearchRecordByInput(string inputId)
     {
         if (!context.monitorOpened)
-            return WrongResponse("¸ÕÀú ¸ğ´ÏÅÍ¸¦ ¿­¾î¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ëª¨ë‹ˆí„°ë¥¼ ì—´ì–´ì•¼ í•©ë‹ˆë‹¤.");
 
         if (string.IsNullOrWhiteSpace(inputId))
-            return WrongResponse("Á¶È¸ÇÒ ID¸¦ ÀÔ·ÂÇØ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ì¡°íšŒí•  IDë¥¼ ì…ë ¥í•´ì•¼ í•©ë‹ˆë‹¤.");
 
-        context.searchedInputId = inputId;
-        context.searchedByInputId = true;
+        context.searchedInputId    = inputId;
+        context.searchedByInputId  = true;
+
+        RecordAction(ManualCommandIds.SearchRecordByInput);
 
         if (!userDatabase.TryGetRecord(inputId, out _))
         {
-            return WrongResponse(
-                playerMessage: "ÇØ´ç IDÀÇ Á¤º¸°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.",
-                stressIncrease: 1
+            return CorrectResponse(
+                playerMessage: $"ID {inputId}ì— í•´ë‹¹í•˜ëŠ” ê¸°ë¡ì´ ì—†ìŠµë‹ˆë‹¤.",
+                shouldRefreshMonitorData: true
             );
         }
 
         return CorrectResponse(
-            playerMessage: $"ID {inputId} Á¤º¸¸¦ Á¶È¸ÇÕ´Ï´Ù.",
+            playerMessage:           $"ID {inputId} ê¸°ë¡ì„ ì¡°íšŒí•©ë‹ˆë‹¤.",
             shouldRefreshMonitorData: true
         );
     }
@@ -143,18 +226,20 @@ public class M_FullID : Manual
     private ResponseResult HandleCompareCardAndMonitor()
     {
         if (!context.idCardInspected)
-            return WrongResponse("¸ÕÀú ½ÅºĞÁõ »ó¼¼¸¦ È®ÀÎÇØ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ì‹ ë¶„ì¦ ìƒì„¸ë¥¼ í™•ì¸í•´ì•¼ í•©ë‹ˆë‹¤.");
 
         if (!context.searchedByInputId)
-            return WrongResponse("¸ÕÀú Àü»ê Á¶È¸¸¦ ÇØ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ëª¨ë‹ˆí„° ì¡°íšŒë¥¼ í•´ì•¼ í•©ë‹ˆë‹¤.");
 
         string targetId = context.EffectiveTargetRecordId;
 
         if (!userDatabase.TryGetRecord(targetId, out var cardRecord))
-            return WrongResponse("Ä«µå ±âÁØ Á¤º¸ Á¶È¸¿¡ ½ÇÆĞÇß½À´Ï´Ù.");
+            return WrongOrder("ì¹´ë“œ ê¸°ë¡ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
 
         if (!userDatabase.TryGetRecord(context.searchedInputId, out var monitorRecord))
-            return WrongResponse("Àü»ê ±âÁØ Á¤º¸ Á¶È¸¿¡ ½ÇÆĞÇß½À´Ï´Ù.");
+            return WrongOrder("ëª¨ë‹ˆí„° ê¸°ë¡ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
+
+        RecordAction(ManualCommandIds.CompareCardAndMonitor);
 
         context.recordCompared = true;
         context.addressMatched = cardRecord.address == monitorRecord.address;
@@ -162,112 +247,108 @@ public class M_FullID : Manual
         if (!context.addressMatched)
         {
             return CorrectResponse(
-                playerMessage: "ÁÖ¼Ò Á¤º¸°¡ ÀÏÄ¡ÇÏÁö ¾Ê½À´Ï´Ù.",
-                customerMessage: "¾Æ, ±×·±°¡¿ä?",
+                playerMessage:           "ì£¼ì†Œ ì •ë³´ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.",
+                customerMessage:         "ì•„, ê·¸ë ‡êµ°ìš”?",
                 shouldRefreshMonitorData: true
             );
         }
 
-        return CorrectResponse(
-            playerMessage: "ÁÖ¼Ò¿Í ½Å¿ø Á¤º¸°¡ ÀÏÄ¡ÇÕ´Ï´Ù."
-        );
+        return CorrectResponse(playerMessage: "ì£¼ì†Œì™€ ì •ë³´ê°€ ì¼ì¹˜í•©ë‹ˆë‹¤.");
     }
 
     private ResponseResult HandleAskPrintOrMobile()
     {
         if (!context.recordCompared)
-            return WrongResponse("¸ÕÀú ½ÅºĞÁõ°ú Àü»ê Á¤º¸¸¦ ºñ±³ÇØ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ì‹ ë¶„ì¦ê³¼ ëª¨ë‹ˆí„° ì •ë³´ë¥¼ ë¹„êµí•´ì•¼ í•©ë‹ˆë‹¤.");
 
         if (!context.addressMatched)
-            return WrongResponse("ÁÖ¼Ò ºÒÀÏÄ¡ »óÅÂÀÔ´Ï´Ù. ¹İ·Á ¶Ç´Â º¸¿Ï ¾È³»°¡ ÇÊ¿äÇÕ´Ï´Ù.");
+            return WrongOrder("ì£¼ì†Œ ë¶ˆì¼ì¹˜ ìƒíƒœì…ë‹ˆë‹¤. ë°˜ë ¤ ë˜ëŠ” ì¶”ê°€ ì•ˆë‚´ê°€ í•„ìš”í•©ë‹ˆë‹¤.");
 
+        RecordAction(ManualCommandIds.AskPrintOrMobile);
         context.deliveryAsked = true;
 
+        string customerReply = context.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile
+            ? "ì „ì ë°œì†¡ ë¶€íƒë“œë¦½ë‹ˆë‹¤."
+            : "ì¸ì‡„ ë¶€íƒë“œë¦½ë‹ˆë‹¤.";
+
         return CorrectResponse(
-            playerMessage: "ÀÎ¼âÇØµå¸±±î¿ä? Àü¼ÛÇØµå¸±±î¿ä?",
-            customerMessage: context.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile
-                ? "Àü¼Û ºÎÅ¹µå¸³´Ï´Ù."
-                : "ÀÎ¼â ºÎÅ¹µå·Á¿ä."
+            playerMessage:   "ì¸ì‡„í•´ë“œë¦´ê¹Œìš”? ì „ì ë°œì†¡í•´ë“œë¦´ê¹Œìš”?",
+            customerMessage: customerReply
         );
     }
 
     private ResponseResult HandleSelectPrint()
     {
         if (!context.deliveryAsked)
-            return WrongResponse("¸ÕÀú Àü´Ş ¹æ½ÄÀ» ¹°¾îºÁ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ì „ë‹¬ ë°©ì‹ì„ ì§ˆë¬¸í•´ì•¼ í•©ë‹ˆë‹¤.");
 
         context.requestedDeliveryType = ComplaintContext.DeliveryType.Print;
-        return CorrectResponse("ÀÎ¼â ¹ß±ŞÀ¸·Î ÁøÇàÇÕ´Ï´Ù.");
+        return CorrectResponse("ì¸ì‡„ ë°œê¸‰ìœ¼ë¡œ ì„ íƒí•©ë‹ˆë‹¤.");
     }
 
     private ResponseResult HandleSelectMobile()
     {
         if (!context.deliveryAsked)
-            return WrongResponse("¸ÕÀú Àü´Ş ¹æ½ÄÀ» ¹°¾îºÁ¾ß ÇÕ´Ï´Ù.");
+            return WrongOrder("ë¨¼ì € ì „ë‹¬ ë°©ì‹ì„ ì§ˆë¬¸í•´ì•¼ í•©ë‹ˆë‹¤.");
 
         context.requestedDeliveryType = ComplaintContext.DeliveryType.Mobile;
-        return CorrectResponse("¸ğ¹ÙÀÏ ¹ß±ŞÀ¸·Î ÁøÇàÇÕ´Ï´Ù.");
+        return CorrectResponse("ì „ì ë°œê¸‰ìœ¼ë¡œ ì„ íƒí•©ë‹ˆë‹¤.");
     }
 
     private ResponseResult HandlePrintDocument()
     {
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
-            return WrongResponse("ÇöÀç ÀÎ¼â ¹ß±ŞÀ¸·Î ¼±ÅÃµÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù.");
+            return WrongOrder("ì¸ì‡„ ë°œê¸‰ì´ ì„ íƒë˜ì–´ ìˆì§€ ì•ŠìŠµë‹ˆë‹¤.");
 
         if (!context.addressMatched)
-            return WrongResponse("ÁÖ¼Ò È®ÀÎÀÌ ¿Ï·áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            return WrongOrder("ì£¼ì†Œ í™•ì¸ì´ ì™„ë£Œë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
 
-        context.documentPrinted = true;
+        RecordAction(ManualCommandIds.PrintDocument);
         context.completed = true;
 
-        int reward = context.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
-
         return CorrectResponse(
-            playerMessage: "Ãâ·ÂÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù.",
-            customerMessage: "¼ö°íÇÏ¼¼¿ä.",
-            completeNow: true,
-            performanceReward: reward,
-            reliabilityReward: 1
+            playerMessage:   "ë°œê¸‰ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.",
+            customerMessage: "ê°ì‚¬í•©ë‹ˆë‹¤.",
+            completeNow:     true
         );
     }
 
     private ResponseResult HandleSendMobile()
     {
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
-            return WrongResponse("ÇöÀç ¸ğ¹ÙÀÏ ¹ß±ŞÀ¸·Î ¼±ÅÃµÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù.");
+            return WrongOrder("ì „ì ë°œê¸‰ì´ ì„ íƒë˜ì–´ ìˆì§€ ì•ŠìŠµë‹ˆë‹¤.");
 
         if (!context.addressMatched)
-            return WrongResponse("ÁÖ¼Ò È®ÀÎÀÌ ¿Ï·áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            return WrongOrder("ì£¼ì†Œ í™•ì¸ì´ ì™„ë£Œë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
 
-        context.documentSent = true;
+        RecordAction(ManualCommandIds.SendMobile);
         context.completed = true;
 
-        int reward = context.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
-
         return CorrectResponse(
-            playerMessage: "¸ğ¹ÙÀÏ Àü¼ÛÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù.",
-            customerMessage: "°¨»çÇÕ´Ï´Ù.",
-            completeNow: true,
-            performanceReward: reward,
-            reliabilityReward: 1
+            playerMessage:   "ì „ì ë°œì†¡ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.",
+            customerMessage: "ê°ì‚¬í•©ë‹ˆë‹¤.",
+            completeNow:     true
         );
     }
 
     private ResponseResult HandleRejectAddressMismatch()
     {
         if (!context.recordCompared)
-            return WrongResponse("ºñ±³ ¿Ï·á ÈÄ¿¡¸¸ ¹İ·ÁÇÒ ¼ö ÀÖ½À´Ï´Ù.");
+            return WrongOrder("ë¹„êµ ì™„ë£Œ í›„ì—ë§Œ ë°˜ë ¤í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.");
 
         if (context.addressMatched)
-            return WrongResponse("ÁÖ¼Ò°¡ ÀÏÄ¡ÇÏ¹Ç·Î ÁÖ¼Ò ºÒÀÏÄ¡ ¹İ·Á ´ë»óÀÌ ¾Æ´Õ´Ï´Ù.");
+            return WrongOrder("ì£¼ì†Œê°€ ì¼ì¹˜í•˜ë¯€ë¡œ ì£¼ì†Œ ë¶ˆì¼ì¹˜ ë°˜ë ¤ ì‚¬ìœ ê°€ ì•„ë‹™ë‹ˆë‹¤.");
 
-        context.rejected = true;
+        RecordAction(ManualCommandIds.RejectAddressMismatch);
+        context.rejected  = true;
         context.completed = true;
 
         return CorrectResponse(
-            playerMessage: "ÁÖ¼ÒÀÌÀü ¸ÕÀú ÇÏ°í ¿À¼¼¿ä.",
-            customerMessage: "¾Ë°Ú½À´Ï´Ù.",
-            completeNow: true
+            playerMessage:   "ì£¼ì†Œê°€ ë‹¬ë¼ ë°œê¸‰ì´ ì–´ë µìŠµë‹ˆë‹¤.",
+            customerMessage: "ì•Œê² ìŠµë‹ˆë‹¤.",
+            completeNow:     true
         );
     }
+
+    public override string GetManualTitle() => "FULLID ë“±ë³¸/ì´ˆë³¸ ë°œê¸‰ ë©”ë‰´ì–¼";
 }

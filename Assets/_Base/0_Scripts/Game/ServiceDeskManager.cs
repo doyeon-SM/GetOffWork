@@ -4,64 +4,75 @@ using UnityEngine;
 
 public class ServiceDeskManager : MonoBehaviour
 {
-    private enum DeskState
-    {
-        Idle,
-        ServingCustomer
-    }
+    // ── 로그 태그 상수 ────────────────────────────────────────────────────
+    // Unity 콘솔에서 이 태그로 필터링하면 민원 흐름만 볼 수 있다.
+    // 예) 콘솔 검색창에 "[Desk]" 또는 "[정산]" 또는 "[Evaluator]" 입력
+    private const string TAG      = "[Desk]";
+    private const string TAG_EVAL = "[정산]";
+    private const string TAG_QUEUE = "[대기열]";
 
-    [Header("�÷��̾�")]
+    private enum DeskState { Idle, ServingCustomer }
+
+    [Header("플레이어")]
     [SerializeField] private PlayerBase playerBase;
 
-    [Header("�ֹ� ������")]
+    [Header("주민 데이터")]
     [SerializeField] private UserRecordDatabase userDatabase;
 
-    [Header("���� �մ� ��� �ð�")]
+    [Header("입장 대사 데이터")]
+    [SerializeField] private ComplaintOpeningLineTable openingLineTable;
+
+    [Header("다음 손님 대기 시간")]
     [SerializeField] private float minCustomerDelay = 2f;
     [SerializeField] private float maxCustomerDelay = 6f;
 
-    [Header("���� �ο�")]
+    [Header("현재 민원")]
     [SerializeField] private ComplaintContext currentComplaint;
 
-    [Header("�����")]
+    [Header("디버그")]
     [SerializeField] private bool showDebugLog = true;
 
     private readonly Queue<ComplaintContext> waitingQueue = new Queue<ComplaintContext>();
 
-    private Manual currentManual;
-    private bool isWorking;
-    private float nextCustomerTimer;
+    private Manual    currentManual;
+    private bool      isWorking;
+    private float     nextCustomerTimer;
     private DeskState deskState = DeskState.Idle;
-    private int spawnedCustomerCountToday;
+    private int       spawnedCustomerCountToday;
 
-    public ComplaintContext CurrentComplaint => currentComplaint;
-    public Manual CurrentManual => currentManual;
-    public bool IsWorking => isWorking;
-    public bool HasActiveCustomer => currentComplaint != null && currentManual != null;
-    public int WaitingCount => waitingQueue.Count;
-    public UserRecordDatabase UserDatabase => userDatabase;
+    // ── 공개 프로퍼티 ─────────────────────────────────────────────────────
+    public ComplaintContext   CurrentComplaint   => currentComplaint;
+    public Manual             CurrentManual      => currentManual;
+    public bool               IsWorking          => isWorking;
+    public bool               HasActiveCustomer  => currentComplaint != null && currentManual != null;
+    public int                WaitingCount       => waitingQueue.Count;
+    public UserRecordDatabase UserDatabase       => userDatabase;
 
-    public int MaxCustomerPerDay => playerBase != null ? playerBase.PlayerLevel * 3 : 0;
+    public int  MaxCustomerPerDay    => playerBase != null ? playerBase.PlayerLevel * 3 : 0;
     public bool HasReachedDailyLimit => spawnedCustomerCountToday >= MaxCustomerPerDay;
 
-    public event Action<int> OnWaitingQueueChanged;
+    // ── 이벤트 ───────────────────────────────────────────────────────────
+    public event Action<int>             OnWaitingQueueChanged;
     public event Action<ComplaintContext> OnCustomerCalled;
-    public event Action OnCustomerCleared;
-    public event Action<bool> OnWorkStateChanged;
+    public event Action                  OnCustomerCleared;
+    public event Action<bool>            OnWorkStateChanged;
 
     public event Action<string> OnPlayerText;
     public event Action<string> OnCustomerText;
+
+    /// <summary>민원인이 입장하며 첫 마디를 할 때 발생. string = 입장 대사</summary>
+    public event Action<string> OnCustomerOpening;
+
     public event Action<ComplaintContext> OnSpawnIdCardRequested;
     public event Action<ComplaintContext> OnOpenIdCardDetailRequested;
     public event Action<ComplaintContext> OnOpenMonitorRequested;
     public event Action<ComplaintContext> OnMonitorRefreshRequested;
 
+    // ── 생명주기 ─────────────────────────────────────────────────────────
     private void Awake()
     {
         ResolvePlayerBase();
-
-        if (userDatabase != null)
-            userDatabase.BuildCache();
+        if (userDatabase != null) userDatabase.BuildCache();
     }
 
     private void Start()
@@ -72,334 +83,267 @@ public class ServiceDeskManager : MonoBehaviour
 
     private void Update()
     {
-        if (!isWorking)
-            return;
-
+        if (!isWorking) return;
         UpdateWaitingArrival();
-
         if (deskState == DeskState.ServingCustomer)
             UpdateCurrentCustomerPatience();
     }
 
-    public void SetPlayerBase(PlayerBase player)
-    {
-        playerBase = player;
-    }
+    // ── 플레이어 참조 ─────────────────────────────────────────────────────
+    public void SetPlayerBase(PlayerBase player) => playerBase = player;
 
     private void ResolvePlayerBase()
     {
-        if (playerBase != null)
-            return;
-
+        if (playerBase != null) return;
         playerBase = PlayerBase.Instance;
-
         if (playerBase == null)
-            Debug.LogError("PlayerBase Instance�� �����ϴ�!");
+            Debug.LogError($"{TAG} PlayerBase Instance가 없습니다!");
     }
 
+    // ── 주민 레코드 ───────────────────────────────────────────────────────
     public bool TryGetResidentRecord(string recordId, out UserRecordData record)
     {
         record = null;
-
-        if (userDatabase == null || string.IsNullOrWhiteSpace(recordId))
-            return false;
-
+        if (userDatabase == null || string.IsNullOrWhiteSpace(recordId)) return false;
         return userDatabase.TryGetRecord(recordId, out record);
     }
 
+    // ── 근무 흐름 ─────────────────────────────────────────────────────────
     public void BeginWorkPhase()
     {
         ResolvePlayerBase();
-
-        isWorking = true;
+        isWorking                 = true;
         spawnedCustomerCountToday = 0;
         waitingQueue.Clear();
-
         ClearCurrentCustomerInternal();
         deskState = DeskState.Idle;
-
         ScheduleNextCustomerArrival();
         RaiseWaitingQueueChanged();
         OnWorkStateChanged?.Invoke(true);
-
-        if (showDebugLog)
-            Debug.Log($"���� ���� / �Ϸ� �ִ� �ο��� ��: {MaxCustomerPerDay}");
+        Log($"{TAG} 근무 시작 / 일일 최대 인원: {MaxCustomerPerDay}");
     }
 
     public void StopWorkPhase()
     {
         isWorking = false;
         waitingQueue.Clear();
-
         ClearCurrentCustomerInternal();
-        deskState = DeskState.Idle;
+        deskState         = DeskState.Idle;
         nextCustomerTimer = 0f;
-
         RaiseWaitingQueueChanged();
         OnCustomerCleared?.Invoke();
         OnWorkStateChanged?.Invoke(false);
-
-        if (showDebugLog)
-            Debug.Log("���� ����");
+        Log($"{TAG} 근무 종료");
     }
 
+    // ── 손님 도착 스케줄 ──────────────────────────────────────────────────
     private void UpdateWaitingArrival()
     {
-        if (HasReachedDailyLimit)
-            return;
-
+        if (HasReachedDailyLimit) return;
         nextCustomerTimer -= Time.deltaTime;
-
         if (nextCustomerTimer <= 0f)
         {
             EnqueueNextCustomer();
-
-            if (!HasReachedDailyLimit)
-                ScheduleNextCustomerArrival();
-            else if (showDebugLog)
-                Debug.Log("�Ϸ� �ִ� �ο��� ���� �����Ͽ� �� �̻� ����ڸ� �������� �ʽ��ϴ�.");
+            if (!HasReachedDailyLimit) ScheduleNextCustomerArrival();
+            else Log($"{TAG_QUEUE} 일일 최대 인원 도달 — 손님 생성 중단");
         }
     }
 
     private void ScheduleNextCustomerArrival()
     {
-        if (HasReachedDailyLimit)
-        {
-            nextCustomerTimer = 0f;
-            return;
-        }
-
+        if (HasReachedDailyLimit) { nextCustomerTimer = 0f; return; }
         nextCustomerTimer = UnityEngine.Random.Range(minCustomerDelay, maxCustomerDelay);
-
-        if (showDebugLog)
-            Debug.Log($"���� ����� ��������: {nextCustomerTimer:F1}��");
+        Log($"{TAG_QUEUE} 다음 손님 대기: {nextCustomerTimer:F1}초");
     }
 
     private void EnqueueNextCustomer()
     {
-        if (HasReachedDailyLimit)
-            return;
-
-        ComplaintContext complaint = CreateRandomComplaint();
+        if (HasReachedDailyLimit) return;
+        var complaint = CreateRandomComplaint();
         complaint.ResetPatience();
-
         waitingQueue.Enqueue(complaint);
         spawnedCustomerCountToday++;
-
         RaiseWaitingQueueChanged();
-
-        if (showDebugLog)
-        {
-            Debug.Log($"��⿭ �߰� / ���� ����� ��: {waitingQueue.Count} / ���� ���� ��: {spawnedCustomerCountToday}/{MaxCustomerPerDay}");
-        }
+        Log($"{TAG_QUEUE} 추가 / 대기: {waitingQueue.Count} / 오늘: {spawnedCustomerCountToday}/{MaxCustomerPerDay}");
     }
 
-    public void OnClickCallNextCustomer()
-    {
-        CallNextCustomer();
-    }
+    // ── 손님 호출 ─────────────────────────────────────────────────────────
+    public void OnClickCallNextCustomer() => CallNextCustomer();
 
     public bool CallNextCustomer()
     {
-        if (!isWorking)
-            return false;
+        if (!isWorking)          return false;
+        if (HasActiveCustomer)   { Log($"{TAG} 이미 민원 처리 중"); return false; }
+        if (waitingQueue.Count <= 0) { Log($"{TAG} 대기열 비어있음"); return false; }
 
-        if (HasActiveCustomer)
-        {
-            if (showDebugLog)
-                Debug.Log("�̹� ���� �ο� ó�� ���Դϴ�.");
-            return false;
-        }
-
-        if (waitingQueue.Count <= 0)
-        {
-            if (showDebugLog)
-                Debug.Log("��⿭�� ��� �ֽ��ϴ�.");
-            return false;
-        }
-
-        ComplaintContext nextComplaint = waitingQueue.Dequeue();
+        var nextComplaint = waitingQueue.Dequeue();
         RaiseWaitingQueueChanged();
 
-        Manual manual = CreateManualByComplaint(nextComplaint);
-        if (manual == null)
-        {
-            if (showDebugLog)
-                Debug.LogWarning("�ο� �Ŵ��� ���� ����");
-            return false;
-        }
+        var manual = CreateManualByComplaint(nextComplaint);
+        if (manual == null) { Debug.LogWarning($"{TAG} 매뉴얼 생성 실패"); return false; }
 
         currentComplaint = nextComplaint;
-        currentManual = manual;
+        currentManual    = manual;
         currentManual.Initialize(currentComplaint);
-        deskState = DeskState.ServingCustomer;
+        deskState        = DeskState.ServingCustomer;
+
+        Log($"{TAG} 호출: {currentManual.GetManualTitle()} / {currentComplaint.applicantType}");
+
+        // 입장 대사 발화 (OnCustomerCalled 이전에 발화해서 UI가 먼저 텍스트를 표시)
+        FireOpeningLine(currentComplaint);
 
         OnCustomerCalled?.Invoke(currentComplaint);
-
-        if (showDebugLog)
-            Debug.Log($"ȣ�� �Ϸ�: {currentManual.GetManualTitle()} / {currentComplaint.applicantType}");
-
         return true;
+    }
+
+    /// <summary>
+    /// ComplaintOpeningLineTable에서 민원 유형과 신청인 유형에 맞는 대사를 골라
+    /// OnCustomerText와 OnCustomerOpening 이벤트로 방송한다.
+    /// </summary>
+    private void FireOpeningLine(ComplaintContext complaint)
+    {
+        string line = openingLineTable != null
+            ? openingLineTable.GetLine(complaint.complaintType, complaint.applicantType)
+            : GetFallbackOpeningLine(complaint);
+
+        if (string.IsNullOrWhiteSpace(line)) return;
+
+        Log($"{TAG} 입장 대사: {line}");
+        OnCustomerText?.Invoke(line);
+        OnCustomerOpening?.Invoke(line);
+    }
+
+    /// <summary>테이블이 없을 때 사용하는 하드코딩 기본 대사</summary>
+    private string GetFallbackOpeningLine(ComplaintContext complaint)
+    {
+        bool isSelf = complaint.applicantType == ComplaintContext.ApplicantType.Self;
+        switch (complaint.complaintType)
+        {
+            case ComplaintContext.ComplaintType.FullID:
+                return isSelf
+                    ? "안녕하세요, 주민등록등본 발급하러 왔습니다."
+                    : "안녕하세요, 가족 대리로 주민등록등본 받으러 왔어요.";
+            default:
+                return "안녕하세요, 민원 처리 부탁드립니다.";
+        }
     }
 
     private Manual CreateManualByComplaint(ComplaintContext complaint)
     {
         switch (complaint.complaintType)
         {
-            case ComplaintContext.ComplaintType.FullID:
-                return new M_FullID(userDatabase);
-            default:
-                return null;
+            case ComplaintContext.ComplaintType.FullID: return new M_FullID(userDatabase);
+            default: return null;
         }
     }
 
     private ComplaintContext CreateRandomComplaint()
     {
-        ComplaintContext complaint = new ComplaintContext();
+        var c = new ComplaintContext();
+        c.complaintType         = ComplaintContext.ComplaintType.FullID;
+        c.applicantType         = UnityEngine.Random.value > 0.5f
+                                  ? ComplaintContext.ApplicantType.Self
+                                  : ComplaintContext.ApplicantType.Proxy;
+        c.requestedDeliveryType = UnityEngine.Random.value > 0.5f
+                                  ? ComplaintContext.DeliveryType.Print
+                                  : ComplaintContext.DeliveryType.Mobile;
 
-        complaint.complaintType = ComplaintContext.ComplaintType.FullID;
-        complaint.applicantType = UnityEngine.Random.value > 0.5f
-            ? ComplaintContext.ApplicantType.Self
-            : ComplaintContext.ApplicantType.Proxy;
-
-        complaint.requestedDeliveryType = UnityEngine.Random.value > 0.5f
-            ? ComplaintContext.DeliveryType.Print
-            : ComplaintContext.DeliveryType.Mobile;
-
-        if (userDatabase != null && userDatabase.Records != null && userDatabase.Records.Count > 0)
+        if (userDatabase != null && userDatabase.Records?.Count > 0)
         {
-            int applicantIndex = UnityEngine.Random.Range(0, userDatabase.Records.Count);
-            complaint.applicantRecordId = userDatabase.Records[applicantIndex].recordId;
-
-            if (complaint.applicantType == ComplaintContext.ApplicantType.Self)
-            {
-                complaint.targetRecordId = complaint.applicantRecordId;
-            }
-            else
-            {
-                int targetIndex = UnityEngine.Random.Range(0, userDatabase.Records.Count);
-                complaint.targetRecordId = userDatabase.Records[targetIndex].recordId;
-            }
+            int ai = UnityEngine.Random.Range(0, userDatabase.Records.Count);
+            c.applicantRecordId = userDatabase.Records[ai].recordId;
+            c.targetRecordId    = c.applicantType == ComplaintContext.ApplicantType.Self
+                                  ? c.applicantRecordId
+                                  : userDatabase.Records[UnityEngine.Random.Range(0, userDatabase.Records.Count)].recordId;
         }
 
-        complaint.maxPatience = UnityEngine.Random.Range(20f, 40f);
-        complaint.currentPatience = complaint.maxPatience;
-
-        return complaint;
+        c.maxPatience     = UnityEngine.Random.Range(20f, 40f);
+        c.currentPatience = c.maxPatience;
+        return c;
     }
 
+    // ── 명령 실행 ─────────────────────────────────────────────────────────
     public void ExecuteCommand(string commandId, string payload = null)
     {
-        if (!isWorking)
-            return;
+        if (!isWorking || deskState != DeskState.ServingCustomer) return;
+        if (currentManual == null || currentComplaint == null)    return;
 
-        if (deskState != DeskState.ServingCustomer)
-            return;
-
-        if (currentManual == null || currentComplaint == null)
-            return;
-
-        ResponseResult result = currentManual.Execute(commandId, payload);
+        var result = currentManual.Execute(commandId, payload);
 
         if (commandId == ManualCommandIds.AskSubmitId && result.IsValid)
         {
-            // �ź��� ���� ��û ���� ���� ���� ���� �ݿ�
             currentManual.Execute(ManualCommandIds.SpawnIdCard);
             currentComplaint.idCardSpawned = true;
         }
 
-        ApplyResponseResult(result);
         DispatchUIResult(result);
 
         if (showDebugLog)
         {
             if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
-                Debug.Log($"Player: {result.PlayerMessage}");
-
+                Log($"{TAG} Player: {result.PlayerMessage}");
             if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
-                Debug.Log($"Customer: {result.CustomerMessage}");
+                Log($"{TAG} Customer: {result.CustomerMessage}");
         }
 
-        if (result.IsCompleted)
-            FinishCurrentCustomer();
+        if (result.IsCompleted) FinishCurrentCustomer();
     }
 
     private void DispatchUIResult(ResponseResult result)
     {
-        if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
-            OnPlayerText?.Invoke(result.PlayerMessage);
-
-        if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
-            OnCustomerText?.Invoke(result.CustomerMessage);
-
-        if (result.ShouldSpawnIdCard)
-            OnSpawnIdCardRequested?.Invoke(currentComplaint);
-
-        if (result.ShouldOpenIdCardDetail)
-            OnOpenIdCardDetailRequested?.Invoke(currentComplaint);
-
-        if (result.ShouldOpenMonitor)
-            OnOpenMonitorRequested?.Invoke(currentComplaint);
-
-        if (result.ShouldRefreshMonitorData)
-            OnMonitorRefreshRequested?.Invoke(currentComplaint);
+        if (!string.IsNullOrWhiteSpace(result.PlayerMessage))    OnPlayerText?.Invoke(result.PlayerMessage);
+        if (!string.IsNullOrWhiteSpace(result.CustomerMessage))  OnCustomerText?.Invoke(result.CustomerMessage);
+        if (result.ShouldSpawnIdCard)        OnSpawnIdCardRequested?.Invoke(currentComplaint);
+        if (result.ShouldOpenIdCardDetail)   OnOpenIdCardDetailRequested?.Invoke(currentComplaint);
+        if (result.ShouldOpenMonitor)        OnOpenMonitorRequested?.Invoke(currentComplaint);
+        if (result.ShouldRefreshMonitorData) OnMonitorRefreshRequested?.Invoke(currentComplaint);
     }
 
+    // ── 인내심 ────────────────────────────────────────────────────────────
     private void UpdateCurrentCustomerPatience()
     {
-        if (currentComplaint == null)
-            return;
-
+        if (currentComplaint == null) return;
         currentComplaint.currentPatience -= Time.deltaTime;
-
         if (currentComplaint.currentPatience <= 0f)
             HandlePatienceExpired();
     }
 
-    private void ApplyResponseResult(ResponseResult result)
-    {
-        ResolvePlayerBase();
-
-        if (playerBase == null)
-            return;
-
-        if (result.PerformanceDelta != 0)
-            playerBase.AddPerformance(result.PerformanceDelta);
-
-        ApplyStatDelta(Stat.Kindness, result.KindnessDelta);
-        ApplyStatDelta(Stat.Stress, result.StressDelta);
-        ApplyStatDelta(Stat.Reliability, result.ReliabilityDelta);
-
-        if (result.PayDelta != 0)
-            playerBase.AddPay(result.PayDelta);
-    }
-
-    private void ApplyStatDelta(Stat stat, int delta)
-    {
-        if (playerBase == null || delta == 0)
-            return;
-
-        playerBase.AddStat(stat, delta);
-    }
-
     private void HandlePatienceExpired()
     {
+        Log($"{TAG} 인내심 소진");
+        FinishCurrentCustomer(patienceExpired: true);
+    }
+
+    // ── 민원 종료 & 정산 ──────────────────────────────────────────────────
+    private void FinishCurrentCustomer(bool patienceExpired = false)
+    {
         ResolvePlayerBase();
 
-        if (showDebugLog)
-            Debug.Log("���� �ο��� �γ��� ����");
-
-        if (playerBase != null)
+        if (patienceExpired && playerBase != null)
         {
             playerBase.AddPerformance(-2);
             playerBase.AddStat(Stat.Stress, 2);
         }
 
-        FinishCurrentCustomer();
-    }
+        if (currentManual != null)
+        {
+            var eval = ManualEvaluator.Evaluate(
+                currentManual.RequiredSteps,
+                currentManual.ActionQueue
+            );
 
-    private void FinishCurrentCustomer()
-    {
+            Log($"{TAG_EVAL} {eval}");
+
+            if (playerBase != null)
+            {
+                if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
+                if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);
+                if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,      eval.StressDelta);
+                if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta);
+                if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
+            }
+        }
+
         ClearCurrentCustomerInternal();
         deskState = DeskState.Idle;
         OnCustomerCleared?.Invoke();
@@ -408,11 +352,15 @@ public class ServiceDeskManager : MonoBehaviour
     private void ClearCurrentCustomerInternal()
     {
         currentComplaint = null;
-        currentManual = null;
+        currentManual    = null;
     }
 
-    private void RaiseWaitingQueueChanged()
-    {
+    private void RaiseWaitingQueueChanged() =>
         OnWaitingQueueChanged?.Invoke(waitingQueue.Count);
+
+    // ── 로그 헬퍼 ─────────────────────────────────────────────────────────
+    private void Log(string message)
+    {
+        if (showDebugLog) Debug.Log(message);
     }
 }

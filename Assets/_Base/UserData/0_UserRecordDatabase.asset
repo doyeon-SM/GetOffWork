@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UserRecordDatabase
   records:
   - {fileID: 11400000, guid: ae432bcdac6cce345ad5dc3479570d74, type: 2}
+  - {fileID: 11400000, guid: 9a737c2fae202064ea70c135e4f82a3c, type: 2}

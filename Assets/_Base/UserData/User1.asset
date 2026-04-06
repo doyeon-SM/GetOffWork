@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c511b7d2b0929b459e6aaa1e7dc77cd, type: 3}
   m_Name: User1
   m_EditorClassIdentifier: Assembly-CSharp::UserRecordData
-  recordId: 10023
-  fullName: AAA
+  recordId: ID-001
+  fullName: "\uD64D\uAE38\uB3D9"
   portrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
-  address: BBB
-  birthDate: 2222
-  phoneNumber: 5555
-  email: 8888
+  address: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C 1"
+  birthDate: 1990-01-01
+  phoneNumber: 010-1111-1111
+  email: "\uD64D\uAE38\uB3D9@mail.com"
   isTampered: 0
   hasMovedAddress: 0
   note: 
