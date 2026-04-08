@@ -6,7 +6,7 @@ public class UIConversationText : MonoBehaviour
     [SerializeField] private ServiceDeskManager serviceDeskManager;
 
     [Header("텍스트")]
-    [SerializeField] private TMP_Text playerText;
+    //[SerializeField] private TMP_Text playerText;
     [SerializeField] private TMP_Text customerText;
 
     private void Awake()
@@ -19,7 +19,7 @@ public class UIConversationText : MonoBehaviour
     private void OnEnable()
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.OnPlayerText       += HandlePlayerText;
+        //serviceDeskManager.OnPlayerText       += HandlePlayerText;
         serviceDeskManager.OnCustomerText     += HandleCustomerText;
         serviceDeskManager.OnCustomerOpening  += HandleCustomerOpening;
         serviceDeskManager.OnCustomerCleared  += HandleCustomerCleared;
@@ -28,16 +28,16 @@ public class UIConversationText : MonoBehaviour
     private void OnDisable()
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.OnPlayerText       -= HandlePlayerText;
+        //serviceDeskManager.OnPlayerText       -= HandlePlayerText;
         serviceDeskManager.OnCustomerText     -= HandleCustomerText;
         serviceDeskManager.OnCustomerOpening  -= HandleCustomerOpening;
         serviceDeskManager.OnCustomerCleared  -= HandleCustomerCleared;
     }
 
-    private void HandlePlayerText(string message)
+    /*private void HandlePlayerText(string message)
     {
         if (playerText != null) playerText.text = message;
-    }
+    }*/
 
     private void HandleCustomerText(string message)
     {
@@ -57,7 +57,7 @@ public class UIConversationText : MonoBehaviour
 
     private void ClearAll()
     {
-        if (playerText != null)   playerText.text   = string.Empty;
+        //if (playerText != null)   playerText.text   = string.Empty;
         if (customerText != null) customerText.text = string.Empty;
     }
 }

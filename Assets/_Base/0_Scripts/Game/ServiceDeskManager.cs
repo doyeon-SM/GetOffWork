@@ -291,7 +291,7 @@ public void OnClickCallNextCustomer()
     }
 
     // ── 명령 실행 ─────────────────────────────────────────────────────────
-    public void ExecuteCommand(string commandId, string payload = null)
+public void ExecuteCommand(string commandId, string payload = null)
     {
         if (!isWorking || deskState != DeskState.ServingCustomer) return;
         if (currentManual == null || currentComplaint == null)    return;
@@ -314,7 +314,10 @@ public void OnClickCallNextCustomer()
                 Log($"{TAG} Customer: {result.CustomerMessage}");
         }
 
-        if (result.IsCompleted) FinishCurrentCustomer();
+        // result.IsCompleted(completeNow=true)인 경우만 즉시 종료
+        // M_FullID는 completeNow=false를 반환하므로 호출 버튼에서 종료
+        if (result.IsCompleted)
+            FinishCurrentCustomer();
     }
 
     private void DispatchUIResult(ResponseResult result)

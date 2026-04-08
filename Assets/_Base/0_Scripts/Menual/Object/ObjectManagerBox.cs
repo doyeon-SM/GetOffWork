@@ -169,24 +169,55 @@ public class ObjectManagerBox : MonoBehaviour
     /// 모두 반납됐으면 true + Destroy, 미반납 있으면 false + 대사 출력.
     /// spawnedItems가 비어있으면 true.
     /// </summary>
-    public bool TryFinishAndReturn()
+public bool TryFinishAndReturn()
     {
+        // 제출된 아이템이 없으면 통과
         if (spawnedItems.Count == 0)
             return true;
 
-        var notReturned = new List<DeskObjectItem>();
-        foreach (var item in spawnedItems)
-            if (item != null && !item.IsInTakeZone)
-                notReturned.Add(item);
-
-        if (notReturned.Count > 0)
+        // 메뉴얼의 RequiredReturnItems 목록을 읽어서
+        // 해당 종류의 아이템이 모두 TakeZone 안에 있는지 확인
+        var manual = serviceDeskManager?.CurrentManual;
+        if (manual != null && manual.RequiredReturnItems.Count > 0)
         {
-            string line = GetRandomLine(returnReminderLines, "신분증 돌려주세요.");
-            Log($"{TAG} 반납 미완료 {notReturned.Count}개 → {line}");
-            serviceDeskManager?.BroadcastCustomerText(line);
-            return false;
+            foreach (var requiredType in manual.RequiredReturnItems)
+            {
+                bool found = false;
+                foreach (var item in spawnedItems)
+                {
+                    if (item == null) continue;
+                    if (item.ObjectType == requiredType && item.IsInTakeZone)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    string line = GetRandomLine(returnReminderLines, "신분증 돌려주세요.");
+                    Log($"{TAG} 반납 미완료 ({requiredType}) → {line}");
+                    serviceDeskManager?.BroadcastCustomerText(line);
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            // RequiredReturnItems가 없으면 전체 아이템이 TakeZone에 있는지 확인 (fallback)
+            foreach (var item in spawnedItems)
+            {
+                if (item != null && !item.IsInTakeZone)
+                {
+                    string line = GetRandomLine(returnReminderLines, "신분증 돌려주세요.");
+                    Log($"{TAG} 반납 미완료 → {line}");
+                    serviceDeskManager?.BroadcastCustomerText(line);
+                    return false;
+                }
+            }
         }
 
+        // 모두 반납 완료 → 삭제
         foreach (var item in spawnedItems)
             if (item != null) Destroy(item.gameObject);
 

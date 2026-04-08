@@ -36,7 +36,14 @@ public abstract class DeskObjectItem : MonoBehaviour
     private Vector3 mouseDownWorldPos;
     private float   originalZ;
 
-    /// <summary>현재 이 오브젝트가 TakeObjectZone 안에 있는가</summary>
+    [Header("오브젝트 종류")]
+    [SerializeField] private DeskObjectType objectType = DeskObjectType.None;
+
+    /// <summary>이 오브젝트의 종류 (반납 검사에 사용)</summary>
+    public DeskObjectType ObjectType => objectType;
+
+    
+/// <summary>현재 이 오브젝트가 TakeObjectZone 안에 있는가</summary>
     public bool IsInTakeZone => takeZone != null && takeZone.Contains(transform.position);
 
     // ── 초기화 ───────────────────────────────────────────────────────────
@@ -115,23 +122,31 @@ public abstract class DeskObjectItem : MonoBehaviour
         transform.position = targetPos;
     }
 
-    private void OnMouseUp()
+private void OnMouseUp()
     {
         isBeingDragged = false;
 
         if (dragStarted)
         {
-            // 드롭 — Z를 원래 깊이로 복구
+            // 드롭 — TakeZone 위이면 TakeZone의 Z 깊이에 맞추고,
+            // 그 외에는 originalZ 복구
             Vector3 pos = transform.position;
-            pos.z = originalZ;
+            if (IsInTakeZone && takeZone != null)
+            {
+                // TakeZone 오브젝트보다 확실히 앞(낮은 Z)으로 배치해 가려짐 방지
+                pos.z = takeZone.transform.position.z - 1f;
+            }
+            else
+            {
+                pos.z = originalZ;
+            }
             transform.position = pos;
 
-            Log($"{TAG} 드롭: {gameObject.name} / TakeZone={IsInTakeZone}");
+            Log($"{TAG} 드롭: {gameObject.name} / TakeZone={IsInTakeZone} / Z={pos.z}");
             OnItemDropped();
         }
         else
         {
-            // 클릭 판정
             Log($"{TAG} 클릭: {gameObject.name}");
             OnItemClicked();
         }

@@ -5,95 +5,90 @@ using UnityEngine;
 /// 모든 메뉴얼의 기반 클래스.
 ///
 /// 구조:
-///   RequiredSteps (List)  : 이 메뉴얼이 요구하는 절차를 순서대로 정의.
-///                           하위 클래스가 BuildSteps()에서 채운다.
-///   ActionQueue   (Queue) : 민원인 입장 후 플레이어가 실제로 수행한 행동을 기록.
-///                           Execute()가 유효한 결과를 반환할 때만 쌓인다.
-///   commandList           : UI 버튼에 표시할 선택지 (변경 없음).
+///   RequiredSteps       : 절차 정의 (List) — 평가에 사용
+///   ActionQueue         : 플레이어 행동 기록 (Queue)
+///   RequiredReturnItems : 반납 필수 오브젝트 목록 (DeskObjectType 열거)
+///                         하위 클래스가 BuildReturnItems()에서 채운다.
+///                         ObjectManagerBox가 이 목록을 읽어 반납 검사를 수행한다.
 ///
-/// 평가는 Manual 자체에서 하지 않는다. ServiceDeskManager가 민원 종료 시
-/// ManualEvaluator.Evaluate(RequiredSteps, ActionQueue)를 호출한다.
+/// 종료 흐름:
+///   발급/전송/반려 완료 → IsDelivered = true (민원 처리 완료, 아직 종료 아님)
+///   호출 버튼 클릭 → ObjectManagerBox.TryFinishAndReturn() 검사
+///   → 반납 완료 → ServiceDeskManager.FinishCurrentCustomer() → 정산 → OnCustomerCleared
 /// </summary>
 public abstract class Manual
 {
-    // ── UI 버튼 목록 (기존 유지) ──────────────────────────────────────────
+    // ── UI 버튼 목록 ─────────────────────────────────────────────────────
     protected List<QuestionData> commandList = new();
     public IReadOnlyList<QuestionData> CommandList => commandList;
 
-    // ── 메뉴얼 절차 정의 (List) ───────────────────────────────────────────
+    // ── 절차 정의 (List) ──────────────────────────────────────────────────
     protected List<ManualStepEntry> requiredSteps = new();
     public IReadOnlyList<ManualStepEntry> RequiredSteps => requiredSteps;
 
-    // ── 플레이어 행동 기록 (Queue) ────────────────────────────────────────
+    // ── 행동 기록 (Queue) ─────────────────────────────────────────────────
     private Queue<PlayerActionRecord> actionQueue = new();
     public IReadOnlyCollection<PlayerActionRecord> ActionQueue => actionQueue;
 
+    // ── 반납 필수 오브젝트 목록 ───────────────────────────────────────────
+    // ObjectManagerBox가 이 목록을 읽어 "반납해야 할 오브젝트가 모두 있는가" 를 판정한다.
+    protected List<DeskObjectType> requiredReturnItems = new();
+    public IReadOnlyList<DeskObjectType> RequiredReturnItems => requiredReturnItems;
+
     // ── 상태 ─────────────────────────────────────────────────────────────
     protected ComplaintContext context;
-    protected bool isCompleted;
+    protected bool isCompleted;   // 발급/전송/반려 완료 여부
     private float sessionStartTime;
 
+    /// <summary>발급/전송/반려가 완료됐는가 (반납 완료 여부와 무관)</summary>
     public bool IsCompleted => isCompleted;
 
     // ── 초기화 ───────────────────────────────────────────────────────────
     public virtual void Initialize(ComplaintContext newContext)
     {
-        context          = newContext;
-        isCompleted      = false;
-        sessionStartTime = Time.time;
+        context           = newContext;
+        isCompleted       = false;
+        sessionStartTime  = Time.time;
 
         commandList.Clear();
         requiredSteps.Clear();
         actionQueue.Clear();
+        requiredReturnItems.Clear();
 
         BuildCommandList();
         BuildSteps();
+        BuildReturnItems();
     }
 
-    /// <summary>UI 버튼 목록을 채운다 (기존과 동일한 역할)</summary>
     protected abstract void BuildCommandList();
+    protected abstract void BuildSteps();
 
     /// <summary>
-    /// RequiredSteps를 순서대로 채운다.
-    /// 각 항목에 OmissionPenalty / OrderPenalty / CompletionReward를 정의한다.
+    /// 이 메뉴얼에서 반납해야 할 오브젝트 종류를 등록한다.
+    /// 예: requiredReturnItems.Add(DeskObjectType.IDCard);
     /// </summary>
-    protected abstract void BuildSteps();
+    protected abstract void BuildReturnItems();
 
     // ── 실행 ─────────────────────────────────────────────────────────────
     public abstract ResponseResult Execute(string commandId, string payload = null);
 
-    /// <summary>
-    /// 행동 결과가 유효(IsValid == true)할 때 Queue에 기록한다.
-    /// Execute 구현 내부에서 호출한다.
-    /// </summary>
     protected void RecordAction(string commandId)
     {
         float elapsed = Time.time - sessionStartTime;
         actionQueue.Enqueue(new PlayerActionRecord(commandId, elapsed));
     }
 
-    // ── 헬퍼: 순서/조건 위반 ─────────────────────────────────────────────
-    /// <summary>
-    /// 선행 조건이 충족되지 않아 행동이 불가할 때 반환.
-    /// Queue에 기록하지 않는다.
-    /// </summary>
-    protected ResponseResult WrongOrder(string playerMessage, string customerMessage = "")
+    // ── 헬퍼 ─────────────────────────────────────────────────────────────
+    protected ResponseResult WrongOrder(string customerMessage = "")
     {
         return ResponseResult.Create(
             isValid: false,
             isCompleted: false,
-            playerMessage: playerMessage,
             customerMessage: customerMessage
         );
     }
 
-    // ── 헬퍼: 정상 응답 ──────────────────────────────────────────────────
-    /// <summary>
-    /// 행동이 정상 처리됐을 때 반환.
-    /// Queue 기록은 각 Handle 메서드에서 RecordAction으로 직접 한다.
-    /// </summary>
     protected ResponseResult CorrectResponse(
-        string playerMessage,
         string customerMessage          = "",
         bool   completeNow              = false,
         bool   shouldSpawnIdCard        = false,
@@ -107,7 +102,6 @@ public abstract class Manual
         return ResponseResult.Create(
             isValid: true,
             isCompleted: completeNow,
-            playerMessage: playerMessage,
             customerMessage: customerMessage,
             shouldSpawnIdCard: shouldSpawnIdCard,
             shouldOpenIdCardDetail: shouldOpenIdCardDetail,

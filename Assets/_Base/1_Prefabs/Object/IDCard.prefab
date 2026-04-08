@@ -186,4 +186,4 @@ MonoBehaviour:
   dragThreshold: 0.1
   dragZOffset: -5
   showDebugLog: 1
-  cardView: {fileID: 0}
+  objectType: 1
