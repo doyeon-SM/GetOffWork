@@ -19,7 +19,11 @@ public class ServiceDeskManager : MonoBehaviour
     [Header("주민 데이터")]
     [SerializeField] private UserRecordDatabase userDatabase;
 
-    [Header("입장 대사 데이터")]
+        [Header("오브젝트 관리 박스")]
+    [SerializeField] private ObjectManagerBox objectManagerBox;
+
+    
+[Header("입장 대사 데이터")]
     [SerializeField] private ComplaintOpeningLineTable openingLineTable;
 
     [Header("다음 손님 대기 시간")]
@@ -108,6 +112,16 @@ public class ServiceDeskManager : MonoBehaviour
         return userDatabase.TryGetRecord(recordId, out record);
     }
 
+/// <summary>
+    /// 외부(ObjectManagerBox 등)에서 민원인 대사를 직접 방송할 때 사용한다.
+    /// </summary>
+    public void BroadcastCustomerText(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+            OnCustomerText?.Invoke(message);
+    }
+
+
     // ── 근무 흐름 ─────────────────────────────────────────────────────────
     public void BeginWorkPhase()
     {
@@ -168,7 +182,21 @@ public class ServiceDeskManager : MonoBehaviour
     }
 
     // ── 손님 호출 ─────────────────────────────────────────────────────────
-    public void OnClickCallNextCustomer() => CallNextCustomer();
+public void OnClickCallNextCustomer()
+    {
+        // 반납 검사: 미반납 오브젝트가 있으면 종료 방어
+        if (objectManagerBox != null && !objectManagerBox.TryFinishAndReturn())
+        {
+            Log($"{TAG} 반납 미완료 — 호출 방어");
+            return;
+        }
+
+        // 현재 민원 종료 (활성 민원이 있으면)
+        if (HasActiveCustomer)
+            FinishCurrentCustomer();
+
+        CallNextCustomer();
+    }
 
     public bool CallNextCustomer()
     {
