@@ -17,6 +17,12 @@ public class SoundSettingsManager : MonoBehaviour
     private const string BGM_KEY = "Sound_BGM";
     private const string SFX_KEY = "Sound_SFX";
 
+    [Header("AudioSource (Optional)")]
+    [Tooltip("비어 있으면 Awake에서 자동 생성한다. BGM 전용 AudioSource.")]
+    [SerializeField] private AudioSource bgmSource;
+    [Tooltip("비어 있으면 Awake에서 자동 생성한다. SFX 전용 AudioSource.")]
+    [SerializeField] private AudioSource sfxSource;
+
     // 0~1 범위로 관리
     public float MasterVolume { get; private set; } = 0.5f; // 초기값 50%
     public float BgmVolume { get; private set; } = 1.0f;
@@ -35,6 +41,7 @@ public class SoundSettingsManager : MonoBehaviour
 
         LoadSettings();
         ApplyAllVolumes();
+        EnsureAudioSources();
     }
 
     public void SetMasterVolume(float value)
@@ -109,5 +116,74 @@ public class SoundSettingsManager : MonoBehaviour
 
         ApplyAllVolumes();
         SaveSettings();
+    }
+    public void PlayBgm(AudioClip bgmClip, float volume = 1f, bool loop = true)
+    {
+        if (bgmClip == null)
+        {
+            Debug.LogWarning("[SoundManager] PlayBgm 실패: bgmClip이 null입니다.");
+            return;
+        }
+
+        if (bgmSource == null)
+        {
+            Debug.LogWarning("[SoundManager] PlayBgm 실패: bgmSource가 없습니다.");
+            return;
+        }
+
+        bgmSource.clip = bgmClip;
+        bgmSource.loop = loop;
+        //bgmSource.volume = Mathf.Clamp01(volume);
+        bgmSource.volume = BgmVolume;
+        bgmSource.Play();
+    }
+    public void StopBgm()
+    {
+        if (bgmSource == null)
+        {
+            Debug.LogWarning("[SoundManager] StopBgm 실패: bgmSource가 없습니다.");
+            return;
+        }
+
+        bgmSource.Stop();
+    }
+    public void PlaySfxOneShot(AudioClip sfxClip)
+    {
+        if (sfxClip == null)
+        {
+            Debug.LogWarning("[SoundManager] PlaySfxOneShot 실패: sfxClip이 null입니다.");
+            return;
+        }
+
+        if (sfxSource == null)
+        {
+            Debug.LogWarning("[SoundManager] PlaySfxOneShot 실패: sfxSource가 없습니다.");
+            return;
+        }
+
+        sfxSource.PlayOneShot(sfxClip, Mathf.Clamp01(SfxVolume));
+    }
+    /// <summary>
+    /// 인스펙터에서 AudioSource를 연결하지 않았을 때 자동 생성한다.
+    /// "필수 컴포넌트 누락"으로 막히지 않게 하는 방어 코드다.
+    /// </summary>
+    private void EnsureAudioSources()
+    {
+        if (bgmSource == null)
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        if (sfxSource == null)
+        {
+            sfxSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        // 역할 분리를 위해 기본값을 명시적으로 지정한다.
+        bgmSource.playOnAwake = false;
+        bgmSource.loop = true;
+
+        sfxSource.playOnAwake = false;
+        sfxSource.loop = false;
     }
 }

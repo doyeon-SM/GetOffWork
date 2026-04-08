@@ -6,6 +6,8 @@ public class CallDisplayObject : ClickableWorldObject
     [Header("¿¬°á")]
     [SerializeField] private ServiceDeskManager serviceDeskManager;
 
+    [SerializeField] private AudioClip CallSFX;
+
 
     protected override void Awake()
     {
@@ -24,6 +26,8 @@ public class CallDisplayObject : ClickableWorldObject
             return;
 
         bool success = serviceDeskManager.CallNextCustomer();
+        if (success && SoundSettingsManager.Instance != null)
+            SoundSettingsManager.Instance.PlaySfxOneShot(CallSFX);
 
         if (showDebugLog)
         {
