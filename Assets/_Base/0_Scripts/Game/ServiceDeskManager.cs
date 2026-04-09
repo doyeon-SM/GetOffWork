@@ -184,16 +184,24 @@ public class ServiceDeskManager : MonoBehaviour
     // ── 손님 호출 ─────────────────────────────────────────────────────────
 public void OnClickCallNextCustomer()
     {
-        // 반납 검사: 미반납 오브젝트가 있으면 종료 방어
-        if (objectManagerBox != null && !objectManagerBox.TryFinishAndReturn())
-        {
-            Log($"{TAG} 반납 미완료 — 호출 방어");
-            return;
-        }
+        if (!isWorking) return;
 
-        // 현재 민원 종료 (활성 민원이 있으면)
-        if (HasActiveCustomer)
-            FinishCurrentCustomer();
+        // ── 필수 반납 검사 + 반려 여부 판정 ───────────────────────────────
+        if (objectManagerBox != null)
+        {
+            bool ok = objectManagerBox.TryFinishAndReturn(out bool isRejection);
+            if (!ok) return; // 반납 미완료 → 호출 방어
+
+            if (HasActiveCustomer)
+            {
+                FinishCurrentCustomer(isRejection: isRejection);
+            }
+        }
+        else
+        {
+            if (HasActiveCustomer)
+                FinishCurrentCustomer();
+        }
 
         CallNextCustomer();
     }
@@ -346,37 +354,81 @@ public void ExecuteCommand(string commandId, string payload = null)
     }
 
     // ── 민원 종료 & 정산 ──────────────────────────────────────────────────
-    private void FinishCurrentCustomer(bool patienceExpired = false)
+private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
     {
-        ResolvePlayerBase();
+        if (currentManual == null || currentComplaint == null) return;
+        if (playerBase == null) return;
 
-        if (patienceExpired && playerBase != null)
+        bool isAddressMismatch = currentComplaint.isAddressMismatch;
+        bool isCompleted       = currentManual.IsCompleted;
+
+        // ── 반려 결과 유형 판정 ────────────────────────────────────────────────
+        //
+        // 정상 반려   : isRejection==true  && isAddressMismatch==true
+        // 비정상 반려 : isRejection==true  && isAddressMismatch==false
+        //                (주소일치인데 반려 / 인쇄 완료 후 반려 시도)
+        // 반려사항 놓침 : isRejection==false && isAddressMismatch==true  && isCompleted==true
+        //                (주소불일치인데 그냥 인쇄/발송 완료)
+
+        bool isValidRejection   = isRejection && isAddressMismatch;    // 정상 반려
+        bool isInvalidRejection = isRejection && !isAddressMismatch;   // 비정상 반려
+        bool isMissedRejection  = !isRejection && isAddressMismatch && isCompleted; // 반려사항 놓침
+
+        // ── 인내심 소진 패널티 ────────────────────────────────────────────────
+        if (patienceExpired)
+        {
+            playerBase.AddStat(Stat.Stress, 2);
+            Log($"{TAG_EVAL} 인내심 소진 → Stress+2");
+        }
+
+        // ── 정상 반려 ──────────────────────────────────────────────────────
+        if (isValidRejection)
+        {
+            int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
+            playerBase.AddPerformance(perfReward);
+            playerBase.AddStat(Stat.Stress, 1);
+            Log($"{TAG_EVAL} 정상 반려(주소불일치) → Performance+{perfReward}, Stress+1");
+        }
+
+        // ── 비정상 반려 ────────────────────────────────────────────────────
+        if (isInvalidRejection)
         {
             playerBase.AddPerformance(-2);
-            playerBase.AddStat(Stat.Stress, 2);
+            playerBase.AddStat(Stat.Reliability, -1);
+            Log($"{TAG_EVAL} 비정상 반려(주소 일치) → Performance-2, Reliability-1");
         }
 
-        if (currentManual != null)
+        // ── 반려사항 놓침 ───────────────────────────────────────────────────
+        if (isMissedRejection)
         {
-            var eval = ManualEvaluator.Evaluate(
-                currentManual.RequiredSteps,
-                currentManual.ActionQueue
-            );
-
-            Log($"{TAG_EVAL} {eval}");
-
-            if (playerBase != null)
-            {
-                if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
-                if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);
-                if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,      eval.StressDelta);
-                if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta);
-                if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
-            }
+            playerBase.AddPerformance(-2);
+            playerBase.AddStat(Stat.Reliability, -1);
+            Log($"{TAG_EVAL} 반려사항 놓침(주소불일치인데 인쇄/발송 완료) → Performance-2, Reliability-1");
         }
 
-        ClearCurrentCustomerInternal();
-        deskState = DeskState.Idle;
+        // ── 메뉴얼 절차 평가 (ManualEvaluator) ─────────────────────────────
+        // isAddressMismatch==true: AskPrintOrMobile/PrintDocument/SendMobile 패널티 자동 제외
+        var eval = ManualEvaluator.Evaluate(
+            currentManual.RequiredSteps,
+            currentManual.ActionQueue,
+            isAddressMismatch: isAddressMismatch
+        );
+
+        Log($"{TAG_EVAL} 평가 — Perf:{eval.PerformanceDelta} Kind:{eval.KindnessDelta} Stress:{eval.StressDelta} Rel:{eval.ReliabilityDelta}");
+
+        if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
+        if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,     eval.KindnessDelta);
+        if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,       eval.StressDelta);
+        if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability,  eval.ReliabilityDelta);
+        if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
+
+        // ── 필수 반납 목록 초기화 + 클린업 ──────────────────────────────────
+        currentManual.ClearRequiredReturnItems();
+
+        Log($"{TAG} 민원 종료 — {currentComplaint.complaintType} / rejected={currentComplaint.rejected}");
+        currentManual    = null;
+        currentComplaint = null;
+        deskState        = DeskState.Idle;
         OnCustomerCleared?.Invoke();
     }
 

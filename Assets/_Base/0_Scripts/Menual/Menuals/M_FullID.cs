@@ -3,14 +3,25 @@ using System.Collections.Generic;
 /// <summary>
 /// 주민등록등본/초본 발급 메뉴얼 (FullID).
 ///
-/// 대사 정책:
-///   - playerMessage 없음 — 플레이어 행동은 UI 질문지 버튼으로 표현
-///   - customerMessage 만 출력 (민원인의 대답)
-///   - 같은 절차 반복은 불필요한 행동으로 Queue에 중복 기록되어 패널티 적용
+/// 절차 분류:
+///   (필수+순서) AskSubmitId         : 신분증 제시 요청
+///   (순서)      SearchRecordByInput  : 주민번호 입력 조회 (선수조건 없음)
+///   (필수)      AskPrintOrMobile    : 수령 방법 질문 (순서 강제 없음)
+///   (필수+순서) PrintDocument       : 서류 출력 (Print 선택 시)
+///   (필수+순서) SendMobile          : 전자 발송 (Mobile 선택 시)
 ///
-/// AskPrintOrMobile 선행 조건:
-///   - ID 조회 없이도 질문 가능 (searchedByInputId 조건 제거)
-///   - 단, 이미 deliveryAsked == true면 중복 질문 → 불필요 절차 패널티
+/// 패널티 기준:
+///   - 필수 누락    → kindness -1  (omissionPenalty)
+///   - 순서 위반    → reliability -1 (orderPenalty)
+///   - 필수+순서    → 둘 다 적용
+///
+/// isAddressMismatch == true 시 eval 제외:
+///   - AskPrintOrMobile, PrintDocument, SendMobile 누락 패널티 제외
+///
+/// 필수 반납 물품 동적 관리:
+///   - BuildReturnItems()에서 미리 추가하지 않음
+///   - AskSubmitId → 신분증 스폰 시 AddRequiredReturnItem(IDCard) 호출
+///   - 응대 종료 시 ClearRequiredReturnItems() 호출 (ServiceDeskManager에서)
 /// </summary>
 public class M_FullID : Manual
 {
@@ -26,10 +37,8 @@ public class M_FullID : Manual
     {
         commandList = new List<QuestionData>
         {
-            new QuestionData(ManualCommandIds.AskSubmitId,           "신분증 제시 요청"),
-            new QuestionData(ManualCommandIds.AskPrintOrMobile,      "인쇄/전자 전달 질문"),
-            new QuestionData(ManualCommandIds.RejectAddressMismatch, "반려",
-                             QuestionData.CommandVisualType.ActionButton),
+            new QuestionData(ManualCommandIds.AskSubmitId,      "신분증 제시 요청"),
+            new QuestionData(ManualCommandIds.AskPrintOrMobile, "인쇄/전자 전달 질문"),
         };
     }
 
@@ -40,45 +49,50 @@ public class M_FullID : Manual
 
         requiredSteps = new List<ManualStepEntry>
         {
+            // ① 신분증 제시 요청 (필수+순서)
+            //   누락 → kindness-1 / 순서위반 → reliability-1
             new ManualStepEntry(
                 commandId:        ManualCommandIds.AskSubmitId,
                 isOrdered:        true,
-                omissionPenalty:  new StepPenalty(reliability: 1, stress: 1),
-                orderPenalty:     new StepPenalty(kindness: 1),
-                completionReward: default
-            ),
-            new ManualStepEntry(
-                commandId:        ManualCommandIds.OpenIdCardDetail,
-                isOrdered:        true,
-                omissionPenalty:  new StepPenalty(reliability: 2),
+                omissionPenalty:  new StepPenalty(kindness: 1),
                 orderPenalty:     new StepPenalty(reliability: 1),
                 completionReward: default
             ),
+            // ② 주민번호 입력 조회 (순서 — 선수조건 없음)
+            //   누락 → reliability-1 / 순서위반 → reliability-1
             new ManualStepEntry(
                 commandId:        ManualCommandIds.SearchRecordByInput,
                 isOrdered:        true,
-                omissionPenalty:  new StepPenalty(reliability: 2, performance: 1),
+                omissionPenalty:  new StepPenalty(reliability: 1),
                 orderPenalty:     new StepPenalty(reliability: 1),
                 completionReward: default
             ),
+            // ③ 수령 방법 질문 (필수 — 순서 강제 없음)
+            //   누락 → kindness-1 / isAddressMismatch==true 시 eval에서 제외
             new ManualStepEntry(
                 commandId:        ManualCommandIds.AskPrintOrMobile,
-                isOrdered:        true,
+                isOrdered:        false,
                 omissionPenalty:  new StepPenalty(kindness: 1),
-                orderPenalty:     new StepPenalty(kindness: 1),
+                orderPenalty:     default,
                 completionReward: default
             ),
+            // ④-A 서류 출력 (필수+순서)
+            //   누락 → kindness-1 / 순서위반 → reliability-1
+            //   isAddressMismatch==true 시 eval에서 제외
             new ManualStepEntry(
                 commandId:        ManualCommandIds.PrintDocument,
                 isOrdered:        true,
-                omissionPenalty:  default,
+                omissionPenalty:  new StepPenalty(kindness: 1),
                 orderPenalty:     new StepPenalty(reliability: 1),
                 completionReward: new StepReward(performance: perfReward, reliability: 1)
             ),
+            // ④-B 전자 발송 (필수+순서)
+            //   누락 → kindness-1 / 순서위반 → reliability-1
+            //   isAddressMismatch==true 시 eval에서 제외
             new ManualStepEntry(
                 commandId:        ManualCommandIds.SendMobile,
                 isOrdered:        true,
-                omissionPenalty:  default,
+                omissionPenalty:  new StepPenalty(kindness: 1),
                 orderPenalty:     new StepPenalty(reliability: 1),
                 completionReward: new StepReward(performance: perfReward, reliability: 1)
             ),
@@ -86,10 +100,8 @@ public class M_FullID : Manual
     }
 
     // ── 반납 필수 목록 ────────────────────────────────────────────────────
-    protected override void BuildReturnItems()
-    {
-        requiredReturnItems.Add(DeskObjectType.IDCard);
-    }
+    // 미리 채우지 않음 — AskSubmitId 실행 후 신분증 스폰 시 동적으로 추가
+    protected override void BuildReturnItems() { }
 
     // ── Execute ──────────────────────────────────────────────────────────
     public override ResponseResult Execute(string commandId, string payload = null)
@@ -109,7 +121,6 @@ public class M_FullID : Manual
             case ManualCommandIds.SelectMobile:          return HandleSelectMobile();
             case ManualCommandIds.PrintDocument:         return HandlePrintDocument();
             case ManualCommandIds.SendMobile:            return HandleSendMobile();
-            case ManualCommandIds.RejectAddressMismatch: return HandleRejectAddressMismatch();
             default:                                     return WrongOrder("알 수 없는 명령입니다.");
         }
     }
@@ -118,75 +129,66 @@ public class M_FullID : Manual
 
     private ResponseResult HandleAskSubmitId()
     {
-        // 이미 신분증이 제출된 상태라면 중복 — Queue 기록 없이 민원인 대사만
         if (context.idCardSpawned)
             return WrongOrder(customerMessage: "이미 제출했습니다.");
 
         RecordAction(ManualCommandIds.AskSubmitId);
         return CorrectResponse(
-            customerMessage:  "네, 여기 있습니다.",
+            customerMessage:   "네, 여기 있습니다.",
             shouldSpawnIdCard: true
         );
     }
 
     // 시스템 내부 호출 — RecordAction 없음
+    // 신분증이 실제로 스폰될 때 필수 반납 목록에 동적 추가
     private ResponseResult HandleSpawnIdCard()
     {
         context.idCardSpawned = true;
+        // 민원인이 직접 제출하는 물품 → 필수 반납 목록에 추가
+        AddRequiredReturnItem(DeskObjectType.IDCard);
         return CorrectResponse();
     }
 
+    // 신분증 열람 — RequiredSteps 제외, RecordAction 없음 (불필요절차 카운트 방지)
     private ResponseResult HandleOpenIdCardDetail()
     {
         if (!context.idCardSpawned)
             return WrongOrder(customerMessage: "신분증을 아직 드리지 않았는데요.");
 
-        RecordAction(ManualCommandIds.OpenIdCardDetail);
         context.idCardInspected = true;
-        return CorrectResponse(
-            shouldOpenIdCardDetail: true
-        );
+        return CorrectResponse(shouldOpenIdCardDetail: true);
     }
 
     private ResponseResult HandleOpenMonitor()
     {
-        return CorrectResponse(
-            shouldOpenMonitor: true
-        );
+        return CorrectResponse(shouldOpenMonitor: true);
     }
 
     private ResponseResult HandleSearchRecordByInput(string inputId)
     {
-        if (!context.idCardSpawned)
-            return WrongOrder(customerMessage: "신분증을 아직 드리지 않았는데요.");
-
-        //if (string.IsNullOrWhiteSpace(inputId))
-        //    return WrongOrder(playerMessage: "조회할 ID를 입력해야 합니다.");
-
+        // 선수조건 없음: 신분증 없이도 조회 가능
         context.searchedInputId   = inputId;
         context.searchedByInputId = true;
 
+        // 주소불일치 여부 판정 — SearchRecordByInput 시점에 context에 저장
+        if (userDatabase.TryGetRecord(inputId, out UserRecordData record))
+            context.isAddressMismatch = record.hasMovedAddress;
+        else
+            context.isAddressMismatch = false;
+
         RecordAction(ManualCommandIds.SearchRecordByInput);
 
-        if (!userDatabase.TryGetRecord(inputId, out _))
-            return CorrectResponse(
-                customerMessage:         "",
-                shouldRefreshMonitorData: true
-            );
-
         return CorrectResponse(
-            customerMessage:         "",
+            customerMessage:          "",
             shouldRefreshMonitorData: true
         );
     }
 
     private ResponseResult HandleAskPrintOrMobile()
     {
-        // 이미 질문한 경우 — 중복 질문은 불필요한 절차
-        // Queue에 다시 기록되므로 평가 시 패널티 적용
+        // 중복 질문 — Queue에 다시 쌓아 불필요 절차로 평가
         if (context.deliveryAsked)
         {
-            // 재질문은 허용하되 Queue에 다시 쌓아 불필요 절차로 평가
             RecordAction(ManualCommandIds.AskPrintOrMobile);
             string repeat = context.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile
                 ? "전자 발송이라고 말씀드렸는데요."
@@ -194,7 +196,6 @@ public class M_FullID : Manual
             return CorrectResponse(customerMessage: repeat);
         }
 
-        // ID 조회 없이도 질문 가능 (searchedByInputId 조건 제거)
         RecordAction(ManualCommandIds.AskPrintOrMobile);
         context.deliveryAsked = true;
 
@@ -252,22 +253,4 @@ public class M_FullID : Manual
             completeNow:     false
         );
     }
-
-    private ResponseResult HandleRejectAddressMismatch()
-    {
-        if (!context.searchedByInputId)
-            return WrongOrder(customerMessage: "");
-
-        RecordAction(ManualCommandIds.RejectAddressMismatch);
-        context.rejected  = true;
-        context.completed = true;
-        isCompleted       = true;
-
-        return CorrectResponse(
-            customerMessage: "알겠습니다.",
-            completeNow:     false
-        );
-    }
-
-    public override string GetManualTitle() => "FULLID 등본/초본 발급 메뉴얼";
 }

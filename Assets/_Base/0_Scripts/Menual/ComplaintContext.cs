@@ -29,7 +29,8 @@ public class ComplaintContext
     public string searchedInputId;   // 조회에 사용한 ID 문자열
     public bool   deliveryAsked;     // 전달 방식(인쇄/전자)을 물어봤는가
     public bool   completed;         // 민원이 정상 종료됐는가
-    public bool   rejected;          // 반려됐는가
+public bool   rejected;          // 반려됐는가
+    public bool   isAddressMismatch; // 반려 시 주소 불일치가 실제로 존재하는가 (판정 기준)
 
     // ── 대화 임시 보관 ────────────────────────────────────────────────────
     [Header("마지막 대사")]

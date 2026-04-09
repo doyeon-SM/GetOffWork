@@ -69,6 +69,26 @@ public abstract class Manual
     /// </summary>
     protected abstract void BuildReturnItems();
 
+    /// <summary>
+    /// 민원인이 실제로 물품을 제출할 때 호출.
+    /// 동적으로 필수 반납 목록에 추가한다.
+    /// </summary>
+    public void AddRequiredReturnItem(DeskObjectType objectType)
+    {
+        if (!requiredReturnItems.Contains(objectType))
+            requiredReturnItems.Add(objectType);
+    }
+
+    /// <summary>
+    /// 응대 종료 시 필수 반납 목록 초기화.
+    /// ServiceDeskManager.FinishCurrentCustomer()에서 호출.
+    /// </summary>
+    public void ClearRequiredReturnItems()
+    {
+        requiredReturnItems.Clear();
+    }
+
+
     // ── 실행 ─────────────────────────────────────────────────────────────
     public abstract ResponseResult Execute(string commandId, string payload = null);
 
