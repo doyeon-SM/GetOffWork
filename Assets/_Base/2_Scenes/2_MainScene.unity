@@ -837,7 +837,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CallDisplayObject
   displayName: Call Dispaly
-  showDebugLog: 1
+  showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
   serviceDeskManager: {fileID: 2056565261}
   callSFX: {fileID: 8300000, guid: e278b9a46cd11674fac9bf8d58b15f51, type: 3}
@@ -2991,7 +2991,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
   m_Value: -0.23387097
-  m_Size: 0.999982
+  m_Size: 0.99999213
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4998,7 +4998,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestionObject
   displayName: Postit(Question)
-  showDebugLog: 1
+  showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
   manualPanel: {fileID: 1468743514}
 --- !u!65 &2025601407
@@ -5624,7 +5624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonitorObject
   displayName: Monitor
-  showDebugLog: 1
+  showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
   monitorView: {fileID: 1172579950}
 --- !u!65 &2090212721
@@ -5775,7 +5775,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrintorObject
   displayName: Printer
-  showDebugLog: 1
+  showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
 --- !u!1 &2146362578
 GameObject:
