@@ -15,7 +15,6 @@ public static class ManualCommandIds
     public const string PrintDocument         = "print_document";
     public const string SendMobile            = "send_mobile";
     public const string MobileNumberByInput = "mobile_number_by_input";
-    public const string MobileDocument = "mobile_document";
     public const string RejectAddressMismatch = "reject_address_mismatch";
 
     // ── 반납 트리거 ──────────────────────────────────────────────────────
