@@ -8,11 +8,14 @@ public class ComplaintContext
     public enum ApplicantType  { Self, Proxy }
     public enum DeliveryType   { None, Print, Mobile }
 
+    public enum NuisanceType { None, Rudely }
+
     // ── 민원 기본 정보 ────────────────────────────────────────────────────
     [Header("민원 기본 정보")]
     public ComplaintType complaintType        = ComplaintType.FullID;
     public ApplicantType applicantType        = ApplicantType.Self;
     public DeliveryType  requestedDeliveryType = DeliveryType.None;
+    public NuisanceType nuisanceType = NuisanceType.None;
 
     [Header("민원인 레코드 정보")]
     public string applicantRecordId; // 창구에 온 사람

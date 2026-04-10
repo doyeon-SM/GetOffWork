@@ -16,21 +16,21 @@ public class ServiceDeskManager : MonoBehaviour
     [Header("플레이어")]
     [SerializeField] private PlayerBase playerBase;
 
-    [Header("주민 데이터")]
-    [SerializeField] private UserRecordDatabase userDatabase;
+    //[Header("주민 데이터")]
+    //[SerializeField] private UserRecordDatabase userDatabase;
 
-        [Header("오브젝트 관리 박스")]
+    [Header("오브젝트 관리 박스")]
     [SerializeField] private ObjectManagerBox objectManagerBox;
 
     
-[Header("입장 대사 데이터")]
-    [SerializeField] private ComplaintOpeningLineTable openingLineTable;
+    //[Header("입장 대사 데이터")]
+    //[SerializeField] private ComplaintOpeningLineTable openingLineTable;
 
-    [Header("FullID 메뉴얼 SO")]
+    /*[Header("FullID 메뉴얼 SO")]
     [SerializeField] private ManualDataSO fullIDSelfManualData_Print;
     [SerializeField] private ManualDataSO fullIDSelfManualData_Mobile;
     [SerializeField] private ManualDataSO fullIDProxyManualData_Print;
-    [SerializeField] private ManualDataSO fullIDProxyManualData_Mobile;
+    [SerializeField] private ManualDataSO fullIDProxyManualData_Mobile;*/
 
 
     [Header("다음 손님 대기 시간")]
@@ -57,7 +57,7 @@ public class ServiceDeskManager : MonoBehaviour
     public bool               IsWorking          => isWorking;
     public bool               HasActiveCustomer  => currentComplaint != null && currentManual != null;
     public int                WaitingCount       => waitingQueue.Count;
-    public UserRecordDatabase UserDatabase       => userDatabase;
+    public UserRecordDatabase UserDatabase       => ServiceDataManager.Instance.UserDatabase;
 
     public int  MaxCustomerPerDay    => playerBase != null ? playerBase.PlayerLevel * 3 : 0;
     public bool HasReachedDailyLimit => spawnedCustomerCountToday >= MaxCustomerPerDay;
@@ -84,7 +84,8 @@ public class ServiceDeskManager : MonoBehaviour
     private void Awake()
     {
         ResolvePlayerBase();
-        if (userDatabase != null) userDatabase.BuildCache();
+        if (ServiceDataManager.Instance != null) 
+            ServiceDataManager.Instance.UserDatabase.BuildCache();
     }
 
     private void Start()
@@ -116,8 +117,8 @@ public class ServiceDeskManager : MonoBehaviour
     public bool TryGetResidentRecord(string recordId, out UserRecordData record)
     {
         record = null;
-        if (userDatabase == null || string.IsNullOrWhiteSpace(recordId)) return false;
-        return userDatabase.TryGetRecord(recordId, out record);
+        if (ServiceDataManager.Instance.UserDatabase == null || string.IsNullOrWhiteSpace(recordId)) return false;
+        return ServiceDataManager.Instance.UserDatabase.TryGetRecord(recordId, out record);
     }
 
 /// <summary>
@@ -246,8 +247,8 @@ public void OnClickCallNextCustomer()
     /// </summary>
     private void FireOpeningLine(ComplaintContext complaint)
     {
-        string line = openingLineTable != null
-            ? openingLineTable.GetLine(complaint.complaintType, complaint.applicantType)
+        string line = ServiceDataManager.Instance.OpeningLineTable != null
+            ? ServiceDataManager.Instance.OpeningLineTable.GetLine(complaint.complaintType, complaint.applicantType, complaint.nuisanceType)
             : GetFallbackOpeningLine(complaint);
 
         if (string.IsNullOrWhiteSpace(line)) return;
@@ -274,25 +275,26 @@ public void OnClickCallNextCustomer()
 
     private Manual CreateManualByComplaint(ComplaintContext complaint)
     {
+        var ud = ServiceDataManager.Instance.UserDatabase;
         switch (complaint.complaintType)
         {
             case ComplaintContext.ComplaintType.FullID:
                 if (complaint.applicantType == ComplaintContext.ApplicantType.Self)
                 {
-                    var m = new M_FullID_Self(userDatabase);
+                    var m = new M_FullID_Self(ud);
                     if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
-                        m.manualData = fullIDSelfManualData_Print;
+                        m.manualData = ServiceDataManager.Instance.FullSelf_Print;
                     else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
-                        m.manualData = fullIDSelfManualData_Mobile;
+                        m.manualData = ServiceDataManager.Instance.FullSelf_Mobile;
                     return m;
                 }
                 else
                 {
-                    var m = new M_FullID_Proxy(userDatabase);
+                    var m = new M_FullID_Proxy(ud);
                     if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
-                        m.manualData = fullIDProxyManualData_Print;
+                        m.manualData = ServiceDataManager.Instance.FullProxy_Print;
                     else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
-                        m.manualData = fullIDProxyManualData_Mobile;
+                        m.manualData = ServiceDataManager.Instance.Fullproxy_Mobile;
                     return m;
                 }
             default: return null;
@@ -310,13 +312,15 @@ public void OnClickCallNextCustomer()
                                   ? ComplaintContext.DeliveryType.Print
                                   : ComplaintContext.DeliveryType.Mobile;
 
-        if (userDatabase != null && userDatabase.Records?.Count > 0)
+        var ub = ServiceDataManager.Instance.UserDatabase;
+
+        if (ub != null && ub.Records?.Count > 0)
         {
-            int ai = UnityEngine.Random.Range(0, userDatabase.Records.Count);
-            c.applicantRecordId = userDatabase.Records[ai].recordId;
+            int ai = UnityEngine.Random.Range(0, ub.Records.Count);
+            c.applicantRecordId = ub.Records[ai].recordId;
             c.targetRecordId    = c.applicantType == ComplaintContext.ApplicantType.Self
                                   ? c.applicantRecordId
-                                  : userDatabase.Records[UnityEngine.Random.Range(0, userDatabase.Records.Count)].recordId;
+                                  : ub.Records[UnityEngine.Random.Range(0, ub.Records.Count)].recordId;
         }
 
         c.maxPatience     = UnityEngine.Random.Range(20f, 40f);

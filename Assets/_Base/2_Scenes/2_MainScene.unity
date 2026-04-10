@@ -970,7 +970,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.0041042264}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.004450947}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -1229,6 +1229,7 @@ Transform:
   - {fileID: 1798869308}
   - {fileID: 988568798}
   - {fileID: 1450168323}
+  - {fileID: 1972732986}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &704820531
@@ -3087,7 +3088,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301799489}
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
-  m_Value: -0.09756097
+  m_Value: -0.18699187
   m_Size: 0.9999922
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -4822,6 +4823,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1272cf404b7d9524b95e674722cf330e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TakeObjectZone
+--- !u!1 &1972732985
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1972732986}
+  - component: {fileID: 1972732987}
+  m_Layer: 0
+  m_Name: ServiceDataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1972732986
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972732985}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 670415915}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1972732987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972732985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b61788113e70524c8f25b9e1fa7fe8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ServiceDataManager
+  userDatabase: {fileID: 11400000, guid: d60279b98f7d9514ca3657d1774b71cd, type: 2}
+  openingLineTable: {fileID: 11400000, guid: 2b2b4729df2391b41a6f0aa2678b0963, type: 2}
+  fullIDSelfManualData_Print: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+  fullIDSelfManualData_Mobile: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+  fullIDProxyManualData_Print: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
+  fullIDProxyManualData_Mobile: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
 --- !u!1 &1980840476
 GameObject:
   m_ObjectHideFlags: 0

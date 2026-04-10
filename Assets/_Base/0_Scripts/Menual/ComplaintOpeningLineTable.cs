@@ -15,6 +15,9 @@ public class ComplaintOpeningLine
     [Tooltip("신청인 유형 (본인 / 대리)")]
     public ComplaintContext.ApplicantType applicantType;
 
+    [Tooltip("진상 유형")]
+    public ComplaintContext.NuisanceType nuisanceType;
+
     [Tooltip("대사 후보 목록 (비어있으면 사용 안 함)")]
     public List<string> lines = new List<string>();
 }
@@ -39,7 +42,8 @@ public class ComplaintOpeningLineTable : ScriptableObject
     /// </summary>
     public string GetLine(
         ComplaintContext.ComplaintType complaintType,
-        ComplaintContext.ApplicantType applicantType)
+        ComplaintContext.ApplicantType applicantType,
+        ComplaintContext.NuisanceType nuisanceType)
     {
         // 조건에 맞는 entry 수집
         var candidates = new List<string>();
@@ -48,6 +52,7 @@ public class ComplaintOpeningLineTable : ScriptableObject
         {
             if (entry.complaintType != complaintType) continue;
             if (entry.applicantType != applicantType) continue;
+            if (entry.nuisanceType != nuisanceType) continue;
             foreach (var line in entry.lines)
                 if (!string.IsNullOrWhiteSpace(line))
                     candidates.Add(line);
