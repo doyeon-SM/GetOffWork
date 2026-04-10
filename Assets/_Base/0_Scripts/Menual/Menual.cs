@@ -210,4 +210,19 @@ public abstract class Manual
     }
 
     public virtual string GetManualTitle() => "기본 메뉴얼";
+
+    // ── 플레이스홀더 치환 ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// SO 대사 안의 {key} 플레이스홀더를 실제 값으로 치환한다.
+    /// 예) "{phone} 입니다." → "010-1111-1111 입니다."
+    /// 하위 클래스에서 GetCorrectLine/GetWrongOrderLine 결과에 적용해 사용한다.
+    /// </summary>
+    protected string ResolvePlaceholders(string line, System.Collections.Generic.Dictionary<string, string> values)
+    {
+        if (string.IsNullOrEmpty(line) || values == null) return line;
+        foreach (var kv in values)
+            line = line.Replace("{" + kv.Key + "}", kv.Value ?? string.Empty);
+        return line;
+    }
 }

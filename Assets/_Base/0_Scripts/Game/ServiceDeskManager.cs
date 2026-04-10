@@ -361,8 +361,8 @@ public class ServiceDeskManager : MonoBehaviour
                 Log(TAG + " Customer: " + result.CustomerMessage);
         }
 
-        if (result.IsCompleted)
-            FinishCurrentCustomer();
+                // 응대 종료는 CallDisplay(OnClickCallNextCustomer) 시에만 수행된다.
+        // result.IsCompleted는 매뉴얼의 완료 상태를 표시할 뿐, 여기서 즉시 종료하지 않는다.er();
     }
 
     private void DispatchUIResult(ResponseResult result)

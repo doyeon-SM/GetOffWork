@@ -4,7 +4,6 @@ using UnityEngine;
 /// 모니터 UI 컨트롤러.
 /// 각 패널은 프리팹으로 관리되며, 전환 시 현재 패널을 Destroy하고
 /// 새 패널을 Instantiate하여 root에 붙인다.
-/// → 화면 추가/확장 시 패널 프리팹만 만들면 됨.
 /// </summary>
 public class UIMonitorController : MonoBehaviour
 {
@@ -18,17 +17,13 @@ public class UIMonitorController : MonoBehaviour
 
     private ServiceDeskManager serviceDeskManager;
     private UserRecordData     currentRecord;
-
-    // 현재 활성화된 패널 인스턴스
-    private GameObject currentPanelInstance;
+    private GameObject         currentPanelInstance;
 
     // ── 초기화 ────────────────────────────────────────────────────────────
 
     private void Awake()
     {
         serviceDeskManager = FindFirstObjectByType<ServiceDeskManager>();
-
-        // panelRoot 미설정 시 자기 자신을 루트로 사용
         if (panelRoot == null)
             panelRoot = GetComponent<RectTransform>();
     }
@@ -65,7 +60,7 @@ public class UIMonitorController : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // ── 패널 전환 (Instantiate / Destroy) ────────────────────────────────
+    // ── 패널 전환 ─────────────────────────────────────────────────────────
 
     public void GoToMain()
     {
@@ -112,25 +107,18 @@ public class UIMonitorController : MonoBehaviour
         });
     }
 
-    /// <summary>
-    /// 현재 패널을 Destroy하고 새 패널 프리팹을 Instantiate하여 panelRoot에 붙인다.
-    /// </summary>
     private void ShowPanel(GameObject prefab, System.Action<GameObject> onCreated)
     {
         ClearCurrentPanel();
-
         currentPanelInstance = Instantiate(prefab, panelRoot);
-
-        // RectTransform 풀 스트레치
         var rect = currentPanelInstance.GetComponent<RectTransform>();
         if (rect != null)
         {
-            rect.anchorMin        = Vector2.zero;
-            rect.anchorMax        = Vector2.one;
-            rect.offsetMin        = Vector2.zero;
-            rect.offsetMax        = Vector2.zero;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
-
         onCreated?.Invoke(currentPanelInstance);
     }
 
@@ -143,18 +131,16 @@ public class UIMonitorController : MonoBehaviour
         }
     }
 
-    // ── 커맨드 (패널에서 호출) ────────────────────────────────────────────
+    // ── 커맨드 ────────────────────────────────────────────────────────────
 
     public void OnSearch(string inputId)
     {
         if (serviceDeskManager == null) return;
-
         serviceDeskManager.ExecuteCommand(ManualCommandIds.SearchRecordByInput, inputId);
 
         if (serviceDeskManager.TryGetResidentRecord(inputId, out UserRecordData record))
         {
             currentRecord = record;
-            // 현재 MainPanel 인스턴스가 살아있으면 바로 갱신
             currentPanelInstance?.GetComponent<UIMonitorMainPanel>()?.RefreshView(record);
         }
         else
@@ -184,10 +170,13 @@ public class UIMonitorController : MonoBehaviour
         serviceDeskManager.ExecuteCommand(ManualCommandIds.PrintDocument);
     }
 
-    public void OnSendMobile()
+    /// <summary>
+    /// MobilePanel의 Send 버튼 → 입력된 전화번호를 payload로 MobileNumberByInput 커맨드 실행
+    /// </summary>
+    public void OnMobileNumberByInput(string inputPhone)
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.ExecuteCommand(ManualCommandIds.SendMobile);
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.MobileNumberByInput, inputPhone);
     }
 
     public void OnRejectAddressMismatch()

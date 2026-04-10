@@ -29,7 +29,9 @@ public class UIMonitorMobilePanel : MonoBehaviour
 
     public void OnClickSend()
     {
-        controller?.OnSendMobile();
+        if (controller == null || mobileInputField == null) return;
+        // 입력값(전화번호)을 payload로 넘겨 MobileNumberByInput 커맨드 처리
+        controller.OnMobileNumberByInput(mobileInputField.text);
     }
 
     public void OnClickRejectAddressMismatch()

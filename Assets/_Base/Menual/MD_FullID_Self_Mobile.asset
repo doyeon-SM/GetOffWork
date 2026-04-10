@@ -33,8 +33,11 @@ MonoBehaviour:
   dialogues:
   - {fileID: 11400000, guid: ac5467ba9d910644b8edc41a60bd1027, type: 2}
   - {fileID: 11400000, guid: 27848f1511ad2a74794ae69ee04632b8, type: 2}
+  - {fileID: 11400000, guid: a235d3ac68b870140a33701db462f14d, type: 2}
+  - {fileID: 11400000, guid: 1e5300a74875f2c429e3cae894a53100, type: 2}
   steps:
   - {fileID: 11400000, guid: c492738cb8a45fb4dbaed32b55e858ff, type: 2}
   - {fileID: 11400000, guid: 4651fb93035bf4248821bc984186a96c, type: 2}
   - {fileID: 11400000, guid: a94a5430401be3a4c8dff65c06c01a42, type: 2}
-  - {fileID: 11400000, guid: e5e93fed1dbdeca478c8dcd02c07e56c, type: 2}
+  - {fileID: 11400000, guid: f87445358dc3e844f968ff931402d1d4, type: 2}
+  - {fileID: 11400000, guid: 73ba6dd1880b51e40b041e650e8acece, type: 2}

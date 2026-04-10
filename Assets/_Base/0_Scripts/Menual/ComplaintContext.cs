@@ -34,6 +34,8 @@ public class ComplaintContext
     public bool   completed;         // 민원이 정상 종료됐는가
 public bool   rejected;          // 반려됐는가
     public bool   isAddressMismatch; // 반려 시 주소 불일치가 실제로 존재하는가 (판정 기준)
+    public bool   mobileNumberAsked;    // 전화번호를 질문했는가
+    public bool   mobileNumberVerified;  // 전화번호 일치 확인이 완료됐는가 (Send 성공)
 
     // ── 대화 임시 보관 ────────────────────────────────────────────────────
     [Header("마지막 대사")]

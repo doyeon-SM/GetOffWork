@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NuisanceTypeSO
   entries:
   - nuisanceType: 1
-    spawnChance: 0.5
+    spawnChance: 0.1
     perMessagePenalty:
       stress: 1
       kindness: 0
