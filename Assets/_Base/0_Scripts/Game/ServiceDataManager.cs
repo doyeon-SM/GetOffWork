@@ -22,6 +22,9 @@ public class ServiceDataManager : MonoBehaviour
     [Header("진상 민원인 설정")]
     [SerializeField] private NuisanceTypeSO nuisanceTypeSettings;
 
+    [Header("질문 설정")]
+    [SerializeField] private QuestionDataList questionDataList;
+
     // ── 프로퍼티 ─────────────────────────────────────────────────────
     public UserRecordDatabase        UserDatabase      => userDatabase;
     public ComplaintOpeningLineTable OpeningLineTable  => openingLineTable;
@@ -33,6 +36,8 @@ public class ServiceDataManager : MonoBehaviour
 
     /// <summary>NuisanceTypeSO. 없으면 null — 호웉 측에서 null 체크 필요</summary>
     public NuisanceTypeSO NuisanceSettings => nuisanceTypeSettings;
+
+    public QuestionDataList QuestionList => questionDataList;
 
     private void Awake()
     {

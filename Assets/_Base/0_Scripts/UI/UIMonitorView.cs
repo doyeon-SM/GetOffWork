@@ -73,8 +73,6 @@ public class UIMonitorView : MonoBehaviour
             ClearView();
     }
 
-    // CompareCardAndMonitor 버튼 제거 — 비교는 플레이어가 눈으로 판단
-
     public void OnClickSelectPrint()
     {
         if (serviceDeskManager == null) return;

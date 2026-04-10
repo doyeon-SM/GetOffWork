@@ -61,7 +61,29 @@ public abstract class Manual
         BuildReturnItems();
     }
 
-    protected abstract void BuildCommandList();
+    // ── UI 버튼 목록 ─────────────────────────────────────────────────────
+    protected virtual void BuildCommandList()
+    {
+        if(ServiceDataManager.Instance != null && ServiceDataManager.Instance.QuestionList.QuestionList != null)
+        {
+            foreach(var question in ServiceDataManager.Instance.QuestionList.QuestionList)
+            {
+                commandList.Add(question);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[메뉴얼] 질문 리스트 Null");
+            /*commandList = new List<QuestionData>
+            {
+                new QuestionData(ManualCommandIds.AskSubmitId,      "신분증 제시 요청"),
+                new QuestionData(ManualCommandIds.AskPrintOrMobile, "인쇄/전자 전달 질문"),
+                new QuestionData(ManualCommandIds.AskMobileNumber, "핸드폰 번호 요청"),
+            };*/
+        }
+
+    }
+    
     protected abstract void BuildSteps();
     protected abstract void BuildReturnItems();
 

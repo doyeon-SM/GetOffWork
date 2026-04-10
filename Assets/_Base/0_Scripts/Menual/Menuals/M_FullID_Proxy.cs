@@ -25,14 +25,14 @@ public class M_FullID_Proxy : Manual
     public override string GetManualTitle() => "주민등록등본/초본 발급 (대리인)";
 
     // ── UI 버튼 목록 ─────────────────────────────────────────────────────
-    protected override void BuildCommandList()
+    /*protected override void BuildCommandList()
     {
         commandList = new List<QuestionData>
         {
             new QuestionData(ManualCommandIds.AskSubmitId,      "신분증 제시 요청"),
             new QuestionData(ManualCommandIds.AskPrintOrMobile, "인쇄/전자 전달 질문"),
         };
-    }
+    }*/
 
     // ── 절차 정의 ────────────────────────────────────────────────────────
     protected override void BuildSteps()
@@ -165,7 +165,7 @@ public class M_FullID_Proxy : Manual
         RecordAction(ManualCommandIds.PrintDocument);
         isCompleted = true;
         context.completed = true;
-        return CorrectResponseFromSO(ManualCommandIds.PrintDocument, completeNow: false);
+        return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
     }
 
     private ResponseResult HandleSendMobile()
@@ -175,6 +175,6 @@ public class M_FullID_Proxy : Manual
         RecordAction(ManualCommandIds.SendMobile);
         isCompleted = true;
         context.completed = true;
-        return CorrectResponseFromSO(ManualCommandIds.SendMobile, completeNow: false);
+        return CorrectResponseFromSO(ManualCommandIds.SendMobile);
     }
 }
