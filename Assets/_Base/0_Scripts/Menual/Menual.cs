@@ -8,12 +8,15 @@ using UnityEngine;
 ///   RequiredSteps       : 절차 정의 (List) — 평가에 사용
 ///   ActionQueue         : 플레이어 행동 기록 (Queue)
 ///   RequiredReturnItems : 반납 필수 오브젝트 목록 (DeskObjectType 열거)
-///                         하위 클래스가 BuildReturnItems()에서 채운다.
-///                         ObjectManagerBox가 이 목록을 읽어 반납 검사를 수행한다.
+///
+/// 대사 조회 흐름:
+///   WrongOrder(commandId)   → ManualDataSO.GetWrongOrderLine(commandId, nuisanceType)
+///   CorrectResponse(commandId) → ManualDataSO.GetCorrectLine(commandId, nuisanceType)
+///   SO에 대사가 없으면 fallback 문자열 사용
 ///
 /// 종료 흐름:
-///   발급/전송/반려 완료 → IsDelivered = true (민원 처리 완료, 아직 종료 아님)
-///   호출 버튼 클릭 → ObjectManagerBox.TryFinishAndReturn() 검사
+///   발급/전송/반려 완료 → isCompleted = true
+///   호출 버튼 클릭 → ObjectManagerBox.TryFinishAndReturn()
 ///   → 반납 완료 → ServiceDeskManager.FinishCurrentCustomer() → 정산 → OnCustomerCleared
 /// </summary>
 public abstract class Manual
@@ -31,24 +34,22 @@ public abstract class Manual
     public IReadOnlyCollection<PlayerActionRecord> ActionQueue => actionQueue;
 
     // ── 반납 필수 오브젝트 목록 ───────────────────────────────────────────
-    // ObjectManagerBox가 이 목록을 읽어 "반납해야 할 오브젝트가 모두 있는가" 를 판정한다.
     protected List<DeskObjectType> requiredReturnItems = new();
     public IReadOnlyList<DeskObjectType> RequiredReturnItems => requiredReturnItems;
 
     // ── 상태 ─────────────────────────────────────────────────────────────
     protected ComplaintContext context;
-    protected bool isCompleted;   // 발급/전송/반려 완료 여부
+    protected bool isCompleted;
     private float sessionStartTime;
 
-    /// <summary>발급/전송/반려가 완료됐는가 (반납 완료 여부와 무관)</summary>
     public bool IsCompleted => isCompleted;
 
     // ── 초기화 ───────────────────────────────────────────────────────────
     public virtual void Initialize(ComplaintContext newContext)
     {
-        context           = newContext;
-        isCompleted       = false;
-        sessionStartTime  = Time.time;
+        context          = newContext;
+        isCompleted      = false;
+        sessionStartTime = Time.time;
 
         commandList.Clear();
         requiredSteps.Clear();
@@ -62,44 +63,31 @@ public abstract class Manual
 
     protected abstract void BuildCommandList();
     protected abstract void BuildSteps();
-
-    /// <summary>
-    /// 이 메뉴얼에서 반납해야 할 오브젝트 종류를 등록한다.
-    /// 예: requiredReturnItems.Add(DeskObjectType.IDCard);
-    /// </summary>
     protected abstract void BuildReturnItems();
 
+    // ── ManualDataSO 참조 (하위 클래스에서 제공) ──────────────────────────
     /// <summary>
-    /// 민원인이 실제로 물품을 제출할 때 호출.
-    /// 동적으로 필수 반납 목록에 추가한다.
+    /// 하위 클래스가 자신의 manualData를 반환하도록 override한다.
+    /// 대사 조회에 사용된다.
     /// </summary>
+    protected virtual ManualDataSO GetManualDataSO() => null;
+
+    // ── 반납 관리 ─────────────────────────────────────────────────────────
     public void AddRequiredReturnItem(DeskObjectType objectType)
     {
         if (!requiredReturnItems.Contains(objectType))
             requiredReturnItems.Add(objectType);
     }
 
-    /// <summary>
-    /// 응대 종료 시 필수 반납 목록 초기화.
-    /// ServiceDeskManager.FinishCurrentCustomer()에서 호출.
-    /// </summary>
     public void ClearRequiredReturnItems()
     {
         requiredReturnItems.Clear();
     }
 
-
     // ── 실행 ─────────────────────────────────────────────────────────────
     public abstract ResponseResult Execute(string commandId, string payload = null);
 
-    /// <summary>
-    /// 시스템이 외부에서 직접 행동을 기록할 때 사용 (ReturnPrintedDoc 등).
-    /// Execute()를 거치지 않고 ActionQueue에만 추가한다.
-    /// </summary>
-    public void RecordReturnAction(string commandId)
-    {
-        RecordAction(commandId);
-    }
+    public void RecordReturnAction(string commandId) => RecordAction(commandId);
 
     protected void RecordAction(string commandId)
     {
@@ -107,7 +95,35 @@ public abstract class Manual
         actionQueue.Enqueue(new PlayerActionRecord(commandId, elapsed));
     }
 
-    // ── 헬퍼 ─────────────────────────────────────────────────────────────
+    // ── 대사 조회 헬퍼 ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// commandId에 대한 정상 응답 대사를 SO에서 조회한다.
+    /// SO에 대사가 없으면 fallback을 반환한다.
+    /// </summary>
+    protected string GetCorrectLine(string commandId, string fallback = "")
+    {
+        var so = GetManualDataSO();
+        if (so == null) return fallback;
+        var nuisanceType = context?.nuisanceType ?? ComplaintContext.NuisanceType.None;
+        return so.GetCorrectLine(commandId, nuisanceType) ?? fallback;
+    }
+
+    /// <summary>
+    /// commandId에 대한 WrongOrder 대사를 SO에서 조회한다.
+    /// SO에 대사가 없으면 fallback을 반환한다.
+    /// </summary>
+    protected string GetWrongOrderLine(string commandId, string fallback = "")
+    {
+        var so = GetManualDataSO();
+        if (so == null) return fallback;
+        var nuisanceType = context?.nuisanceType ?? ComplaintContext.NuisanceType.None;
+        return so.GetWrongOrderLine(commandId, nuisanceType) ?? fallback;
+    }
+
+    // ── 응답 생성 헬퍼 ────────────────────────────────────────────────────
+
+    /// <summary>잘못된 순서/상태. customerMessage를 직접 지정할 때.</summary>
     protected ResponseResult WrongOrder(string customerMessage = "")
     {
         return ResponseResult.Create(
@@ -117,6 +133,16 @@ public abstract class Manual
         );
     }
 
+    /// <summary>
+    /// 잘못된 순서/상태. CommandDialogueSO에서 WrongOrder 대사를 조회할 때.
+    /// SO에 대사가 없으면 fallback 사용.
+    /// </summary>
+    protected ResponseResult WrongOrderFromSO(string commandId, string fallback = "")
+    {
+        return WrongOrder(GetWrongOrderLine(commandId, fallback));
+    }
+
+    /// <summary>정상 응답. customerMessage를 직접 지정할 때.</summary>
     protected ResponseResult CorrectResponse(
         string customerMessage          = "",
         bool   completeNow              = false,
@@ -125,13 +151,35 @@ public abstract class Manual
         bool   shouldOpenMonitor        = false,
         bool   shouldRefreshMonitorData = false)
     {
-        if (completeNow)
-            isCompleted = true;
+        if (completeNow) isCompleted = true;
 
         return ResponseResult.Create(
             isValid: true,
             isCompleted: completeNow,
             customerMessage: customerMessage,
+            shouldSpawnIdCard: shouldSpawnIdCard,
+            shouldOpenIdCardDetail: shouldOpenIdCardDetail,
+            shouldOpenMonitor: shouldOpenMonitor,
+            shouldRefreshMonitorData: shouldRefreshMonitorData
+        );
+    }
+
+    /// <summary>
+    /// 정상 응답. CommandDialogueSO에서 Correct 대사를 조회할 때.
+    /// SO에 대사가 없으면 fallback 사용.
+    /// </summary>
+    protected ResponseResult CorrectResponseFromSO(
+        string commandId,
+        string fallback                 = "",
+        bool   completeNow              = false,
+        bool   shouldSpawnIdCard        = false,
+        bool   shouldOpenIdCardDetail   = false,
+        bool   shouldOpenMonitor        = false,
+        bool   shouldRefreshMonitorData = false)
+    {
+        return CorrectResponse(
+            customerMessage: GetCorrectLine(commandId, fallback),
+            completeNow: completeNow,
             shouldSpawnIdCard: shouldSpawnIdCard,
             shouldOpenIdCardDetail: shouldOpenIdCardDetail,
             shouldOpenMonitor: shouldOpenMonitor,

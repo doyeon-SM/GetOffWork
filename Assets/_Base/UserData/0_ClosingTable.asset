@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0311047091d7e264eb5770bc472ce0d5, type: 3}
+  m_Name: 0_ClosingTable
+  m_EditorClassIdentifier: Assembly-CSharp::ComplaintClosingLineTable
+  entries:
+  - complaintType: 0
+    applicantType: 0
+    nuisanceType: 0
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4"
+  - complaintType: 0
+    applicantType: 1
+    nuisanceType: 0
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4"
+  - complaintType: 0
+    applicantType: 0
+    nuisanceType: 1
+    lines:
+    - ...
+  - complaintType: 0
+    applicantType: 1
+    nuisanceType: 1
+    lines:
+    - ...

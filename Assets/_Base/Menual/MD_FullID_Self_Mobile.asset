@@ -30,6 +30,9 @@ MonoBehaviour:
     Stress: 0
     Reliability: 1
     Pay: 0
+  dialogues:
+  - {fileID: 11400000, guid: ac5467ba9d910644b8edc41a60bd1027, type: 2}
+  - {fileID: 11400000, guid: 27848f1511ad2a74794ae69ee04632b8, type: 2}
   steps:
   - {fileID: 11400000, guid: c492738cb8a45fb4dbaed32b55e858ff, type: 2}
   - {fileID: 11400000, guid: 4651fb93035bf4248821bc984186a96c, type: 2}

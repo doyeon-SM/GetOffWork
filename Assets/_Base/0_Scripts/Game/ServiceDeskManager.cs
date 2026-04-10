@@ -4,11 +4,8 @@ using UnityEngine;
 
 public class ServiceDeskManager : MonoBehaviour
 {
-    // ── 로그 태그 상수 ────────────────────────────────────────────────────
-    // Unity 콘솔에서 이 태그로 필터링하면 민원 흐름만 볼 수 있다.
-    // 예) 콘솔 검색창에 "[Desk]" 또는 "[정산]" 또는 "[Evaluator]" 입력
-    private const string TAG      = "[Desk]";
-    private const string TAG_EVAL = "[정산]";
+    private const string TAG       = "[Desk]";
+    private const string TAG_EVAL  = "[정산]";
     private const string TAG_QUEUE = "[대기열]";
 
     private enum DeskState { Idle, ServingCustomer }
@@ -16,22 +13,8 @@ public class ServiceDeskManager : MonoBehaviour
     [Header("플레이어")]
     [SerializeField] private PlayerBase playerBase;
 
-    //[Header("주민 데이터")]
-    //[SerializeField] private UserRecordDatabase userDatabase;
-
     [Header("오브젝트 관리 박스")]
     [SerializeField] private ObjectManagerBox objectManagerBox;
-
-    
-    //[Header("입장 대사 데이터")]
-    //[SerializeField] private ComplaintOpeningLineTable openingLineTable;
-
-    /*[Header("FullID 메뉴얼 SO")]
-    [SerializeField] private ManualDataSO fullIDSelfManualData_Print;
-    [SerializeField] private ManualDataSO fullIDSelfManualData_Mobile;
-    [SerializeField] private ManualDataSO fullIDProxyManualData_Print;
-    [SerializeField] private ManualDataSO fullIDProxyManualData_Mobile;*/
-
 
     [Header("다음 손님 대기 시간")]
     [SerializeField] private float minCustomerDelay = 2f;
@@ -63,10 +46,10 @@ public class ServiceDeskManager : MonoBehaviour
     public bool HasReachedDailyLimit => spawnedCustomerCountToday >= MaxCustomerPerDay;
 
     // ── 이벤트 ───────────────────────────────────────────────────────────
-    public event Action<int>             OnWaitingQueueChanged;
+    public event Action<int>              OnWaitingQueueChanged;
     public event Action<ComplaintContext> OnCustomerCalled;
-    public event Action                  OnCustomerCleared;
-    public event Action<bool>            OnWorkStateChanged;
+    public event Action                   OnCustomerCleared;
+    public event Action<bool>             OnWorkStateChanged;
 
     public event Action<string> OnPlayerText;
     public event Action<string> OnCustomerText;
@@ -84,7 +67,7 @@ public class ServiceDeskManager : MonoBehaviour
     private void Awake()
     {
         ResolvePlayerBase();
-        if (ServiceDataManager.Instance != null) 
+        if (ServiceDataManager.Instance != null)
             ServiceDataManager.Instance.UserDatabase.BuildCache();
     }
 
@@ -110,7 +93,7 @@ public class ServiceDeskManager : MonoBehaviour
         if (playerBase != null) return;
         playerBase = PlayerBase.Instance;
         if (playerBase == null)
-            Debug.LogError($"{TAG} PlayerBase Instance가 없습니다!");
+            Debug.LogError(TAG + " PlayerBase Instance가 없습니다!");
     }
 
     // ── 주민 레코드 ───────────────────────────────────────────────────────
@@ -121,15 +104,12 @@ public class ServiceDeskManager : MonoBehaviour
         return ServiceDataManager.Instance.UserDatabase.TryGetRecord(recordId, out record);
     }
 
-/// <summary>
-    /// 외부(ObjectManagerBox 등)에서 민원인 대사를 직접 방송할 때 사용한다.
-    /// </summary>
+    /// <summary>외부(ObjectManagerBox 등)에서 민원인 대사를 직접 방송할 때 사용한다.</summary>
     public void BroadcastCustomerText(string message)
     {
         if (!string.IsNullOrWhiteSpace(message))
             OnCustomerText?.Invoke(message);
     }
-
 
     // ── 근무 흐름 ─────────────────────────────────────────────────────────
     public void BeginWorkPhase()
@@ -143,7 +123,7 @@ public class ServiceDeskManager : MonoBehaviour
         ScheduleNextCustomerArrival();
         RaiseWaitingQueueChanged();
         OnWorkStateChanged?.Invoke(true);
-        Log($"{TAG} 근무 시작 / 일일 최대 인원: {MaxCustomerPerDay}");
+        Log(TAG + " 근무 시작 / 일일 최대 인원: " + MaxCustomerPerDay);
     }
 
     public void StopWorkPhase()
@@ -156,7 +136,7 @@ public class ServiceDeskManager : MonoBehaviour
         RaiseWaitingQueueChanged();
         OnCustomerCleared?.Invoke();
         OnWorkStateChanged?.Invoke(false);
-        Log($"{TAG} 근무 종료");
+        Log(TAG + " 근무 종료");
     }
 
     // ── 손님 도착 스케줄 ──────────────────────────────────────────────────
@@ -168,7 +148,7 @@ public class ServiceDeskManager : MonoBehaviour
         {
             EnqueueNextCustomer();
             if (!HasReachedDailyLimit) ScheduleNextCustomerArrival();
-            else Log($"{TAG_QUEUE} 일일 최대 인원 도달 — 손님 생성 중단");
+            else Log(TAG_QUEUE + " 일일 최대 인원 도달 — 손님 생성 중단");
         }
     }
 
@@ -176,7 +156,7 @@ public class ServiceDeskManager : MonoBehaviour
     {
         if (HasReachedDailyLimit) { nextCustomerTimer = 0f; return; }
         nextCustomerTimer = UnityEngine.Random.Range(minCustomerDelay, maxCustomerDelay);
-        Log($"{TAG_QUEUE} 다음 손님 대기: {nextCustomerTimer:F1}초");
+        Log(TAG_QUEUE + " 다음 손님 대기: " + nextCustomerTimer.ToString("F1") + "초");
     }
 
     private void EnqueueNextCustomer()
@@ -187,24 +167,21 @@ public class ServiceDeskManager : MonoBehaviour
         waitingQueue.Enqueue(complaint);
         spawnedCustomerCountToday++;
         RaiseWaitingQueueChanged();
-        Log($"{TAG_QUEUE} 추가 / 대기: {waitingQueue.Count} / 오늘: {spawnedCustomerCountToday}/{MaxCustomerPerDay}");
+        Log(TAG_QUEUE + " 추가 / 대기: " + waitingQueue.Count + " / 오늘: " + spawnedCustomerCountToday + "/" + MaxCustomerPerDay);
     }
 
     // ── 손님 호출 ─────────────────────────────────────────────────────────
-public void OnClickCallNextCustomer()
+    public void OnClickCallNextCustomer()
     {
         if (!isWorking) return;
 
-        // ── 필수 반납 검사 + 반려 여부 판정 ───────────────────────────────
         if (objectManagerBox != null)
         {
             bool ok = objectManagerBox.TryFinishAndReturn(out bool isRejection);
-            if (!ok) return; // 반납 미완료 → 호출 방어
+            if (!ok) return;
 
             if (HasActiveCustomer)
-            {
                 FinishCurrentCustomer(isRejection: isRejection);
-            }
         }
         else
         {
@@ -217,43 +194,45 @@ public void OnClickCallNextCustomer()
 
     public bool CallNextCustomer()
     {
-        if (!isWorking)          return false;
-        if (HasActiveCustomer)   { Log($"{TAG} 이미 민원 처리 중"); return false; }
-        if (waitingQueue.Count <= 0) { Log($"{TAG} 대기열 비어있음"); return false; }
+        if (!isWorking)              return false;
+        if (HasActiveCustomer)       { Log(TAG + " 이미 민원 처리 중"); return false; }
+        if (waitingQueue.Count <= 0) { Log(TAG + " 대기열 비어있음");   return false; }
 
         var nextComplaint = waitingQueue.Dequeue();
         RaiseWaitingQueueChanged();
 
         var manual = CreateManualByComplaint(nextComplaint);
-        if (manual == null) { Debug.LogWarning($"{TAG} 매뉴얼 생성 실패"); return false; }
+        if (manual == null) { Debug.LogWarning(TAG + " 매뉴얼 생성 실패"); return false; }
 
         currentComplaint = nextComplaint;
         currentManual    = manual;
         currentManual.Initialize(currentComplaint);
         deskState        = DeskState.ServingCustomer;
 
-        Log($"{TAG} 호출: {currentManual.GetManualTitle()} / {currentComplaint.applicantType}");
+        Log(TAG + " 호출: " + currentManual.GetManualTitle() + " / " + currentComplaint.applicantType
+            + " / NuisanceType:" + currentComplaint.nuisanceType);
 
-        // 입장 대사 발화 (OnCustomerCalled 이전에 발화해서 UI가 먼저 텍스트를 표시)
         FireOpeningLine(currentComplaint);
-
         OnCustomerCalled?.Invoke(currentComplaint);
         return true;
     }
 
     /// <summary>
-    /// ComplaintOpeningLineTable에서 민원 유형과 신청인 유형에 맞는 대사를 골라
+    /// ComplaintOpeningLineTable에서 민원/신청인/진상 유형에 맞는 대사를 골라
     /// OnCustomerText와 OnCustomerOpening 이벤트로 방송한다.
     /// </summary>
     private void FireOpeningLine(ComplaintContext complaint)
     {
         string line = ServiceDataManager.Instance.OpeningLineTable != null
-            ? ServiceDataManager.Instance.OpeningLineTable.GetLine(complaint.complaintType, complaint.applicantType, complaint.nuisanceType)
+            ? ServiceDataManager.Instance.OpeningLineTable.GetLine(
+                complaint.complaintType,
+                complaint.applicantType,
+                complaint.nuisanceType)
             : GetFallbackOpeningLine(complaint);
 
         if (string.IsNullOrWhiteSpace(line)) return;
 
-        Log($"{TAG} 입장 대사: {line}");
+        Log(TAG + " 입장 대사: " + line);
         OnCustomerText?.Invoke(line);
         OnCustomerOpening?.Invoke(line);
     }
@@ -301,45 +280,60 @@ public void OnClickCallNextCustomer()
         }
     }
 
+    // ── 민원 컨텍스트 생성 ────────────────────────────────────────────────
     private ComplaintContext CreateRandomComplaint()
     {
         var c = new ComplaintContext();
-        c.complaintType         = ComplaintContext.ComplaintType.FullID;
-        c.applicantType         = UnityEngine.Random.value > 0.5f
-                                  ? ComplaintContext.ApplicantType.Self
-                                  : ComplaintContext.ApplicantType.Proxy;
+        c.complaintType = ComplaintContext.ComplaintType.FullID;
+        c.applicantType = UnityEngine.Random.value > 0.5f
+            ? ComplaintContext.ApplicantType.Self
+            : ComplaintContext.ApplicantType.Proxy;
         c.requestedDeliveryType = UnityEngine.Random.value > 0.5f
-                                  ? ComplaintContext.DeliveryType.Print
-                                  : ComplaintContext.DeliveryType.Mobile;
+            ? ComplaintContext.DeliveryType.Print
+            : ComplaintContext.DeliveryType.Mobile;
 
+        // ── NuisanceType 결정 (NuisanceTypeSO 기반 확률) ─────────────────
+        var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
+        if (nuisanceSO != null)
+            c.nuisanceType = nuisanceSO.RollNuisanceType();
+        else
+            c.nuisanceType = ComplaintContext.NuisanceType.None;
+
+        // ── 주민 레코드 배정 ───────────────────────────────────────────────
         var ub = ServiceDataManager.Instance.UserDatabase;
-
-        if (ub != null && ub.Records?.Count > 0)
+        if (ub != null && ub.Records != null && ub.Records.Count > 0)
         {
             int ai = UnityEngine.Random.Range(0, ub.Records.Count);
             c.applicantRecordId = ub.Records[ai].recordId;
-            c.targetRecordId    = c.applicantType == ComplaintContext.ApplicantType.Self
-                                  ? c.applicantRecordId
-                                  : ub.Records[UnityEngine.Random.Range(0, ub.Records.Count)].recordId;
+            bool isSelf = c.applicantType == ComplaintContext.ApplicantType.Self;
+            c.targetRecordId = isSelf
+                ? c.applicantRecordId
+                : ub.Records[UnityEngine.Random.Range(0, ub.Records.Count)].recordId;
         }
 
-        c.maxPatience     = UnityEngine.Random.Range(20f, 40f);
-        c.currentPatience = c.maxPatience;
+        // ── 인내심 (진상 타입 배율 적용) ──────────────────────────────────
+        float basePatience = UnityEngine.Random.Range(20f, 40f);
+        if (nuisanceSO != null && c.nuisanceType != ComplaintContext.NuisanceType.None)
+        {
+            var entry = nuisanceSO.GetEntry(c.nuisanceType);
+            basePatience *= entry.patienceMultiplier;
+            Log(TAG_QUEUE + " [" + c.nuisanceType + "] 진상 생성 / 인내심 배율: " + entry.patienceMultiplier);
+        }
+        c.maxPatience     = basePatience;
+        c.currentPatience = basePatience;
         return c;
     }
 
     // ── 명령 실행 ─────────────────────────────────────────────────────────
-public void ExecuteCommand(string commandId, string payload = null)
+    public void ExecuteCommand(string commandId, string payload = null)
     {
         if (!isWorking || deskState != DeskState.ServingCustomer) return;
         if (currentManual == null || currentComplaint == null)    return;
 
-        // ReturnPrintedDoc은 Manual.Execute 를 거치지 않고 직접 RecordAction만 수행
-        // (PaperItem이 TakeZone에 드롭될 때 시스템 커맨드로 발행됨)
         if (commandId == ManualCommandIds.ReturnPrintedDoc)
         {
             currentManual.RecordReturnAction(commandId);
-            Log($"{TAG} Paper 반납 확인 커맨드 발행");
+            Log(TAG + " Paper 반납 확인 커맨드 발행");
             return;
         }
 
@@ -351,11 +345,10 @@ public void ExecuteCommand(string commandId, string payload = null)
             currentComplaint.idCardSpawned = true;
         }
 
-        // PrintDocument 성공 시 프린터에서 Paper Spawn 요청
         if (commandId == ManualCommandIds.PrintDocument && result.IsValid)
         {
             OnPrintDocumentRequested?.Invoke(currentComplaint);
-            Log($"{TAG} OnPrintDocumentRequested 발행");
+            Log(TAG + " OnPrintDocumentRequested 발행");
         }
 
         DispatchUIResult(result);
@@ -363,23 +356,60 @@ public void ExecuteCommand(string commandId, string payload = null)
         if (showDebugLog)
         {
             if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
-                Log($"{TAG} Player: {result.PlayerMessage}");
+                Log(TAG + " Player: " + result.PlayerMessage);
             if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
-                Log($"{TAG} Customer: {result.CustomerMessage}");
+                Log(TAG + " Customer: " + result.CustomerMessage);
         }
 
         if (result.IsCompleted)
             FinishCurrentCustomer();
     }
 
-private void DispatchUIResult(ResponseResult result)
+    private void DispatchUIResult(ResponseResult result)
     {
-        if (!string.IsNullOrWhiteSpace(result.PlayerMessage))    OnPlayerText?.Invoke(result.PlayerMessage);
-        if (!string.IsNullOrWhiteSpace(result.CustomerMessage))  OnCustomerText?.Invoke(result.CustomerMessage);
+        if (!string.IsNullOrWhiteSpace(result.PlayerMessage))
+            OnPlayerText?.Invoke(result.PlayerMessage);
+
+        if (!string.IsNullOrWhiteSpace(result.CustomerMessage))
+        {
+            OnCustomerText?.Invoke(result.CustomerMessage);
+            // ── 진상 민원인 응대 패널티: customerMessage 출력마다 perMessagePenalty 적용
+            ApplyNuisancePerMessagePenalty();
+        }
+
         if (result.ShouldSpawnIdCard)        OnSpawnIdCardRequested?.Invoke(currentComplaint);
         if (result.ShouldOpenIdCardDetail)   OnOpenIdCardDetailRequested?.Invoke(currentComplaint);
         if (result.ShouldOpenMonitor)        OnOpenMonitorRequested?.Invoke(currentComplaint);
         if (result.ShouldRefreshMonitorData) OnMonitorRefreshRequested?.Invoke(currentComplaint);
+    }
+
+    /// <summary>
+    /// 진상 민원인 응대 중 customerMessage 출력마다
+    /// NuisanceTypeSO.perMessagePenalty를 PlayerBase에 적용한다.
+    /// </summary>
+    private void ApplyNuisancePerMessagePenalty()
+    {
+        if (currentComplaint == null) return;
+        if (currentComplaint.nuisanceType == ComplaintContext.NuisanceType.None) return;
+        if (playerBase == null) return;
+
+        var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
+        if (nuisanceSO == null) return;
+
+        var entry = nuisanceSO.GetEntry(currentComplaint.nuisanceType);
+        if (entry.perMessagePenalty.IsEmpty) return;
+
+        ApplyNuisancePenalty(entry.perMessagePenalty);
+        Log(TAG + " [NuisancePenalty/msg] type:" + currentComplaint.nuisanceType);
+    }
+
+    /// <summary>NuisancePenalty 구조체를 PlayerBase 스탯에 반영한다.</summary>
+    private void ApplyNuisancePenalty(NuisancePenalty penalty)
+    {
+        if (penalty.stress      != 0) playerBase.AddStat(Stat.Stress,      penalty.stress);
+        if (penalty.kindness    != 0) playerBase.AddStat(Stat.Kindness,     penalty.kindness);
+        if (penalty.reliability != 0) playerBase.AddStat(Stat.Reliability,  penalty.reliability);
+        if (penalty.performance != 0) playerBase.AddPerformance(-penalty.performance);
     }
 
     // ── 인내심 ────────────────────────────────────────────────────────────
@@ -393,12 +423,33 @@ private void DispatchUIResult(ResponseResult result)
 
     private void HandlePatienceExpired()
     {
-        Log($"{TAG} 인내심 소진");
+        Log(TAG + " 인내심 소진");
         FinishCurrentCustomer(patienceExpired: true);
     }
 
+/// <summary>
+    /// ClosingLineTable에서 퇴장 대사를 가져와 OnCustomerText로 방송한다.
+    /// FinishCurrentCustomer() 클린업 직전에 호출된다.
+    /// </summary>
+    private void FireClosingLine(ComplaintContext complaint)
+    {
+        var table = ServiceDataManager.Instance?.ClosingLineTable;
+        if (table == null || complaint == null) return;
+
+        string line = table.GetLine(
+            complaint.complaintType,
+            complaint.applicantType,
+            complaint.nuisanceType);
+
+        if (string.IsNullOrWhiteSpace(line)) return;
+
+        Log(TAG + " [퇴장 대사] " + line);
+        OnCustomerText?.Invoke(line);
+    }
+
+
     // ── 민원 종료 & 정산 ──────────────────────────────────────────────────
-private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
+    private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
     {
         if (currentManual == null || currentComplaint == null) return;
         if (playerBase == null) return;
@@ -406,48 +457,56 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         bool isAddressMismatch = currentComplaint.isAddressMismatch;
         bool isCompleted       = currentManual.IsCompleted;
 
-        // ── 반려 결과 유형 판정 ─────────────────────────────────────────────────────
         bool isValidRejection   = isRejection && isAddressMismatch;
         bool isInvalidRejection = isRejection && !isAddressMismatch;
         bool isMissedRejection  = !isRejection && isAddressMismatch && isCompleted;
 
-        // ── 인내심 소진 패널티 ─────────────────────────────────────────────────────
+        // ── 인내심 소진 패널티 ─────────────────────────────────────────────
         if (patienceExpired)
         {
             playerBase.AddStat(Stat.Stress, 2);
-            Log($"{TAG_EVAL} 인내심 소진 → Stress+2");
+            Log(TAG_EVAL + " 인내심 소진 → Stress+2");
         }
 
-        // ── 메뉴얼 절차 평가 (ManualEvaluator) ───────────────────────────────────
+        // ── 진상 종료 패널티 (onFinishPenalty) ────────────────────────────
+        var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
+        if (nuisanceSO != null && currentComplaint.nuisanceType != ComplaintContext.NuisanceType.None)
+        {
+            var nEntry = nuisanceSO.GetEntry(currentComplaint.nuisanceType);
+            if (!nEntry.onFinishPenalty.IsEmpty)
+            {
+                ApplyNuisancePenalty(nEntry.onFinishPenalty);
+                Log(TAG_EVAL + " [NuisancePenalty/finish] type:" + currentComplaint.nuisanceType);
+            }
+        }
+
+        // ── 메뉴얼 절차 평가 ───────────────────────────────────────────────
         var eval = ManualEvaluator.Evaluate(
             currentManual.RequiredSteps,
             currentManual.ActionQueue,
             isAddressMismatch: isAddressMismatch
         );
-        Log($"{TAG_EVAL} 평가 — {eval}");
+        Log(TAG_EVAL + " 평가 — " + eval);
 
-        // ── 정상 반려 (주소불일치) ────────────────────────────────────────────
+        // ── 정상 반려 (주소불일치) ─────────────────────────────────────────
         if (isValidRejection)
         {
             var soData = GetCurrentManualData();
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
-                Log($"{TAG_EVAL} 정상 반려(주소불일치) → SO completionReward 적용");
+                Log(TAG_EVAL + " 정상 반려(주소불일치) → SO completionReward 적용");
             }
             else
             {
                 int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
                 playerBase.AddPerformance(perfReward);
-                Log($"{TAG_EVAL} 정상 반려(주소불일치) → Performance+{perfReward} [폴백]");
+                Log(TAG_EVAL + " 정상 반려(주소불일치) → Performance+" + perfReward + " [폴백]");
             }
             playerBase.AddStat(Stat.Stress, 1);
         }
 
-        // ── 비정상 처리 통합 패널티 (abnormalRejectionPenalty) ───────────────────
-        // 1) 비정상 반려 (주소일치인데 반려)
-        // 2) 반려사항 놓침 (주소불일치인데 인쇄/발송 완료)
-        // 3) 정상 응대 실패 (평가 더러움 — 누락/순서위반/미반납 등)
+        // ── 비정상 처리 통합 패널티 ───────────────────────────────────────
         bool isAbnormal = isInvalidRejection
                        || isMissedRejection
                        || (isCompleted && !isValidRejection && !eval.IsClean);
@@ -461,38 +520,39 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
             {
                 ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
-                Log($"{TAG_EVAL} [{reason}] → SO abnormalRejectionPenalty 적용");
+                Log(TAG_EVAL + " [" + reason + "] → SO abnormalRejectionPenalty 적용");
             }
             else
             {
                 playerBase.AddPerformance(-2);
                 playerBase.AddStat(Stat.Reliability, -1);
-                Log($"{TAG_EVAL} [{reason}] → Performance-2, Reliability-1 [폴백]");
+                Log(TAG_EVAL + " [" + reason + "] → Performance-2, Reliability-1 [폴백]");
             }
         }
 
-        // ── 평가 스탃 적용 ────────────────────────────────────────────────────────
+        // ── 평가 스탯 적용 ────────────────────────────────────────────────
         if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
-        if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,     eval.KindnessDelta);
-        if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,       eval.StressDelta);
-        if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability,  eval.ReliabilityDelta);
+        if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);
+        if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,      eval.StressDelta);
+        if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta);
         if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
 
-        // ── 정상 응대 보상 (ManualDataSO.completionReward) ─────────────────────
+        // ── 정상 응대 보상 ─────────────────────────────────────────────────
         if (isCompleted && !isValidRejection && eval.IsClean)
         {
             var soData = GetCurrentManualData();
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
-                Log($"{TAG_EVAL} 정상 응대 보상 → SO completionReward 적용");
+                Log(TAG_EVAL + " 정상 응대 보상 → SO completionReward 적용");
             }
         }
 
-        // ── 필수 반납 목록 초기화 + 클린업 ─────────────────────────────────
+        // -- 퇴장 대사 발화
+        FireClosingLine(currentComplaint);
         currentManual.ClearRequiredReturnItems();
 
-        Log($"{TAG} 민원 종료 — {currentComplaint.complaintType} / rejected={currentComplaint.rejected}");
+        Log(TAG + " 민원 종료 — " + currentComplaint.complaintType + " / rejected=" + currentComplaint.rejected);
         currentManual    = null;
         currentComplaint = null;
         deskState        = DeskState.Idle;
@@ -505,10 +565,6 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         currentManual    = null;
     }
 
-/// <summary>
-    /// 현재 활성 Manual에서 ManualDataSO를 가져온다.
-    /// M_FullID_Self / M_FullID_Proxy 모두 지원.
-    /// </summary>
     private ManualDataSO GetCurrentManualData()
     {
         if (currentManual is M_FullID_Self self)   return self.manualData;
@@ -527,17 +583,15 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
     private void ApplyPenaltyFromSO(StepPenalty penalty)
     {
         if (penalty.Performance != 0) playerBase.AddPerformance(-penalty.Performance);
-        if (penalty.Kindness    != 0) playerBase.AddStat(Stat.Kindness,     -penalty.Kindness);
-        if (penalty.Stress      != 0) playerBase.AddStat(Stat.Stress,        penalty.Stress);
-        if (penalty.Reliability != 0) playerBase.AddStat(Stat.Reliability,  -penalty.Reliability);
+        if (penalty.Kindness    != 0) playerBase.AddStat(Stat.Kindness,    -penalty.Kindness);
+        if (penalty.Stress      != 0) playerBase.AddStat(Stat.Stress,       penalty.Stress);
+        if (penalty.Reliability != 0) playerBase.AddStat(Stat.Reliability, -penalty.Reliability);
         if (penalty.Pay         != 0) playerBase.AddPay(-penalty.Pay);
     }
-
 
     private void RaiseWaitingQueueChanged() =>
         OnWaitingQueueChanged?.Invoke(waitingQueue.Count);
 
-    // ── 로그 헬퍼 ─────────────────────────────────────────────────────────
     private void Log(string message)
     {
         if (showDebugLog) Debug.Log(message);

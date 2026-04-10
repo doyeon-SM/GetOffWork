@@ -10,16 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfef037fbfb75e64a8b136f686ecc128, type: 3}
-  m_Name: 0_ComplaintOpeningLineTable
+  m_Name: 0_OpeningTable
   m_EditorClassIdentifier: Assembly-CSharp::ComplaintOpeningLineTable
   entries:
   - complaintType: 0
     applicantType: 0
+    nuisanceType: 0
     lines:
     - "\uC8FC\uBBFC\uB4F1\uB85D\uB4F1\uBCF8 \uBC1C\uAE09\uD558\uB7EC \uC654\uC5B4\uC694"
     - "\uB4F1\uBCF8 \uD558\uB098 \uBC1C\uAE09\uD574\uC8FC\uC138\uC694"
   - complaintType: 0
     applicantType: 1
+    nuisanceType: 0
     lines:
     - "\uAC00\uC871 \uB300\uC2E0 \uB4F1\uBCF8 \uBC1B\uC73C\uB7EC \uC654\uC2B5\uB2C8\uB2E4"
     - "\uB300\uB9AC \uBC1C\uAE09 \uAC00\uB2A5\uD55C\uAC00\uC694?"
+  - complaintType: 0
+    applicantType: 0
+    nuisanceType: 1
+    lines:
+    - "\uB4F1\uBCF8."
+  - complaintType: 0
+    applicantType: 1
+    nuisanceType: 1
+    lines:
+    - "00 \uB4F1\uBCF8."

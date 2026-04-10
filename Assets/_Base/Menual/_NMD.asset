@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16b187a6ce6f5104e8b906999ddac05d, type: 3}
+  m_Name: _NMD
+  m_EditorClassIdentifier: Assembly-CSharp::NuisanceTypeSO
+  entries:
+  - nuisanceType: 1
+    spawnChance: 0.5
+    perMessagePenalty:
+      stress: 1
+      kindness: 0
+      reliability: 0
+      performance: 0
+    patienceMultiplier: 1
+    onFinishPenalty:
+      stress: 0
+      kindness: 0
+      reliability: 0
+      performance: 0
