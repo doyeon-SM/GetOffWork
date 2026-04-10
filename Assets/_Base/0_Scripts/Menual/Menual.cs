@@ -92,6 +92,15 @@ public abstract class Manual
     // ── 실행 ─────────────────────────────────────────────────────────────
     public abstract ResponseResult Execute(string commandId, string payload = null);
 
+    /// <summary>
+    /// 시스템이 외부에서 직접 행동을 기록할 때 사용 (ReturnPrintedDoc 등).
+    /// Execute()를 거치지 않고 ActionQueue에만 추가한다.
+    /// </summary>
+    public void RecordReturnAction(string commandId)
+    {
+        RecordAction(commandId);
+    }
+
     protected void RecordAction(string commandId)
     {
         float elapsed = Time.time - sessionStartTime;

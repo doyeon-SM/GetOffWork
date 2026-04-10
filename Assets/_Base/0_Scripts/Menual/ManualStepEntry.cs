@@ -3,6 +3,8 @@ using System;
 /// <summary>
 /// 메뉴얼에 정의된 절차 한 단계.
 /// Manual의 RequiredSteps List에 순서대로 등록된다.
+///
+/// 보상은 단계별이 아닌 메뉴얼 단위(ManualDataSO.completionReward)로 관리한다.
 /// </summary>
 [Serializable]
 public class ManualStepEntry
@@ -29,29 +31,19 @@ public class ManualStepEntry
     /// </summary>
     public StepPenalty OrderPenalty;
 
-    /// <summary>
-    /// 이 단계를 정상 수행했을 때 적용할 보상.
-    /// 민원 종료 시 평가에서 사용된다.
-    /// </summary>
-    public StepReward CompletionReward;
-
     public ManualStepEntry(
         string commandId,
-        bool isOrdered = true,
+        bool isOrdered = true,        
         StepPenalty omissionPenalty = default,
-        StepPenalty orderPenalty = default,
-        StepReward completionReward = default)
+        StepPenalty orderPenalty = default)
     {
-        CommandId        = commandId;
-        IsOrdered        = isOrdered;
-        OmissionPenalty  = omissionPenalty;
-        OrderPenalty     = orderPenalty;
-        CompletionReward = completionReward;
+        CommandId       = commandId;
+        IsOrdered       = isOrdered;        
+        OmissionPenalty = omissionPenalty;
+        OrderPenalty    = orderPenalty;
     }
 }
 
-/// <summary>
-/// 단계 누락 또는 순서 위반 시 적용되는 패널티 묶음.
 /// 모든 필드 기본값 0 = 패널티 없음.
 /// </summary>
 [Serializable]

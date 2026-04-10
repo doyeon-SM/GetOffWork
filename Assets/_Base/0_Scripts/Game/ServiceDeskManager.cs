@@ -26,6 +26,13 @@ public class ServiceDeskManager : MonoBehaviour
 [Header("입장 대사 데이터")]
     [SerializeField] private ComplaintOpeningLineTable openingLineTable;
 
+    [Header("FullID 메뉴얼 SO")]
+    [SerializeField] private ManualDataSO fullIDSelfManualData_Print;
+    [SerializeField] private ManualDataSO fullIDSelfManualData_Mobile;
+    [SerializeField] private ManualDataSO fullIDProxyManualData_Print;
+    [SerializeField] private ManualDataSO fullIDProxyManualData_Mobile;
+
+
     [Header("다음 손님 대기 시간")]
     [SerializeField] private float minCustomerDelay = 2f;
     [SerializeField] private float maxCustomerDelay = 6f;
@@ -68,6 +75,7 @@ public class ServiceDeskManager : MonoBehaviour
     public event Action<string> OnCustomerOpening;
 
     public event Action<ComplaintContext> OnSpawnIdCardRequested;
+    public event Action<ComplaintContext> OnPrintDocumentRequested;
     public event Action<ComplaintContext> OnOpenIdCardDetailRequested;
     public event Action<ComplaintContext> OnOpenMonitorRequested;
     public event Action<ComplaintContext> OnMonitorRefreshRequested;
@@ -268,7 +276,25 @@ public void OnClickCallNextCustomer()
     {
         switch (complaint.complaintType)
         {
-            case ComplaintContext.ComplaintType.FullID: return new M_FullID(userDatabase);
+            case ComplaintContext.ComplaintType.FullID:
+                if (complaint.applicantType == ComplaintContext.ApplicantType.Self)
+                {
+                    var m = new M_FullID_Self(userDatabase);
+                    if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
+                        m.manualData = fullIDSelfManualData_Print;
+                    else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
+                        m.manualData = fullIDSelfManualData_Mobile;
+                    return m;
+                }
+                else
+                {
+                    var m = new M_FullID_Proxy(userDatabase);
+                    if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
+                        m.manualData = fullIDProxyManualData_Print;
+                    else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
+                        m.manualData = fullIDProxyManualData_Mobile;
+                    return m;
+                }
             default: return null;
         }
     }
@@ -304,12 +330,28 @@ public void ExecuteCommand(string commandId, string payload = null)
         if (!isWorking || deskState != DeskState.ServingCustomer) return;
         if (currentManual == null || currentComplaint == null)    return;
 
+        // ReturnPrintedDoc은 Manual.Execute 를 거치지 않고 직접 RecordAction만 수행
+        // (PaperItem이 TakeZone에 드롭될 때 시스템 커맨드로 발행됨)
+        if (commandId == ManualCommandIds.ReturnPrintedDoc)
+        {
+            currentManual.RecordReturnAction(commandId);
+            Log($"{TAG} Paper 반납 확인 커맨드 발행");
+            return;
+        }
+
         var result = currentManual.Execute(commandId, payload);
 
         if (commandId == ManualCommandIds.AskSubmitId && result.IsValid)
         {
             currentManual.Execute(ManualCommandIds.SpawnIdCard);
             currentComplaint.idCardSpawned = true;
+        }
+
+        // PrintDocument 성공 시 프린터에서 Paper Spawn 요청
+        if (commandId == ManualCommandIds.PrintDocument && result.IsValid)
+        {
+            OnPrintDocumentRequested?.Invoke(currentComplaint);
+            Log($"{TAG} OnPrintDocumentRequested 발행");
         }
 
         DispatchUIResult(result);
@@ -322,13 +364,11 @@ public void ExecuteCommand(string commandId, string payload = null)
                 Log($"{TAG} Customer: {result.CustomerMessage}");
         }
 
-        // result.IsCompleted(completeNow=true)인 경우만 즉시 종료
-        // M_FullID는 completeNow=false를 반환하므로 호출 버튼에서 종료
         if (result.IsCompleted)
             FinishCurrentCustomer();
     }
 
-    private void DispatchUIResult(ResponseResult result)
+private void DispatchUIResult(ResponseResult result)
     {
         if (!string.IsNullOrWhiteSpace(result.PlayerMessage))    OnPlayerText?.Invoke(result.PlayerMessage);
         if (!string.IsNullOrWhiteSpace(result.CustomerMessage))  OnCustomerText?.Invoke(result.CustomerMessage);
@@ -362,67 +402,90 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         bool isAddressMismatch = currentComplaint.isAddressMismatch;
         bool isCompleted       = currentManual.IsCompleted;
 
-        // ── 반려 결과 유형 판정 ────────────────────────────────────────────────
-        //
-        // 정상 반려   : isRejection==true  && isAddressMismatch==true
-        // 비정상 반려 : isRejection==true  && isAddressMismatch==false
-        //                (주소일치인데 반려 / 인쇄 완료 후 반려 시도)
-        // 반려사항 놓침 : isRejection==false && isAddressMismatch==true  && isCompleted==true
-        //                (주소불일치인데 그냥 인쇄/발송 완료)
+        // ── 반려 결과 유형 판정 ─────────────────────────────────────────────────────
+        bool isValidRejection   = isRejection && isAddressMismatch;
+        bool isInvalidRejection = isRejection && !isAddressMismatch;
+        bool isMissedRejection  = !isRejection && isAddressMismatch && isCompleted;
 
-        bool isValidRejection   = isRejection && isAddressMismatch;    // 정상 반려
-        bool isInvalidRejection = isRejection && !isAddressMismatch;   // 비정상 반려
-        bool isMissedRejection  = !isRejection && isAddressMismatch && isCompleted; // 반려사항 놓침
-
-        // ── 인내심 소진 패널티 ────────────────────────────────────────────────
+        // ── 인내심 소진 패널티 ─────────────────────────────────────────────────────
         if (patienceExpired)
         {
             playerBase.AddStat(Stat.Stress, 2);
             Log($"{TAG_EVAL} 인내심 소진 → Stress+2");
         }
 
-        // ── 정상 반려 ──────────────────────────────────────────────────────
-        if (isValidRejection)
-        {
-            int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
-            playerBase.AddPerformance(perfReward);
-            playerBase.AddStat(Stat.Stress, 1);
-            Log($"{TAG_EVAL} 정상 반려(주소불일치) → Performance+{perfReward}, Stress+1");
-        }
-
-        // ── 비정상 반려 ────────────────────────────────────────────────────
-        if (isInvalidRejection)
-        {
-            playerBase.AddPerformance(-2);
-            playerBase.AddStat(Stat.Reliability, -1);
-            Log($"{TAG_EVAL} 비정상 반려(주소 일치) → Performance-2, Reliability-1");
-        }
-
-        // ── 반려사항 놓침 ───────────────────────────────────────────────────
-        if (isMissedRejection)
-        {
-            playerBase.AddPerformance(-2);
-            playerBase.AddStat(Stat.Reliability, -1);
-            Log($"{TAG_EVAL} 반려사항 놓침(주소불일치인데 인쇄/발송 완료) → Performance-2, Reliability-1");
-        }
-
-        // ── 메뉴얼 절차 평가 (ManualEvaluator) ─────────────────────────────
-        // isAddressMismatch==true: AskPrintOrMobile/PrintDocument/SendMobile 패널티 자동 제외
+        // ── 메뉴얼 절차 평가 (ManualEvaluator) ───────────────────────────────────
         var eval = ManualEvaluator.Evaluate(
             currentManual.RequiredSteps,
             currentManual.ActionQueue,
             isAddressMismatch: isAddressMismatch
         );
+        Log($"{TAG_EVAL} 평가 — {eval}");
 
-        Log($"{TAG_EVAL} 평가 — Perf:{eval.PerformanceDelta} Kind:{eval.KindnessDelta} Stress:{eval.StressDelta} Rel:{eval.ReliabilityDelta}");
+        // ── 정상 반려 (주소불일치) ────────────────────────────────────────────
+        if (isValidRejection)
+        {
+            var soData = GetCurrentManualData();
+            if (soData != null && !soData.completionReward.IsEmpty)
+            {
+                ApplyReward(soData.completionReward);
+                Log($"{TAG_EVAL} 정상 반려(주소불일치) → SO completionReward 적용");
+            }
+            else
+            {
+                int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
+                playerBase.AddPerformance(perfReward);
+                Log($"{TAG_EVAL} 정상 반려(주소불일치) → Performance+{perfReward} [폴백]");
+            }
+            playerBase.AddStat(Stat.Stress, 1);
+        }
 
+        // ── 비정상 처리 통합 패널티 (abnormalRejectionPenalty) ───────────────────
+        // 1) 비정상 반려 (주소일치인데 반려)
+        // 2) 반려사항 놓침 (주소불일치인데 인쇄/발송 완료)
+        // 3) 정상 응대 실패 (평가 더러움 — 누락/순서위반/미반납 등)
+        bool isAbnormal = isInvalidRejection
+                       || isMissedRejection
+                       || (isCompleted && !isValidRejection && !eval.IsClean);
+
+        if (isAbnormal)
+        {
+            var soData = GetCurrentManualData();
+            string reason = isInvalidRejection ? "비정상 반려"
+                          : isMissedRejection  ? "반려사항 놓침"
+                                               : "정상 응대 실패";
+            if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
+            {
+                ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
+                Log($"{TAG_EVAL} [{reason}] → SO abnormalRejectionPenalty 적용");
+            }
+            else
+            {
+                playerBase.AddPerformance(-2);
+                playerBase.AddStat(Stat.Reliability, -1);
+                Log($"{TAG_EVAL} [{reason}] → Performance-2, Reliability-1 [폴백]");
+            }
+        }
+
+        // ── 평가 스탃 적용 ────────────────────────────────────────────────────────
         if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
         if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,     eval.KindnessDelta);
         if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,       eval.StressDelta);
         if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability,  eval.ReliabilityDelta);
         if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
 
-        // ── 필수 반납 목록 초기화 + 클린업 ──────────────────────────────────
+        // ── 정상 응대 보상 (ManualDataSO.completionReward) ─────────────────────
+        if (isCompleted && !isValidRejection && eval.IsClean)
+        {
+            var soData = GetCurrentManualData();
+            if (soData != null && !soData.completionReward.IsEmpty)
+            {
+                ApplyReward(soData.completionReward);
+                Log($"{TAG_EVAL} 정상 응대 보상 → SO completionReward 적용");
+            }
+        }
+
+        // ── 필수 반납 목록 초기화 + 클린업 ─────────────────────────────────
         currentManual.ClearRequiredReturnItems();
 
         Log($"{TAG} 민원 종료 — {currentComplaint.complaintType} / rejected={currentComplaint.rejected}");
@@ -437,6 +500,35 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         currentComplaint = null;
         currentManual    = null;
     }
+
+/// <summary>
+    /// 현재 활성 Manual에서 ManualDataSO를 가져온다.
+    /// M_FullID_Self / M_FullID_Proxy 모두 지원.
+    /// </summary>
+    private ManualDataSO GetCurrentManualData()
+    {
+        if (currentManual is M_FullID_Self self)   return self.manualData;
+        if (currentManual is M_FullID_Proxy proxy) return proxy.manualData;
+        return null;
+    }
+
+    private void ApplyReward(StepReward reward)
+    {
+        if (reward.Performance != 0) playerBase.AddPerformance(reward.Performance);
+        if (reward.Kindness    != 0) playerBase.AddStat(Stat.Kindness,    reward.Kindness);
+        if (reward.Reliability != 0) playerBase.AddStat(Stat.Reliability, reward.Reliability);
+        if (reward.Pay         != 0) playerBase.AddPay(reward.Pay);
+    }
+
+    private void ApplyPenaltyFromSO(StepPenalty penalty)
+    {
+        if (penalty.Performance != 0) playerBase.AddPerformance(-penalty.Performance);
+        if (penalty.Kindness    != 0) playerBase.AddStat(Stat.Kindness,     -penalty.Kindness);
+        if (penalty.Stress      != 0) playerBase.AddStat(Stat.Stress,        penalty.Stress);
+        if (penalty.Reliability != 0) playerBase.AddStat(Stat.Reliability,  -penalty.Reliability);
+        if (penalty.Pay         != 0) playerBase.AddPay(-penalty.Pay);
+    }
+
 
     private void RaiseWaitingQueueChanged() =>
         OnWaitingQueueChanged?.Invoke(waitingQueue.Count);

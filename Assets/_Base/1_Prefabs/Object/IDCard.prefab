@@ -185,5 +185,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IDCardItem
   dragThreshold: 0.1
   dragZOffset: -5
-  showDebugLog: 1
+  showDebugLog: 0
   objectType: 1
