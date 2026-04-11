@@ -5,18 +5,18 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 편의점 UI.
-/// - storeItemPool에 등록된 아이템 중 랜덤 최대 4개를 진열한다.
+/// - StoreItemManager SO에서 랜덤 4개를 딕셔너리로 받아 슬롯에 진열한다.
 /// - 구매 후 해당 슬롯은 "품절" 상태가 된다.
-/// - 편의점이 열릴 때 PlayerInventory.ResetDailyPurchase()를 호출해 당일 구매 이력을 초기화한다.
+/// - 편의점이 열릴 때 PlayerInventory.ResetDailyPurchase()를 호출해 당일 이력을 초기화한다.
 /// </summary>
 public class UIStore : MonoBehaviour
 {
     [Header("기본 UI")]
-    [SerializeField] private Button    closeButton;
-    [SerializeField] private TMP_Text  playerPayText;
+    [SerializeField] private Button   closeButton;
+    [SerializeField] private TMP_Text playerPayText;
 
-    [Header("아이템 풀 (전체 목록 — 이 중 랜덤 4개 진열)")]
-    [SerializeField] private List<ItemBase> storeItemPool = new List<ItemBase>();
+    [Header("아이템 풀 관리자 (StoreItemManager SO)")]
+    [SerializeField] private StoreItemManager storeItemManager;
 
     [Header("슬롯 (Inspector에서 4개 연결)")]
     [SerializeField] private UIStoreItemSlot[] itemSlots = new UIStoreItemSlot[4];
@@ -24,6 +24,9 @@ public class UIStore : MonoBehaviour
     private UIHomeController uiHomeController;
     private PlayerInventory  playerInventory;
     private PlayerBase       playerBase;
+
+    // 이번 방문에서 진열된 아이템 딕셔너리 (슬롯인덱스 → ItemBase)
+    private Dictionary<int, ItemBase> displayedItems;
 
     public PlayerInventory Inventory => playerInventory;
 
@@ -48,26 +51,28 @@ public class UIStore : MonoBehaviour
         RefreshUI();
     }
 
-    /// <summary>풀에서 랜덤 최대 4개를 골라 슬롯에 배치한다.</summary>
+    /// <summary>StoreItemManager에서 랜덤 4개를 받아 슬롯에 배치한다.</summary>
     private void BindSlots()
     {
-        // 풀을 셔플해서 앞 4개 선택
-        var shuffled = new List<ItemBase>(storeItemPool);
-        for (int i = shuffled.Count - 1; i > 0; i--)
+        if (storeItemManager == null)
         {
-            int j = Random.Range(0, i + 1);
-            (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]);
+            Debug.LogWarning("[UIStore] StoreItemManager가 연결되지 않았습니다.");
+            foreach (var slot in itemSlots)
+                if (slot != null) slot.gameObject.SetActive(false);
+            return;
         }
+
+        displayedItems = storeItemManager.GetRandomItems(4);
 
         int slotCount = Mathf.Min(itemSlots.Length, 4);
         for (int i = 0; i < slotCount; i++)
         {
             if (itemSlots[i] == null) continue;
 
-            if (i < shuffled.Count && shuffled[i] != null)
+            if (displayedItems.TryGetValue(i, out ItemBase item))
             {
                 itemSlots[i].gameObject.SetActive(true);
-                itemSlots[i].Setup(shuffled[i], this, i);
+                itemSlots[i].Setup(item, this, i);
             }
             else
             {
@@ -106,10 +111,8 @@ public class UIStore : MonoBehaviour
             playerPayText.text = $"잔액 : {playerBase.Pay}원";
 
         foreach (var slot in itemSlots)
-        {
             if (slot != null && slot.gameObject.activeSelf)
                 slot.Refresh();
-        }
     }
 
     // ── 닫기 ─────────────────────────────────────────────────────────────
