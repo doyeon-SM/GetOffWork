@@ -27,7 +27,7 @@ public struct PlayerStat
 
     public PlayerStat WithAddedStat(Stat stat, int amount)
     {
-        float value = 0.05f * amount;
+        float value = 0.01f * amount;
 
         switch (stat)
         {
