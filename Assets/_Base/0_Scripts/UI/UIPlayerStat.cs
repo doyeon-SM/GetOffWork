@@ -5,13 +5,13 @@ using TMPro;
 public class UIPlayerStat : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerBase playerbase;
+    [SerializeField] private PlayerBase      playerbase;
     [SerializeField] private PlayerInventory playerInventory;
 
     [Header("Performance UI")]
-    [SerializeField] private Slider performanceSlider;
+    [SerializeField] private Slider      performanceSlider;
     [SerializeField] private RectTransform goalMarker;
-    [SerializeField] private TMP_Text performanceText;
+    [SerializeField] private TMP_Text    performanceText;
     [SerializeField] private RectTransform sliderFillRect;
 
     [Header("Stat Text UI")]
@@ -20,101 +20,81 @@ public class UIPlayerStat : MonoBehaviour
     [SerializeField] private TMP_Text reliabilityText;
     [SerializeField] private TMP_Text payText;
 
-    
-
+    [Header("인벤토리 슬롯 (0~2번 버튼)")]
+    [SerializeField] private UIInventorySlot inventorySlot0;
+    [SerializeField] private UIInventorySlot inventorySlot1;
+    [SerializeField] private UIInventorySlot inventorySlot2;
 
     private void Awake()
     {
-        playerbase = PlayerBase.Instance;
-        playerInventory = PlayerInventory.Instance;        
+        playerbase       = PlayerBase.Instance;
+        playerInventory  = PlayerInventory.Instance;
     }
 
     private void OnGUI()
     {
-        //playerbase.DebugLogStat();
         RefreshUI();
     }
 
     private void RefreshUI()
     {
-        if (playerbase == null)
-            return;
+        if (playerbase == null) return;
 
         UpdatePerformanceUI();
         UpdateStatTexts();
+        RefreshInventorySlots();
     }
+
+    // ── 스탯 ─────────────────────────────────────────────────────────────
 
     private void UpdatePerformanceUI()
     {
-        int currentPerformance = playerbase.Performance;
-        int maxPerformance = playerbase.GetMaxPerformance();
-        int goalPerformance = playerbase.GoalPerformance;
-        //Debug.Log($"currentPerformance : {currentPerformance} | max : {maxPerformance} | goal : {goalPerformance}");
-
-        currentPerformance = Mathf.Clamp(currentPerformance, 0, maxPerformance);
-        goalPerformance = Mathf.Clamp(goalPerformance, 0, maxPerformance);
-
-        //Debug.Log($"currentPerformance : {currentPerformance} | max : {maxPerformance} | goal : {goalPerformance}");
+        int cur  = Mathf.Clamp(playerbase.Performance, 0, playerbase.GetMaxPerformance());
+        int max  = playerbase.GetMaxPerformance();
+        int goal = Mathf.Clamp(playerbase.GoalPerformance, 0, max);
 
         if (performanceSlider != null)
         {
             performanceSlider.minValue = 0;
-            performanceSlider.maxValue = maxPerformance;
-            performanceSlider.value = currentPerformance;
+            performanceSlider.maxValue = max;
+            performanceSlider.value    = cur;
         }
 
         if (performanceText != null)
-        {
-            performanceText.text = $"{currentPerformance} / {maxPerformance}";
-        }
+            performanceText.text = $"{cur} / {max}";
 
-        UpdateGoalMarker(goalPerformance, maxPerformance);
+        UpdateGoalMarker(goal, max);
     }
-    private void UpdateStatTexts()
-    {
-        UpdateStat_Kindness();
-        UpdateStat_Stress();
-        UpdateStat_Reliability();
-        UpdatePay();
-    }
+
     private void UpdateGoalMarker(int goal, int max)
     {
-        if (goalMarker == null || sliderFillRect == null || max <= 0)
-        {
-            Debug.Log($"[Error] {goalMarker} | {sliderFillRect} | {max}");
-            return;
-        }
-        float ratio = (float)goal / max;
-        ratio = Mathf.Clamp01(ratio);
-        float width = sliderFillRect.rect.width;
+        if (goalMarker == null || sliderFillRect == null || max <= 0) return;
 
-        float x =  width * 0.5f - width* ratio;
+        float ratio = Mathf.Clamp01((float)goal / max);
+        float width = sliderFillRect.rect.width;
+        float x     = width * 0.5f - width * ratio;
         goalMarker.anchoredPosition = new Vector2(x, goalMarker.anchoredPosition.y);
     }
+
+    private void UpdateStatTexts()
+    {
+        if (kindnessText    != null) kindnessText.text    = ToPercent(playerbase.Kindness);
+        if (stressText      != null) stressText.text      = ToPercent(playerbase.Stress);
+        if (reliabilityText != null) reliabilityText.text = ToPercent(playerbase.Reliability);
+        if (payText         != null) payText.text         = playerbase.Pay.ToString();
+    }
+
     private string ToPercent(float v)
     {
-        int percent = Mathf.RoundToInt(v * 100f);
-        percent = Mathf.Clamp(percent, 0, 100);
-        return $"{percent}%";
+        return $"{Mathf.Clamp(Mathf.RoundToInt(v * 100f), 0, 100)}%";
     }
-    private void UpdateStat_Kindness()
+
+    // ── 인벤토리 ─────────────────────────────────────────────────────────
+
+    private void RefreshInventorySlots()
     {
-        if (kindnessText != null)
-            kindnessText.text = ToPercent(playerbase.Kindness);
-    }
-    private void UpdateStat_Stress()
-    {
-        if (stressText != null)
-            stressText.text = ToPercent(playerbase.Stress);
-    }
-    private void UpdateStat_Reliability()
-    {
-        if (reliabilityText != null)
-            reliabilityText.text = ToPercent(playerbase.Reliability);
-    }
-    private void UpdatePay()
-    {
-        if (payText != null)
-            payText.text = playerbase.Pay.ToString();
+        inventorySlot0?.Refresh();
+        inventorySlot1?.Refresh();
+        inventorySlot2?.Refresh();
     }
 }

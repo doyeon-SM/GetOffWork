@@ -132,7 +132,15 @@ PrefabInstance:
       value: StatUI Root
       objectReference: {fileID: 0}
     - target: {fileID: 3863603584532698274, guid: 58f2c075aa231f64090c2388e64c1fbe, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3863603584532698274, guid: 58f2c075aa231f64090c2388e64c1fbe, type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3863603584532698274, guid: 58f2c075aa231f64090c2388e64c1fbe, type: 3}
+      propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6023957059063590733, guid: 58f2c075aa231f64090c2388e64c1fbe, type: 3}

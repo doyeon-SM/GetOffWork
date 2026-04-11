@@ -462,7 +462,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIStore
   closeButton: {fileID: 4991660701398580339}
   playerPayText: {fileID: 8593159730429210535}
-  storeItems:
+  storeItemPool:
   - {fileID: 11400000, guid: bb798bd46eddd4c438cd114d632c81e3, type: 2}
   - {fileID: 11400000, guid: 4b6a11f2dbac53840863f3f8361c37c1, type: 2}
   - {fileID: 11400000, guid: fce3c8999331f2d41ac9df8efc0d2d02, type: 2}
@@ -811,14 +811,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 220
+      value: 215
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 120
+      value: 102.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5936492169098398458, guid: 94c262c833f718b45bc4212df2884194, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 94c262c833f718b45bc4212df2884194, type: 3}
@@ -1072,14 +1073,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -200
+      value: -205
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 120
+      value: 102.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5936492169098398458, guid: 94c262c833f718b45bc4212df2884194, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 94c262c833f718b45bc4212df2884194, type: 3}
@@ -1333,14 +1335,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -200
+      value: -205
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -80
+      value: -98
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5936492169098398458, guid: 94c262c833f718b45bc4212df2884194, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 94c262c833f718b45bc4212df2884194, type: 3}
@@ -1594,14 +1597,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 220
+      value: 215
       objectReference: {fileID: 0}
     - target: {fileID: 8718005729567667239, guid: 94c262c833f718b45bc4212df2884194, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -80
+      value: -97.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5936492169098398458, guid: 94c262c833f718b45bc4212df2884194, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 94c262c833f718b45bc4212df2884194, type: 3}
