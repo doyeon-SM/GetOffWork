@@ -20,6 +20,17 @@ public class ManualDataSO : ScriptableObject
     [Header("메뉴얼 이름 (참조용)")]
     public string manualTitle;
 
+    [Header("인내심 범위")]
+    [Tooltip("민원인 인내심의 최소값. 0이면 전역 ServiceDeskManager 기본값(20f) 사용.")]
+    public float patienceMin = 0f;
+    [Tooltip("인내심의 최대값. 0이면 전역 ServiceDeskManager 기본값(40f) 사용.")]
+    public float patienceMax = 0f;
+
+    /// <summary>
+    /// patienceMin/Max가 유효한지 여부 (0이면 기본값 사용).
+    /// </summary>
+    public bool HasPatienceOverride => patienceMin > 0f || patienceMax > 0f;
+
     [Header("정상 응대 보상")]
     [Tooltip("모든 필수 절차를 누락/순서위반 없이 정상 완료했을 때 적용되는 보상")]
     public StepReward completionReward;

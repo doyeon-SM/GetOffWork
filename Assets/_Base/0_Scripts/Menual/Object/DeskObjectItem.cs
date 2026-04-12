@@ -48,7 +48,8 @@ public abstract class DeskObjectItem : MonoBehaviour
     [Header("오브젝트 종류")]
     [SerializeField] private DeskObjectType objectType = DeskObjectType.None;
 
-    public DeskObjectType ObjectType => objectType;
+        public DeskObjectType ObjectType => objectType;
+    public void SetObjectType(DeskObjectType type) { objectType = type; }
 
     public bool IsInTakeZone => takeZone != null && takeZone.Contains(transform.position);
 

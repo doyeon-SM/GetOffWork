@@ -154,17 +154,19 @@ public class ObjectManagerBox : MonoBehaviour
     private void OnEnable()
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.OnSpawnIdCardRequested     += HandleSpawnIdCard;
-        serviceDeskManager.OnPrintDocumentRequested   += HandlePrintDocument;
-        serviceDeskManager.OnCustomerCleared          += HandleCustomerCleared;
+                serviceDeskManager.OnSpawnIdCardRequested      += HandleSpawnIdCard;
+        serviceDeskManager.OnSpawnProxyIdCardRequested  += HandleSpawnProxyIdCard;
+        serviceDeskManager.OnPrintDocumentRequested     += HandlePrintDocument;
+        serviceDeskManager.OnCustomerCleared            += HandleCustomerCleared;
     }
 
     private void OnDisable()
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.OnSpawnIdCardRequested     -= HandleSpawnIdCard;
-        serviceDeskManager.OnPrintDocumentRequested   -= HandlePrintDocument;
-        serviceDeskManager.OnCustomerCleared          -= HandleCustomerCleared;
+                serviceDeskManager.OnSpawnIdCardRequested      -= HandleSpawnIdCard;
+        serviceDeskManager.OnSpawnProxyIdCardRequested  -= HandleSpawnProxyIdCard;
+        serviceDeskManager.OnPrintDocumentRequested     -= HandlePrintDocument;
+        serviceDeskManager.OnCustomerCleared            -= HandleCustomerCleared;
     }
 
     // ── IDCard 스폰 ───────────────────────────────────────────────────────
@@ -208,7 +210,41 @@ public class ObjectManagerBox : MonoBehaviour
         Log($"{TAG} IDCard Spawn 완료");
     }
 
-    // ── Paper 스폰 ────────────────────────────────────────────────────────
+        // ── ProxyIDCard 스폰 ──────────────────────────────────────────────────
+    private void HandleSpawnProxyIdCard(ComplaintContext complaint)
+    {
+        if (idCardPrefab == null)
+        {
+            Debug.LogWarning($"{TAG} idCardPrefab이 비어있습니다.");
+            return;
+        }
+
+        // 방문객 신분증에서 약간 오프셋을 주어 겹치지 않게 스폰
+        Vector3 spawnPos = takeZone != null
+            ? takeZone.GetCenterWorldPos() + spawnOffsetInTake + new Vector3(0.3f, 0f, 0f)
+            : transform.position;
+
+        GameObject go = Instantiate(idCardPrefab, spawnPos, Quaternion.identity);
+        DeskObjectItem item = go.GetComponent<DeskObjectItem>();
+
+        if (item == null)
+        {
+            Debug.LogError($"{TAG} idCardPrefab에 DeskObjectItem이 없습니다.");
+            Destroy(go);
+            return;
+        }
+
+        item.Initialize(this, takeZone, targetCamera);
+        item.SetObjectType(DeskObjectType.ProxyIDCard);
+
+        if (item is IDCardItem idItem)
+            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView);
+
+        userspawnedItems.Add(item);
+        Log($"{TAG} ProxyIDCard Spawn 완료");
+    }
+
+    // ── Paper 스폰────
     private void HandlePrintDocument(ComplaintContext complaint)
     {
         if (paperPrefab == null)

@@ -16,6 +16,9 @@ MonoBehaviour:
   - CommandId: ask_submit_id
     DisplayText: "\uC2E0\uBD84\uC99D \uC694\uCCAD"
     VisualType: 0
+  - CommandId: ask_submit_proxy_id
+    DisplayText: "\uB300\uB9AC\uC778 \uC2E0\uBD84\uC99D \uC694\uCCAD"
+    VisualType: 0
   - CommandId: ask_print_or_mobile
     DisplayText: "\uC778\uC1C4/\uC804\uC790 \uC804\uB2EC \uC9C8\uBB38"
     VisualType: 0

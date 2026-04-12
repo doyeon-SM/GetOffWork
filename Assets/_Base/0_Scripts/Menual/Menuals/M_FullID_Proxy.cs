@@ -4,14 +4,22 @@ using UnityEngine;
 /// <summary>
 /// 주민등록등본/초본 발급 — 대리인 신청 메뉴얼.
 ///
-/// [종료 흐름]
-/// 매뉴얼 완료(isCompleted=true) 후 플레이어가 CallDisplay를 눌러야 응대가 종료된다.
-/// ExecuteCommand에서는 즉시 종료하지 않는다.
+/// [절차 순서]
+/// 1. AskSubmitId        — 방문객(대리인) 신분증 요청
+/// 2. AskSubmitProxyId   — 대리인 신분증 요청 (IsOrdered=false, 자유 단계)
+/// 3. SearchRecordByInput     — 방문객 ID 모니터 조회 (주소불일치 확인용)
+/// 4. SearchProxyRecordByInput — 대리인(발급대상) ID 모니터 조회
+/// 5. AskPrintOrMobile   — 인쇄/전자 전송 질문
+/// 6. [인쇄] PrintDocument — 대리인 ID 기준으로 인쇄
+///            방문객 ID로 인쇄 시 WrongOrder(불필요+1)
+/// 6. [모바일] AskMobileNumber → MobileNumberByInput
+///            전화번호는 방문객(PhoneRecipientRecordId) 번호와 대조
 ///
-/// [모바일 전송 흐름]
-/// AskPrintOrMobile → SelectMobile → AskMobileNumber → MobileNumberByInput(Send)
-///   일치   → isCompleted=true (CallDisplay 시 정상 종료)
-///   불일치 → WrongOrder 대사만, 절차 미집계 (계속 시도 가능)
+/// [반납 필수 물품]
+///   방문객 신분증(IDCard) + 대리인 신분증(ProxyIDCard) + 인쇄물(PrintedDoc)
+///
+/// [비정상 반려]
+///   방문객 ID 기준 인쇄물이 반납될 경우 → ServiceDeskManager에서 비정상 판정
 /// </summary>
 public class M_FullID_Proxy : Manual
 {
@@ -40,13 +48,15 @@ public class M_FullID_Proxy : Manual
         Debug.LogWarning("[M_FullID_Proxy] manualData SO가 연결되지 않았습니다. 하드코딩 기본값을 사용합니다.");
         requiredSteps = new List<ManualStepEntry>
         {
-            new ManualStepEntry(ManualCommandIds.AskSubmitId,        true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
-            new ManualStepEntry(ManualCommandIds.SearchRecordByInput, true,  new StepPenalty(reliability: 1), new StepPenalty(reliability: 1)),
-            new ManualStepEntry(ManualCommandIds.AskPrintOrMobile,    false, new StepPenalty(kindness: 1),    default),
-            new ManualStepEntry(ManualCommandIds.AskMobileNumber,     false, new StepPenalty(kindness: 1),    default),
-            new ManualStepEntry(ManualCommandIds.MobileNumberByInput, true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
-            new ManualStepEntry(ManualCommandIds.PrintDocument,       true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
-            new ManualStepEntry(ManualCommandIds.ReturnPrintedDoc,    true,  new StepPenalty(reliability: 1), default),
+            new ManualStepEntry(ManualCommandIds.AskSubmitId,             true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
+            new ManualStepEntry(ManualCommandIds.AskSubmitProxyId,        false, new StepPenalty(kindness: 1),    default),
+            new ManualStepEntry(ManualCommandIds.SearchRecordByInput,     true,  new StepPenalty(reliability: 1), new StepPenalty(reliability: 1)),
+            new ManualStepEntry(ManualCommandIds.SearchProxyRecordByInput, true,  new StepPenalty(reliability: 1), new StepPenalty(reliability: 1)),
+            new ManualStepEntry(ManualCommandIds.AskPrintOrMobile,        false, new StepPenalty(kindness: 1),    default),
+            new ManualStepEntry(ManualCommandIds.AskMobileNumber,         false, new StepPenalty(kindness: 1),    default),
+            new ManualStepEntry(ManualCommandIds.MobileNumberByInput,     true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
+            new ManualStepEntry(ManualCommandIds.PrintDocument,           true,  new StepPenalty(kindness: 1),    new StepPenalty(reliability: 1)),
+            new ManualStepEntry(ManualCommandIds.ReturnPrintedDoc,        true,  new StepPenalty(reliability: 1), default),
         };
     }
 
@@ -60,23 +70,27 @@ public class M_FullID_Proxy : Manual
 
         switch (commandId)
         {
-            case ManualCommandIds.AskSubmitId:         return HandleAskSubmitId();
-            case ManualCommandIds.SpawnIdCard:         return HandleSpawnIdCard();
-            case ManualCommandIds.OpenIdCardDetail:    return HandleOpenIdCardDetail();
-            case ManualCommandIds.OpenMonitor:         return HandleOpenMonitor();
-            case ManualCommandIds.SearchRecordByInput: return HandleSearchRecordByInput(payload);
-            case ManualCommandIds.AskPrintOrMobile:    return HandleAskPrintOrMobile();
-            case ManualCommandIds.SelectPrint:         return HandleSelectPrint();
-            case ManualCommandIds.SelectMobile:        return HandleSelectMobile();
-            case ManualCommandIds.AskMobileNumber:     return HandleAskMobileNumber();
-            case ManualCommandIds.MobileNumberByInput: return HandleMobileNumberByInput(payload);
-            case ManualCommandIds.PrintDocument:       return HandlePrintDocument();
-            default:                                   return WrongOrder("알 수 없는 명령입니다.");
+            case ManualCommandIds.AskSubmitId:              return HandleAskSubmitId();
+            case ManualCommandIds.SpawnIdCard:              return HandleSpawnIdCard();
+            case ManualCommandIds.AskSubmitProxyId:         return HandleAskSubmitProxyId();
+            case ManualCommandIds.SpawnProxyIdCard:         return HandleSpawnProxyIdCard();
+            case ManualCommandIds.OpenIdCardDetail:         return HandleOpenIdCardDetail();
+            case ManualCommandIds.OpenMonitor:              return HandleOpenMonitor();
+            case ManualCommandIds.SearchRecordByInput:      return HandleSearchRecordByInput(payload);
+            case ManualCommandIds.SearchProxyRecordByInput: return HandleSearchProxyRecordByInput(payload);
+            case ManualCommandIds.AskPrintOrMobile:         return HandleAskPrintOrMobile();
+            case ManualCommandIds.SelectPrint:              return HandleSelectPrint();
+            case ManualCommandIds.SelectMobile:             return HandleSelectMobile();
+            case ManualCommandIds.AskMobileNumber:          return HandleAskMobileNumber();
+            case ManualCommandIds.MobileNumberByInput:      return HandleMobileNumberByInput(payload);
+            case ManualCommandIds.PrintDocument:            return HandlePrintDocument(payload);
+            default:                                        return WrongOrder("알 수 없는 명령입니다.");
         }
     }
 
     // ── 핸들러 ───────────────────────────────────────────────────────────
 
+    /// <summary>방문객(대리인 본인) 신분증 요청</summary>
     private ResponseResult HandleAskSubmitId()
     {
         if (context.idCardSpawned)
@@ -89,6 +103,22 @@ public class M_FullID_Proxy : Manual
     {
         context.idCardSpawned = true;
         AddRequiredReturnItem(DeskObjectType.IDCard);
+        return CorrectResponse();
+    }
+
+    /// <summary>대리인(발급 대상자) 신분증 요청 — IsOrdered=false 자유 단계</summary>
+    private ResponseResult HandleAskSubmitProxyId()
+    {
+        if (context.proxyIdCardSpawned)
+            return WrongOrderFromSO(ManualCommandIds.AskSubmitProxyId, "이미 제출했습니다.");
+        RecordAction(ManualCommandIds.AskSubmitProxyId);
+        return CorrectResponseFromSO(ManualCommandIds.AskSubmitProxyId, fallback: "네, 여기 있습니다.", shouldSpawnProxyIdCard: true);
+    }
+
+    private ResponseResult HandleSpawnProxyIdCard()
+    {
+        context.proxyIdCardSpawned = true;
+        AddRequiredReturnItem(DeskObjectType.ProxyIDCard);
         return CorrectResponse();
     }
 
@@ -105,6 +135,7 @@ public class M_FullID_Proxy : Manual
         return CorrectResponse(shouldOpenMonitor: true);
     }
 
+    /// <summary>방문객 ID 조회 — 주소불일치 확인용</summary>
     private ResponseResult HandleSearchRecordByInput(string inputId)
     {
         context.searchedInputId   = inputId;
@@ -114,6 +145,15 @@ public class M_FullID_Proxy : Manual
         else
             context.isAddressMismatch = false;
         RecordAction(ManualCommandIds.SearchRecordByInput);
+        return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);
+    }
+
+    /// <summary>대리인(발급 대상) ID 조회</summary>
+    private ResponseResult HandleSearchProxyRecordByInput(string inputId)
+    {
+        context.proxySearchedInputId = inputId;
+        context.proxySearched        = true;
+        RecordAction(ManualCommandIds.SearchProxyRecordByInput);
         return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);
     }
 
@@ -148,13 +188,61 @@ public class M_FullID_Proxy : Manual
         return CorrectResponse();
     }
 
+    /// <summary>
+    /// 인쇄 처리.
+    /// payload로 넘어온 ID가 대리인(targetRecordId)이면 정상.
+    /// 방문객(applicantRecordId)이면 불필요 절차 +1.
+    /// payload 없으면 마지막으로 조회된 ID(proxySearchedInputId)를 사용.
+    /// </summary>
+    private ResponseResult HandlePrintDocument(string inputId = null)
+    {
+        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
+            return WrongOrder();
+
+        // 어떤 ID로 인쇄할지 결정
+        string printId = string.IsNullOrEmpty(inputId)
+            ? context.proxySearchedInputId
+            : inputId;
+
+        bool isCorrectId = !string.IsNullOrEmpty(printId)
+                           && printId == context.targetRecordId;
+        bool isApplicantId = !string.IsNullOrEmpty(printId)
+                             && printId == context.applicantRecordId;
+
+        if (isCorrectId)
+        {
+            // 대리인 ID로 정상 인쇄
+            RecordAction(ManualCommandIds.PrintDocument);
+            isCompleted       = true;
+            context.completed = true;
+            return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
+        }
+        else if (isApplicantId)
+        {
+            // 방문객 ID로 인쇄 시도 → 불필요 절차 +1, 완료되지 않음
+            Debug.Log("[M_FullID_Proxy] 방문객 ID로 인쇄 시도 → 불필요 절차 +1");
+            return WrongOrderFromSO(ManualCommandIds.PrintDocument,
+                fallback: "죄송합니다, 발급 대상자 정보로 인쇄해 주세요.");
+        }
+        else
+        {
+            // ID 조회 없이 인쇄 시도
+            RecordAction(ManualCommandIds.PrintDocument);
+            isCompleted       = true;
+            context.completed = true;
+            return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
+        }
+    }
+
     private ResponseResult HandleAskMobileNumber()
     {
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
             return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
         RecordAction(ManualCommandIds.AskMobileNumber);
         context.mobileNumberAsked = true;
-        string phone    = GetCustomerPhoneNumber();
+
+        // 전화번호는 방문객(창구에 온 사람)의 번호
+        string phone    = GetApplicantPhoneNumber();
         string fallback = string.IsNullOrEmpty(phone) ? "010-0000-0000 입니다." : $"{phone} 입니다.";
         string raw      = GetCorrectLine(ManualCommandIds.AskMobileNumber, fallback);
         string line     = ResolvePlaceholders(raw, new System.Collections.Generic.Dictionary<string, string> { { "phone", phone } });
@@ -162,18 +250,21 @@ public class M_FullID_Proxy : Manual
     }
 
     /// <summary>
-    /// MobilePanel Send — 번호 대조.
-    ///   일치   → RecordAction + isCompleted=true. 종료는 CallDisplay 시.
-    ///   불일치 → WrongOrder 대사만, 절차 미집계.
+    /// MobilePanel Send — 방문객 전화번호와 대조.
+    ///   일치   → isCompleted=true (CallDisplay 시 종료)
+    ///   불일치 → WrongOrder 대사만, 절차 미집계
     /// </summary>
     private ResponseResult HandleMobileNumberByInput(string inputPhone)
     {
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
             return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
-        string correctPhone = GetCustomerPhoneNumber();
+
+        // 전화번호는 방문객 번호와 대조
+        string correctPhone = GetApplicantPhoneNumber();
         bool matched = !string.IsNullOrEmpty(correctPhone)
                        && NormalizePhone(inputPhone) == NormalizePhone(correctPhone);
         var placeholders = new System.Collections.Generic.Dictionary<string, string> { { "phone", correctPhone } };
+
         if (matched)
         {
             RecordAction(ManualCommandIds.MobileNumberByInput);
@@ -194,21 +285,12 @@ public class M_FullID_Proxy : Manual
         }
     }
 
-    private ResponseResult HandlePrintDocument()
-    {
-        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
-            return WrongOrder();
-        RecordAction(ManualCommandIds.PrintDocument);
-        isCompleted       = true;
-        context.completed = true;
-        return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
-    }
-
     // ── 유틸리티 ─────────────────────────────────────────────────────────
 
-    private string GetCustomerPhoneNumber()
+    /// <summary>방문객(창구에 온 사람)의 전화번호 — 모바일 전송 수신처</summary>
+    private string GetApplicantPhoneNumber()
     {
-        string recordId = context.EffectiveTargetRecordId;
+        string recordId = context.PhoneRecipientRecordId; // 항상 방문객
         if (string.IsNullOrEmpty(recordId)) return string.Empty;
         if (userDatabase.TryGetRecord(recordId, out UserRecordData record))
             return record.phoneNumber ?? string.Empty;

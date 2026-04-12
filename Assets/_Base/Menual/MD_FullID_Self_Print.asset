@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: MD_FullID_Self_Print
   m_EditorClassIdentifier: Assembly-CSharp::ManualDataSO
   manualTitle: FullID_Self_Print
+  patienceMin: 30
+  patienceMax: 50
   completionReward:
     Performance: 3
     Kindness: 0

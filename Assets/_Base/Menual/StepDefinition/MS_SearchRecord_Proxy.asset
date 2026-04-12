@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4cf57ccbacec517419d958c87449115e, type: 3}
-  m_Name: MS_AskSubmitId
+  m_Name: MS_SearchRecord_Proxy
   m_EditorClassIdentifier: Assembly-CSharp::ManualStepDefinitionSO
-  commandId: ask_submit_id
-  isOrdered: 1
+  commandId: search_proxy_record_by_input
+  isOrdered: 0
   omissionPenalty:
     Performance: 0
     Kindness: 1
@@ -24,5 +24,5 @@ MonoBehaviour:
     Performance: 0
     Kindness: 0
     Stress: 0
-    Reliability: 1
+    Reliability: 0
     Pay: 0
