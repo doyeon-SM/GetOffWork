@@ -4,6 +4,12 @@ using UnityEngine;
 /// 모니터 UI 컨트롤러.
 /// 각 패널은 프리팹으로 관리되며, 전환 시 현재 패널을 Destroy하고
 /// 새 패널을 Instantiate하여 root에 붙인다.
+///
+/// [이벤트 구독 방식]
+/// OnEnable/OnDisable 대신 Start/OnDestroy에서만 구독/해제한다.
+/// SetActive(false)로 비활성화되어도 OnCustomerCleared 수신을 유지해
+/// 어떤 경로(응대종료, 인내심 한계, 반려 등)로 민원이 끝나도
+/// 반드시 모니터가 초기화되도록 보장한다.
 /// </summary>
 public class UIMonitorController : MonoBehaviour
 {
@@ -28,22 +34,41 @@ public class UIMonitorController : MonoBehaviour
             panelRoot = GetComponent<RectTransform>();
     }
 
-    private void OnEnable()
+    private void Start()
     {
+        // Start에서 한 번만 구독
+        // OnEnable/OnDisable 타이밍 문제(SetActive로 인한 구독 해제)를 방지한다.
         if (serviceDeskManager != null)
             serviceDeskManager.OnCustomerCleared += HandleCustomerCleared;
+        else
+            Debug.LogWarning("[UIMonitorController] ServiceDeskManager를 찾을 수 없어 OnCustomerCleared 구독 실패.");
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
+        // 오브젝트가 실제로 파괴될 때만 구독 해제
         if (serviceDeskManager != null)
             serviceDeskManager.OnCustomerCleared -= HandleCustomerCleared;
     }
 
+    // ── 민원 종료 핸들러 ──────────────────────────────────────────────────
+
     private void HandleCustomerCleared()
     {
         currentRecord = null;
-        Close();
+
+        if (gameObject.activeSelf)
+        {
+            // 모니터가 열려있으면 닫는다 (패널 Destroy + SetActive(false))
+            Close();
+        }
+        else
+        {
+            // 비활성 상태에서도 currentPanelInstance가 남아있을 수 있으므로 정리
+            ClearCurrentPanel();
+        }
+
+        Debug.Log("[UIMonitorController] 민원 종료 — 모니터 초기화 완료");
     }
 
     // ── 열기/닫기 ─────────────────────────────────────────────────────────
