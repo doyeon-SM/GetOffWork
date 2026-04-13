@@ -12,7 +12,6 @@ public static class ManualCommandIds
     public const string OpenIdCardDetail         = "open_idcard_detail";
     public const string OpenMonitor              = "open_monitor";
     public const string SearchRecordByInput      = "search_record_by_input";
-    public const string SearchProxyRecordByInput = "search_proxy_record_by_input"; // 대리인 ID 모니터 검색
     public const string SelectPrint              = "select_print";
     public const string SelectMobile             = "select_mobile";
     public const string PrintDocument            = "print_document";

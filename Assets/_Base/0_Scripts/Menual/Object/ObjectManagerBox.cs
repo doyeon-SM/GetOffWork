@@ -170,7 +170,7 @@ public class ObjectManagerBox : MonoBehaviour
     }
 
     // ── IDCard 스폰 ───────────────────────────────────────────────────────
-    private void HandleSpawnIdCard(ComplaintContext complaint)
+private void HandleSpawnIdCard(ComplaintContext complaint)
     {
         if (idCardSpawned)
         {
@@ -203,15 +203,17 @@ public class ObjectManagerBox : MonoBehaviour
         item.Initialize(this, takeZone, targetCamera);
 
         if (item is IDCardItem idItem)
-            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView);
+            // 방문객(창구에 온 사람)의 신분증 — applicantRecordId
+            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
+                displayId: complaint.applicantRecordId);
 
         userspawnedItems.Add(item);
         idCardSpawned = true;
-        Log($"{TAG} IDCard Spawn 완료");
+        Log($"{TAG} IDCard Spawn 완료 — 방문객 recordId={complaint.applicantRecordId}");
     }
 
         // ── ProxyIDCard 스폰 ──────────────────────────────────────────────────
-    private void HandleSpawnProxyIdCard(ComplaintContext complaint)
+private void HandleSpawnProxyIdCard(ComplaintContext complaint)
     {
         if (idCardPrefab == null)
         {
@@ -238,10 +240,12 @@ public class ObjectManagerBox : MonoBehaviour
         item.SetObjectType(DeskObjectType.ProxyIDCard);
 
         if (item is IDCardItem idItem)
-            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView);
+            // 대리인 신분증 — 대리 요청 대상자(targetRecordId)의 정보 표시
+            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
+                displayId: complaint.targetRecordId);
 
         userspawnedItems.Add(item);
-        Log($"{TAG} ProxyIDCard Spawn 완료");
+        Log($"{TAG} ProxyIDCard Spawn 완료 — 대상자 recordId={complaint.targetRecordId}");
     }
 
     // ── Paper 스폰────

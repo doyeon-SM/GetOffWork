@@ -13,6 +13,11 @@ using UnityEngine;
 /// isAddressMismatch == true 일 때 제외되는 패널티:
 ///   AskPrintOrMobile, PrintDocument, SendMobile 의 omission/order 패널티
 ///
+/// [중복 commandId 지원]
+/// RequiredSteps에 동일한 commandId가 N번 등록된 경우 (예: Proxy의 SearchRecordByInput x2),
+/// 1단계 탐색에서 순서대로 서로 다른 action에 매핑하고
+/// 3단계 집계에서도 N번까지는 정상으로 본다.
+///
 /// 정상 완료 보상(completionReward)은 Evaluator가 직접 적용하지 않는다.
 /// ServiceDeskManager가 EvaluationResult.IsClean 을 보고 ManualDataSO.completionReward 를 적용한다.
 ///
@@ -40,11 +45,15 @@ public static class ManualEvaluator
         IReadOnlyCollection<PlayerActionRecord> actionQueue,
         bool isAddressMismatch = false)
     {
-        var result = new EvaluationResult();
+        var result     = new EvaluationResult();
         var actionList = new List<PlayerActionRecord>(actionQueue);
 
-        // ── 1단계: 각 RequiredStep이 Queue에서 첫 번째로 등장하는 위치 탐색 ──
-        var stepQueueIndex = new int[requiredSteps.Count];
+        // ── 1단계: 각 RequiredStep이 Queue에서 대응하는 위치 탐색 ──────────────
+        // 같은 commandId가 여러 step에 있는 경우(예: SearchRecordByInput x2),
+        // 순서대로 actionList에서 서로 다른 항목을 하나씩 소비한다.
+        var stepQueueIndex    = new int[requiredSteps.Count];
+        var usedActionIndices = new HashSet<int>();
+
         for (int i = 0; i < stepQueueIndex.Length; i++)
             stepQueueIndex[i] = -1;
 
@@ -53,16 +62,17 @@ public static class ManualEvaluator
             string targetId = requiredSteps[si].CommandId;
             for (int ai = 0; ai < actionList.Count; ai++)
             {
-                if (actionList[ai].CommandId == targetId)
+                if (actionList[ai].CommandId == targetId && !usedActionIndices.Contains(ai))
                 {
                     stepQueueIndex[si] = ai;
+                    usedActionIndices.Add(ai);
                     break;
                 }
             }
         }
 
-        // ── 2단계: 각 RequiredStep 평가 ──
-        int evaluatedStepCount = 0; // 주소불일치 제외 후 실제 평가 대상 Step 수
+        // ── 2단계: 각 RequiredStep 평가 ──────────────────────────────────────
+        int evaluatedStepCount = 0;
 
         for (int si = 0; si < requiredSteps.Count; si++)
         {
@@ -116,12 +126,21 @@ public static class ManualEvaluator
         // 평가 대상 Step 수 기록 (IsClean 판단 기준)
         result.EvaluatedStepCount = evaluatedStepCount;
 
-        // ── 3단계: 불필요한 절차 집계 ──
-        var requiredIds = new HashSet<string>();
+        // ── 3단계: 불필요한 절차 집계 ─────────────────────────────────────────
+        // requiredSteps에 같은 commandId가 N번 등록된 경우 N번 실행은 정상으로 본다.
+        var requiredIdCounts = new Dictionary<string, int>();
         foreach (var step in requiredSteps)
-            requiredIds.Add(step.CommandId);
+        {
+            if (!requiredIdCounts.ContainsKey(step.CommandId))
+                requiredIdCounts[step.CommandId] = 0;
+            requiredIdCounts[step.CommandId]++;
+        }
 
-        var systemExcludedIds = new HashSet<string> { ManualCommandIds.CallDisplay, ManualCommandIds.ReturnPrintedDoc };
+        var systemExcludedIds = new HashSet<string>
+        {
+            ManualCommandIds.CallDisplay,
+            ManualCommandIds.ReturnPrintedDoc
+        };
 
         var actionCount = new Dictionary<string, int>();
         foreach (var action in actionList)
@@ -135,19 +154,21 @@ public static class ManualEvaluator
         foreach (var kv in actionCount)
         {
             string cmdId = kv.Key;
-            int count    = kv.Value;
+            int    count = kv.Value;
 
             if (systemExcludedIds.Contains(cmdId)) continue;
 
-            if (!requiredIds.Contains(cmdId))
+            int required = requiredIdCounts.ContainsKey(cmdId) ? requiredIdCounts[cmdId] : 0;
+
+            if (required == 0)
             {
                 unnecessaryCount += count;
                 Debug.Log($"[Evaluator] 불필요(미정의): {cmdId} x{count}");
             }
-            else if (count > 1)
+            else if (count > required)
             {
-                unnecessaryCount += count - 1;
-                Debug.Log($"[Evaluator] 불필요(중복): {cmdId} x{count - 1}");
+                unnecessaryCount += count - required;
+                Debug.Log($"[Evaluator] 불필요(중복): {cmdId} x{count - required}");
             }
         }
 

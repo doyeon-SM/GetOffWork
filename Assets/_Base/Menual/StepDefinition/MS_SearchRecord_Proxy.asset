@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cf57ccbacec517419d958c87449115e, type: 3}
   m_Name: MS_SearchRecord_Proxy
   m_EditorClassIdentifier: Assembly-CSharp::ManualStepDefinitionSO
-  commandId: search_proxy_record_by_input
+  commandId: search_record_by_input
   isOrdered: 0
   omissionPenalty:
     Performance: 0
