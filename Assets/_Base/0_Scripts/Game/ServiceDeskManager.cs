@@ -341,6 +341,8 @@ private ComplaintContext CreateRandomComplaint()
                 && ((aRec != null && aRec.HasPortraitMismatch)
                     || (tRec != null && tRec.HasPortraitMismatch));
 
+            aRec.SetIdCard(c.isAddressMismatch, c.isIdMismatch, c.isPortraitMismatch);
+
             Log(TAG_QUEUE + $" 불일치: addr={c.isAddressMismatch} id={c.isIdMismatch} portrait={c.isPortraitMismatch}");
         }
 

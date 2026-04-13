@@ -40,12 +40,30 @@ public class UserRecordData : ScriptableObject
 
     // ── ID카드 표시용 프로퍼티 ──────────────────────────────────────────────
 
-    /// <summary>ID카드에 표시할 주소. fakeAddress가 있으면 가짜 주소, 없으면 실제 주소.</summary>
-    public string IdCardAddress => string.IsNullOrEmpty(fakeAddress) ? address : fakeAddress;
+    /// <summary>ID카드에 표시할 가짜정보.</summary>
+    public string IdCardAddress;
+    public string IdCardId;
+    public Sprite IdCardPortrait;
 
-    /// <summary>ID카드에 표시할 ID. fakeID가 있으면 가짜 ID, 없으면 실제 recordId.</summary>
-    public string IdCardId => string.IsNullOrEmpty(fakeID) ? recordId : fakeID;
+    public void SetIdCard(bool isAddressFake, bool isIdFake, bool isPortraitFake)
+    {
+        if (string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(recordId) || portrait == null)
+            return;
 
-    /// <summary>ID카드에 표시할 초상화. fakePortrait가 있으면 가짜 사진, 없으면 실제 portrait.</summary>
-    public Sprite IdCardPortrait => fakePortrait != null ? fakePortrait : portrait;
+        if (fakeAddress == null)
+            IdCardAddress = address;
+        else
+            IdCardAddress = !isAddressFake ? address : fakeAddress;
+
+        if (fakeID == null)
+            IdCardId = recordId;
+        else
+            IdCardId = !isIdFake ? recordId : fakeID;
+
+        if (fakePortrait == null)
+            IdCardPortrait = portrait;
+        else
+            IdCardPortrait = !isPortraitFake ? portrait : fakePortrait;
+    }
+
 }
