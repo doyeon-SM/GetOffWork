@@ -485,19 +485,20 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         if (currentManual == null || currentComplaint == null) return;
         if (playerBase == null) return;
 
-        // 하나라도 불일치가 있으면 반려 대상
         bool hasAnyMismatch     = currentComplaint.HasAnyMismatch;
         bool isCompleted        = currentManual.IsCompleted;
-        bool isValidRejection   = isRejection && hasAnyMismatch;    // 불일치 + 반려 버튼
-        bool isInvalidRejection = isRejection && !hasAnyMismatch;   // 정상인데 반려
-        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted; // 불일치 놈침
+        bool isValidRejection   = isRejection && hasAnyMismatch;   // 불일치 + 반려 버튼
+        bool isInvalidRejection = isRejection && !hasAnyMismatch;  // 정상인데 반려
+        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted; // 불일치인데 인쇄/전자전송 완료
 
+        // 인내심 소진 패널티
         if (patienceExpired)
         {
             playerBase.AddStat(Stat.Stress, 2);
             Log(TAG_EVAL + " 인내심 소진 → Stress+2");
         }
 
+        // 진상 종료 패널티
         var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
         if (nuisanceSO != null && currentComplaint.nuisanceType != ComplaintContext.NuisanceType.None)
         {
@@ -509,9 +510,9 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             }
         }
 
+        // ── Case 1: 불일치 + 정상 반려 ───────────────────────────────────────────
         if (isValidRejection)
         {
-            // 불일치 + 정상 반려: 절차 평가 전체 무시, completionReward만 적용
             string mismatchLog = $"addr={currentComplaint.isAddressMismatch} "
                                + $"id={currentComplaint.isIdMismatch} "
                                + $"portrait={currentComplaint.isPortraitMismatch}";
@@ -533,23 +534,44 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             goto Cleanup;
         }
 
-        // 정상 케이스 평가 (불일치 반려가 아닌 경우)
+        // ── Case 2: 불일치인데 인쇄물 전달 또는 전자전송 완료 (isMissedRejection) ──
+        if (isMissedRejection)
+        {
+            string mismatchLog = $"addr={currentComplaint.isAddressMismatch} "
+                               + $"id={currentComplaint.isIdMismatch} "
+                               + $"portrait={currentComplaint.isPortraitMismatch}";
+            Log(TAG_EVAL + " 반려사항 놓침(불일치인데 정상응대 완료) [" + mismatchLog + "]");
+
+            var soData = GetCurrentManualData();
+            if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
+            {
+                ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
+                Log(TAG_EVAL + " [반려사항 놓침] → abnormalRejectionPenalty 적용");
+            }
+            else
+            {
+                playerBase.AddPerformance(-2);
+                playerBase.AddStat(Stat.Reliability, -1);
+                Log(TAG_EVAL + " [반려사항 놓침] → Performance-2, Reliability-1 [폴백]");
+            }
+            goto Cleanup;
+        }
+
+        // ── Case 3: 정상 케이스 평가 (불일치 없음) ─────────────────────────────
         var eval = ManualEvaluator.Evaluate(
             currentManual.RequiredSteps,
             currentManual.ActionQueue,
-            isAddressMismatch: hasAnyMismatch);
+            isAddressMismatch: false); // 불일치 케이스는 이미 Case 1/2에서 처리됨
         Log(TAG_EVAL + " 평가 — " + eval);
 
         bool isAbnormal = isInvalidRejection
-                       || isMissedRejection
-                       || (isCompleted && !eval.IsClean);
+                       || (isCompleted && !eval.IsClean)
+                       || (!isCompleted && !isRejection); // 미완료 + 반려도 아닔
 
         if (isAbnormal)
         {
             var soData = GetCurrentManualData();
-            string reason = isInvalidRejection ? "비정상 반려"
-                          : isMissedRejection  ? "반려사항 놓침"
-                                               : "정상 응대 실패";
+            string reason = isInvalidRejection ? "비정상 반려" : "정상 응대 실패";
             if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
             {
                 ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
