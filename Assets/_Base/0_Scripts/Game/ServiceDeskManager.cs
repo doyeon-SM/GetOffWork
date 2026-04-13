@@ -275,7 +275,7 @@ public class ServiceDeskManager : MonoBehaviour
     }
 
     // ── 민원 컨텍스트 생성 ────────────────────────────────────────────────
-    private ComplaintContext CreateRandomComplaint()
+private ComplaintContext CreateRandomComplaint()
     {
         var c = new ComplaintContext();
         c.complaintType         = ComplaintContext.ComplaintType.FullID;
@@ -296,9 +296,30 @@ public class ServiceDeskManager : MonoBehaviour
         {
             int ai = UnityEngine.Random.Range(0, ub.Records.Count);
             c.applicantRecordId = ub.Records[ai].recordId;
-            c.targetRecordId = c.applicantType == ComplaintContext.ApplicantType.Self
-                ? c.applicantRecordId
-                : ub.Records[UnityEngine.Random.Range(0, ub.Records.Count)].recordId;
+
+            if (c.applicantType == ComplaintContext.ApplicantType.Self)
+            {
+                // 본인 신청: 발급 대상자 = 방문객 본인
+                c.targetRecordId = c.applicantRecordId;
+            }
+            else
+            {
+                // 대리인 신청: 대리 대상자는 반드시 방문객과 다른 레코드여야 한다.
+                if (ub.Records.Count >= 2)
+                {
+                    // 방문객 인덱스를 제외하고 다른 레코드 랜덤 선택
+                    int ti = UnityEngine.Random.Range(0, ub.Records.Count - 1);
+                    if (ti >= ai) ti++; // ai 인덱스 스킵
+                    c.targetRecordId = ub.Records[ti].recordId;
+                }
+                else
+                {
+                    // 레코드가 1개밖여서 Proxy를 만들 수 없음 — Self로 다운그레이드
+                    c.applicantType  = ComplaintContext.ApplicantType.Self;
+                    c.targetRecordId = c.applicantRecordId;
+                    Debug.LogWarning(TAG_QUEUE + " 레코드가 1개만 존재해 Proxy 생성 불가 — Self로 대체");
+                }
+            }
         }
 
         // ManualDataSO의 인내심 범위 적용 (0이면 기본값 사용)
