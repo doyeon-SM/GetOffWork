@@ -19,6 +19,7 @@ MonoBehaviour:
   birthDate: 1995-01-02
   phoneNumber: 010-1111-1112
   email: "\uAE40\uCCA0\uC218@mail.com"
-  isTampered: 0
-  hasMovedAddress: 0
+  fakeAddress: "\uC11C\uC6B8\uC2DC 2"
+  fakeID: 002
+  fakePortrait: {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
   note: 

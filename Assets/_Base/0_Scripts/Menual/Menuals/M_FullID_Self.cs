@@ -105,14 +105,12 @@ public class M_FullID_Self : Manual
         return CorrectResponse(shouldOpenMonitor: true);
     }
 
-    private ResponseResult HandleSearchRecordByInput(string inputId)
+private ResponseResult HandleSearchRecordByInput(string inputId)
     {
         context.searchedInputId   = inputId;
         context.searchedByInputId = true;
-        if (userDatabase.TryGetRecord(inputId, out UserRecordData record))
-            context.isAddressMismatch = record.hasMovedAddress;
-        else
-            context.isAddressMismatch = false;
+        // isAddressMismatch는 민원 생성 시(CreateRandomComplaint)에 미리 결정됨.
+        // Search는 모니터 표시를 트리거하는 용도로만 사용한다.
         RecordAction(ManualCommandIds.SearchRecordByInput);
         return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);
     }

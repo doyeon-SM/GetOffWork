@@ -299,30 +299,51 @@ private ComplaintContext CreateRandomComplaint()
 
             if (c.applicantType == ComplaintContext.ApplicantType.Self)
             {
-                // 본인 신청: 발급 대상자 = 방문객 본인
                 c.targetRecordId = c.applicantRecordId;
             }
             else
             {
-                // 대리인 신청: 대리 대상자는 반드시 방문객과 다른 레코드여야 한다.
                 if (ub.Records.Count >= 2)
                 {
-                    // 방문객 인덱스를 제외하고 다른 레코드 랜덤 선택
                     int ti = UnityEngine.Random.Range(0, ub.Records.Count - 1);
-                    if (ti >= ai) ti++; // ai 인덱스 스킵
+                    if (ti >= ai) ti++;
                     c.targetRecordId = ub.Records[ti].recordId;
                 }
                 else
                 {
-                    // 레코드가 1개밖여서 Proxy를 만들 수 없음 — Self로 다운그레이드
                     c.applicantType  = ComplaintContext.ApplicantType.Self;
                     c.targetRecordId = c.applicantRecordId;
-                    Debug.LogWarning(TAG_QUEUE + " 레코드가 1개만 존재해 Proxy 생성 불가 — Self로 대체");
+                    Debug.LogWarning(TAG_QUEUE + " 레코드 1개만 존재 — Proxy 불가, Self로 대체");
                 }
             }
+
+            // 종류별 불일치 판정 — 각각 독립적으로 확률 체크
+            var mismatchSO     = ServiceDataManager.Instance?.MismatchSetting;
+            float addrChance    = mismatchSO != null ? mismatchSO.AddressspawnChance  : 0f;
+            float idChance      = mismatchSO != null ? mismatchSO.IDspawnChance       : 0f;
+            float portraitChance= mismatchSO != null ? mismatchSO.PortraitspawnChance : 0f;
+
+            ub.TryGetRecord(c.applicantRecordId, out UserRecordData aRec);
+            ub.TryGetRecord(c.targetRecordId,    out UserRecordData tRec);
+
+            // 주소 불일치: fakeAddress가 있는 레코드 + 확률 성공
+            c.isAddressMismatch = UnityEngine.Random.value < addrChance
+                && ((aRec != null && aRec.HasAddressMismatch)
+                    || (tRec != null && tRec.HasAddressMismatch));
+
+            // ID 불일치: fakeID가 있는 레코드 + 확률 성공
+            c.isIdMismatch = UnityEngine.Random.value < idChance
+                && ((aRec != null && aRec.HasIdMismatch)
+                    || (tRec != null && tRec.HasIdMismatch));
+
+            // 사진 불일치: fakePortrait가 있는 레코드 + 확률 성공
+            c.isPortraitMismatch = UnityEngine.Random.value < portraitChance
+                && ((aRec != null && aRec.HasPortraitMismatch)
+                    || (tRec != null && tRec.HasPortraitMismatch));
+
+            Log(TAG_QUEUE + $" 불일치: addr={c.isAddressMismatch} id={c.isIdMismatch} portrait={c.isPortraitMismatch}");
         }
 
-        // ManualDataSO의 인내심 범위 적용 (0이면 기본값 사용)
         ManualDataSO patienceSO = GetManualDataSOByComplaint(c);
         float pMin = DEFAULT_PATIENCE_MIN;
         float pMax = DEFAULT_PATIENCE_MAX;
@@ -459,16 +480,17 @@ private ComplaintContext CreateRandomComplaint()
     }
 
     // ── 민원 종료 & 정산 ──────────────────────────────────────────────────
-    private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
+private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
     {
         if (currentManual == null || currentComplaint == null) return;
         if (playerBase == null) return;
 
-        bool isAddressMismatch  = currentComplaint.isAddressMismatch;
+        // 하나라도 불일치가 있으면 반려 대상
+        bool hasAnyMismatch     = currentComplaint.HasAnyMismatch;
         bool isCompleted        = currentManual.IsCompleted;
-        bool isValidRejection   = isRejection && isAddressMismatch;
-        bool isInvalidRejection = isRejection && !isAddressMismatch;
-        bool isMissedRejection  = !isRejection && isAddressMismatch && isCompleted;
+        bool isValidRejection   = isRejection && hasAnyMismatch;    // 불일치 + 반려 버튼
+        bool isInvalidRejection = isRejection && !hasAnyMismatch;   // 정상인데 반려
+        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted; // 불일치 놈침
 
         if (patienceExpired)
         {
@@ -487,32 +509,40 @@ private ComplaintContext CreateRandomComplaint()
             }
         }
 
-        var eval = ManualEvaluator.Evaluate(
-            currentManual.RequiredSteps,
-            currentManual.ActionQueue,
-            isAddressMismatch: isAddressMismatch);
-        Log(TAG_EVAL + " 평가 — " + eval);
-
         if (isValidRejection)
         {
+            // 불일치 + 정상 반려: 절차 평가 전체 무시, completionReward만 적용
+            string mismatchLog = $"addr={currentComplaint.isAddressMismatch} "
+                               + $"id={currentComplaint.isIdMismatch} "
+                               + $"portrait={currentComplaint.isPortraitMismatch}";
+            Log(TAG_EVAL + " 정상 반려(불일치) [" + mismatchLog + "] — 절차 평가 무시");
+
             var soData = GetCurrentManualData();
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
-                Log(TAG_EVAL + " 정상 반려(주소불일치) → SO completionReward 적용");
+                Log(TAG_EVAL + " completionReward 적용");
             }
             else
             {
                 int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
                 playerBase.AddPerformance(perfReward);
-                Log(TAG_EVAL + " 정상 반려(주소불일치) → Performance+" + perfReward + " [폴백]");
+                Log(TAG_EVAL + " Performance+" + perfReward + " [폴백]");
             }
             playerBase.AddStat(Stat.Stress, 1);
+            goto Cleanup;
         }
+
+        // 정상 케이스 평가 (불일치 반려가 아닌 경우)
+        var eval = ManualEvaluator.Evaluate(
+            currentManual.RequiredSteps,
+            currentManual.ActionQueue,
+            isAddressMismatch: hasAnyMismatch);
+        Log(TAG_EVAL + " 평가 — " + eval);
 
         bool isAbnormal = isInvalidRejection
                        || isMissedRejection
-                       || (isCompleted && !isValidRejection && !eval.IsClean);
+                       || (isCompleted && !eval.IsClean);
 
         if (isAbnormal)
         {
@@ -523,7 +553,7 @@ private ComplaintContext CreateRandomComplaint()
             if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
             {
                 ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
-                Log(TAG_EVAL + " [" + reason + "] → SO abnormalRejectionPenalty 적용");
+                Log(TAG_EVAL + " [" + reason + "] → abnormalRejectionPenalty 적용");
             }
             else
             {
@@ -539,16 +569,17 @@ private ComplaintContext CreateRandomComplaint()
         if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta);
         if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
 
-        if (isCompleted && !isValidRejection && eval.IsClean)
+        if (isCompleted && eval.IsClean)
         {
             var soData = GetCurrentManualData();
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
-                Log(TAG_EVAL + " 정상 응대 보상 → SO completionReward 적용");
+                Log(TAG_EVAL + " 정상 응대 보상 → completionReward 적용");
             }
         }
 
+        Cleanup:
         FireClosingLine(currentComplaint);
         currentManual.ClearRequiredReturnItems();
         Log(TAG + " 민원 종료 — " + currentComplaint.complaintType + " / rejected=" + currentComplaint.rejected);

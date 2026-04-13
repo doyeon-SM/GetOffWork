@@ -526,7 +526,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.0040292987}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.0045092455}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -1762,8 +1762,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301799489}
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
-  m_Value: -0.08196721
-  m_Size: 0.9999816
+  m_Value: -0.20325203
+  m_Size: 0.99998903
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2961,6 +2961,7 @@ MonoBehaviour:
   fullIDProxyManualData_Print: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
   fullIDProxyManualData_Mobile: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
   nuisanceTypeSettings: {fileID: 11400000, guid: bc064f774427b4a429ce04944ab93c3e, type: 2}
+  mismatchSetting: {fileID: 11400000, guid: 39cefa65f65c90d40ab1b92f70617da6, type: 2}
   questionDataList: {fileID: 11400000, guid: 04c14c1a0ac73f044840f631617430bf, type: 2}
 --- !u!1 &1980840476
 GameObject:

@@ -142,24 +142,26 @@ public override ResponseResult Execute(string commandId, string payload = null)
     /// 2차 호출: 대리 대상자(targetRecordId) ID 조회 — proxySearchedInputId 기록
     /// 이후 호출: 불필요 절차로 체덕될 수 있음 (ManualEvaluator가 중복 집계)
     /// </summary>
+/// <summary>
+    /// 모니터 ID 조회 통합 핸들러.
+    /// 1차 호출: 방문객 ID 조회
+    /// 2차 호출: 대리 대상자 ID 기록
+    /// isAddressMismatch는 민원 생성 시에 미리 결정되므로 여기서 재설정하지 않는다.
+    /// </summary>
     private ResponseResult HandleSearchRecordByInput(string inputId)
     {
         if (!context.searchedByInputId)
         {
-            // 1차 조회: 방문객 ID — 주소불일치 판볔
+            // 1차: 방문객 ID
             context.searchedInputId   = inputId;
             context.searchedByInputId = true;
-            if (userDatabase.TryGetRecord(inputId, out UserRecordData record))
-                context.isAddressMismatch = record.hasMovedAddress;
-            else
-                context.isAddressMismatch = false;
             RecordAction(ManualCommandIds.SearchRecordByInput);
-            Debug.Log($"[M_FullID_Proxy] 1차 조회(방문객): {inputId} / 주소불일치={context.isAddressMismatch}");
+            Debug.Log($"[M_FullID_Proxy] 1차 조회(방문객): {inputId}");
             return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);
         }
         else if (!context.proxySearched)
         {
-            // 2차 조회: 대리 대상자 ID 기록
+            // 2차: 대리 대상자 ID
             context.proxySearchedInputId = inputId;
             context.proxySearched        = true;
             RecordAction(ManualCommandIds.SearchRecordByInput);
@@ -168,7 +170,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
         }
         else
         {
-            // 3차 이후: 불필요 절차 (ManualEvaluator가 중복으로 체덕)
+            // 3차 이후: 불필요 절차
             RecordAction(ManualCommandIds.SearchRecordByInput);
             Debug.Log($"[M_FullID_Proxy] 추가 조회(불필요): {inputId}");
             return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);

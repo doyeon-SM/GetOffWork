@@ -35,7 +35,9 @@ public class ComplaintContext
     public bool   deliveryAsked;          // 전달 방식을 물어봤는가
     public bool   completed;              // 민원이 정상 종료됐는가
     public bool   rejected;               // 반려됐는가
-    public bool   isAddressMismatch;      // 방문객 주소 불일치 여부
+    public bool   isAddressMismatch;  // 주소 불일치 여부 (applicant 또는 target의 fakeAddress)
+    public bool   isIdMismatch;       // ID 불일치 여부 (applicant 또는 target의 fakeID)
+    public bool   isPortraitMismatch; // 사진 불일치 여부 (applicant 또는 target의 fakePortrait)
     public bool   mobileNumberAsked;      // 전화번호를 질문했는가
     public bool   mobileNumberVerified;   // 전화번호 일치 확인 완료됐는가
 
@@ -58,5 +60,11 @@ public class ComplaintContext
         applicantType == ApplicantType.Self ? applicantRecordId : targetRecordId;
 
     /// <summary>전화번호 수신 대상 ID — 항상 창구에 온 방문객(applicant)</summary>
-    public string PhoneRecipientRecordId => applicantRecordId;
+        public string PhoneRecipientRecordId => applicantRecordId;
+
+    /// <summary>
+    /// 주소/ID/사진 중 하나라도 불일치하면 true.
+    /// 이 민원인이 반려 대상인지 여부를 판단할 때 사용한다.
+    /// </summary>
+    public bool HasAnyMismatch => isAddressMismatch || isIdMismatch || isPortraitMismatch;
 }

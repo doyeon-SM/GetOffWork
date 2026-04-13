@@ -4,9 +4,12 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 신분증 상세 UI.
-/// ObjectManagerBox가 런타임에 Canvas 위에 Instantiate한다.
-/// Hide()는 SetActive(false) 대신 CanvasGroup.alpha로 처리해
-/// 비활성화로 인한 FindFirstObjectByType 탐색 실패 문제를 방지한다.
+///
+/// [표시 규칙]
+/// 모니터(DB) → record.address / record.recordId / record.portrait  (실제/올바른 정보)
+/// ID카드     → record.IdCardAddress / record.IdCardId / record.IdCardPortrait
+///              (fake 필드가 있으면 틀린 정보, 없으면 실제 정보)
+/// 플레이어가 둘을 비교해 불일치를 직접 판단한다.
 /// </summary>
 [RequireComponent(typeof(CanvasGroup))]
 public class UIIDCardView : MonoBehaviour
@@ -29,10 +32,11 @@ public class UIIDCardView : MonoBehaviour
     {
         if (record == null) return;
 
-        if (portraitImage != null) portraitImage.sprite = record.portrait;
-        if (idText        != null) idText.text          = record.recordId;
+        // ID카드 표시: fake 필드가 있으면 가짜 정보, 없으면 실제 정보
+        if (portraitImage != null) portraitImage.sprite = record.IdCardPortrait;
+        if (idText        != null) idText.text          = record.IdCardId;
         if (nameText      != null) nameText.text        = record.fullName;
-        if (addressText   != null) addressText.text     = record.address;
+        if (addressText   != null) addressText.text     = record.IdCardAddress;
 
         canvasGroup.alpha          = 1f;
         canvasGroup.interactable   = true;
