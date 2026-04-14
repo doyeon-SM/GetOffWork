@@ -34,6 +34,13 @@ public abstract class DeskObjectItem : MonoBehaviour
     private TakeObjectZone   takeZone;
     private Camera           targetCamera;
 
+    // ── 전역 드래그 잠금 (한 번에 하나의 아이템만 드래그 가능) ──────────────
+    /// <summary>
+    /// 현재 드래그 중인 인스턴스. null이면 아무것도 드래그하지 않는 상태.
+    /// 겹친 아이템들이 동시에 드래그되는 문제를 방지한다.
+    /// </summary>
+    private static DeskObjectItem s_draggingItem = null;
+
     // ── 드래그 상태 ───────────────────────────────────────────────────────
     private bool    isBeingDragged;
     private bool    dragStarted;
@@ -78,8 +85,11 @@ public abstract class DeskObjectItem : MonoBehaviour
             OnMouseUp();
     }
 
-    private void OnMouseDown()
+private void OnMouseDown()
     {
+        // 이미 다른 아이템이 드래그 중이면 무시
+        if (s_draggingItem != null && s_draggingItem != this) return;
+
         Vector2 mouseScreen = Mouse.current.position.ReadValue();
         Vector2 mouseWorld  = targetCamera != null
             ? (Vector2)targetCamera.ScreenToWorldPoint(mouseScreen)
@@ -88,6 +98,8 @@ public abstract class DeskObjectItem : MonoBehaviour
         Collider2D col = GetComponent<Collider2D>();
         if (col == null || !col.OverlapPoint(mouseWorld)) return;
 
+        // 전역 잠금 획득
+        s_draggingItem    = this;
         isBeingDragged    = true;
         dragStarted       = false;
         mouseDownWorldPos = new Vector3(mouseWorld.x, mouseWorld.y, transform.position.z);
@@ -128,17 +140,19 @@ public abstract class DeskObjectItem : MonoBehaviour
             ghost.transform.position = ghostTarget;
     }
 
-    private void OnMouseUp()
+private void OnMouseUp()
     {
         isBeingDragged = false;
 
+        // 전역 잠금 해제
+        if (s_draggingItem == this)
+            s_draggingItem = null;
+
         if (dragStarted)
         {
-            // ghost 위치를 실제 오브젝트 위치로 확정
             Vector3 dropPos = ghost != null ? ghost.transform.position : transform.position;
             EndGhost();
 
-            // Z 복원
             if (IsInTakeZone && takeZone != null)
                 dropPos.z = takeZone.transform.position.z - 1f;
             else
@@ -146,7 +160,7 @@ public abstract class DeskObjectItem : MonoBehaviour
 
             transform.position = dropPos;
 
-            Log($"{TAG} 드롭: {gameObject.name} / TakeZone={IsInTakeZone} / Z={dropPos.z}");
+            Log($"{TAG} 드론: {gameObject.name} / TakeZone={IsInTakeZone} / Z={dropPos.z}");
             OnItemDropped();
         }
         else
@@ -203,9 +217,12 @@ public abstract class DeskObjectItem : MonoBehaviour
             originalRenderer.enabled = true;
     }
 
-    private void OnDestroy()
+private void OnDestroy()
     {
-        // 만약 드래그 중에 오브젝트가 파괴되면 ghost도 정리
+        // 드래그 중 파괴되면 전역 잠금도 해제
+        if (s_draggingItem == this)
+            s_draggingItem = null;
+
         if (ghost != null)
             Destroy(ghost);
     }
