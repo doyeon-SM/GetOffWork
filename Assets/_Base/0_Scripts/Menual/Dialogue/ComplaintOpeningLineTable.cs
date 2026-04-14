@@ -8,5 +8,5 @@
 /// </summary>
 [UnityEngine.CreateAssetMenu(
     fileName = "ComplaintOpeningLineTable",
-    menuName  = "Game/Dialogue/Complaint Opening Lines")]
+    menuName  = "Game/Setting/Complaint Opening Lines")]
 public class ComplaintOpeningLineTable : ComplaintLineTableBase { }

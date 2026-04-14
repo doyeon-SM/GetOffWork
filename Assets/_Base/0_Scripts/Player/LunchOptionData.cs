@@ -9,7 +9,7 @@ public class LunchStatChange
     public int amount;
 }
 
-[CreateAssetMenu(fileName = "LunchOption_", menuName = "Lunch/Lunch Option")]
+[CreateAssetMenu(fileName = "LunchOption_", menuName = "Game/Record/Lunch Option")]
 public class LunchOptionData : ScriptableObject
 {
     [Header("기본 정보")]

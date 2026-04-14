@@ -1,4 +1,30 @@
 using UnityEngine;
+using System;
+using System.Collections.Generic;
+
+/// <summary>스탯 변화 이벤트의 출처 구분</summary>
+public enum StatChangeSource
+{
+    ServiceSuccess,  // 응대 성공
+    ServiceFail,     // 응대 실패
+    Lunch,           // 점심시간
+    ItemUse,         // 아이템 사용
+}
+
+/// <summary>
+/// 한 번의 스탯 변화 이벤트를 담는 구조체.
+/// 같은 응대 내에서 누적된 패널티는 합산해 하나의 이벤트로 Enqueue한다.
+/// </summary>
+[System.Serializable]
+public struct StatChangeEvent
+{
+    public StatChangeSource source;
+    public int   performanceDelta;
+    public float stressDelta;
+    public float kindnessDelta;
+    public float reliabilityDelta;
+    public int   payDelta;
+}
 
 /// <summary>
 /// 하루 정산에 필요한 스탯 스냅샷 + 변화량 데이터.
@@ -14,6 +40,13 @@ public class DayResultData
     public float startKindness;     // 0~1
     public float startReliability;  // 0~1
     public int   startPay;
+
+    // ── 하루 과정 큐 ────────────────────────────────────────────────────
+    /// <summary>
+    /// 하루 동안 발생한 스탯 변화 이벤트 목록.
+    /// 같은 응대 내 누적 패널티는 합산해 하나의 이벤트로 저장된다.
+    /// </summary>
+    public Queue<StatChangeEvent> statChangeProgress = new Queue<StatChangeEvent>();
 
     // ── 하루 종료 스냅샷 ──────────────────────────────────────────────────
     public int   endPerformance;

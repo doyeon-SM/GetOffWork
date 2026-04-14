@@ -259,13 +259,26 @@ public class WorkDayManager : MonoBehaviour
     private void ApplyLunchStatChanges(LunchOptionData optionData)
     {
         if (playerBase == null || optionData == null || optionData.statChanges == null) return;
+
+        var evt = new StatChangeEvent { source = StatChangeSource.Lunch };
+
         for (int i = 0; i < optionData.statChanges.Count; i++)
         {
             var change = optionData.statChanges[i];
             if (change == null) continue;
             playerBase.AddStat(change.stat, change.amount);
             Debug.Log($"[Lunch] {change.stat}: {change.amount}");
+
+            switch (change.stat)
+            {
+                case Stat.Stress:      evt.stressDelta      += change.amount; break;
+                case Stat.Kindness:    evt.kindnessDelta    += change.amount; break;
+                case Stat.Reliability: evt.reliabilityDelta += change.amount; break;
+            }
         }
+
+        _dayResultData?.statChangeProgress.Enqueue(evt);
+        Debug.Log($"[WorkDayManager] Lunch StatChangeEvent enqueued");
     }
 
     public void CloseLunchResultUIAndStartAfternoon()
@@ -282,8 +295,23 @@ public class WorkDayManager : MonoBehaviour
 
     // ── 하루 정산 ──────────────────────────────────────────────────────────
 
-    /// <summary>오전 시작 시 하루 시작 스탯을 찍는다.</summary>
-    private void SnapshotDayStart()
+    // ── 하루 과정 큐 API ────────────────────────────────────────────────
+
+    /// <summary>
+    /// 외부(ServiceDeskManager 등)에서 스탯 변화 이벤트를 큐에 추가한다.
+    /// </summary>
+    public void EnqueueStatChangeEvent(StatChangeEvent evt)
+    {
+        if (_dayResultData == null) return;
+        _dayResultData.statChangeProgress.Enqueue(evt);
+        Debug.Log($"[WorkDayManager] StatChangeEvent enqueued — source:{evt.source} "
+                + $"P:{evt.performanceDelta} S:{evt.stressDelta:F2} K:{evt.kindnessDelta:F2} "
+                + $"R:{evt.reliabilityDelta:F2} Pay:{evt.payDelta}");
+    }
+
+    // ── 하루 정산 ──────────────────────────────────────────────────────────
+
+        private void SnapshotDayStart()
     {
         ResolvePlayerBase();
         _dayResultData = new DayResultData();

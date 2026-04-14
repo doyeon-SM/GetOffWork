@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "UserRecord", menuName = "Game/Manual/User Record")]
+[CreateAssetMenu(fileName = "UserRecord", menuName = "Game/Record/User Record")]
 public class UserRecordData : ScriptableObject
 {
     [Header("기본 식별 정보")]

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "UserRecordDatabase", menuName = "Game/Manual/User Record Database")]
+[CreateAssetMenu(fileName = "UserRecordDatabase", menuName = "Game/Setting/User Record Database")]
 public class UserRecordDatabase : ScriptableObject
 {
     [SerializeField] private List<UserRecordData> records = new();

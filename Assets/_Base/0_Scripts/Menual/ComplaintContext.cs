@@ -43,7 +43,7 @@ public class ComplaintContext
 
     // ── 대화 임시 보관 ────────────────────────────────────────────────────
     [Header("마지막 대사")]
-    public string lastPlayerMessage;
+    //public string lastPlayerMessage;
     public string lastCustomerMessage;
 
     // ── 인내심 ────────────────────────────────────────────────────────────

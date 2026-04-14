@@ -13,7 +13,7 @@ using UnityEngine;
 /// </summary>
 [CreateAssetMenu(
     fileName = "ManualData_New",
-    menuName  = "Manual/Manual Data",
+    menuName  = "Game/Manual/Manual Data",
     order     = 0)]
 public class ManualDataSO : ScriptableObject
 {

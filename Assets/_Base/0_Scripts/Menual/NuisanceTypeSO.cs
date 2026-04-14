@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 [CreateAssetMenu(
     fileName = "NuisanceTypeSettings",
-    menuName  = "Game/Nuisance/Nuisance Type Settings")]
+    menuName  = "Game/Setting/Nuisance Type Settings")]
 public class NuisanceTypeSO : ScriptableObject
 {
     [SerializeField] private List<NuisanceTypeEntry> entries = new List<NuisanceTypeEntry>();

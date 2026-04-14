@@ -12,5 +12,5 @@
 /// </summary>
 [UnityEngine.CreateAssetMenu(
     fileName = "ComplaintClosingLineTable",
-    menuName  = "Game/Dialogue/Complaint Closing Lines")]
+    menuName  = "Game/Setting/Complaint Closing Lines")]
 public class ComplaintClosingLineTable : ComplaintLineTableBase { }

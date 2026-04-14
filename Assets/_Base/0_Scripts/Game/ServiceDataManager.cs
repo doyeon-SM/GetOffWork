@@ -36,10 +36,9 @@ public class ServiceDataManager : MonoBehaviour
     public ManualDataSO Fullproxy_Mobile => fullIDProxyManualData_Mobile;
 
     /// <summary>NuisanceTypeSO. 없으면 null — 호웉 측에서 null 체크 필요</summary>
-    /// <summary>NuisanceTypeSO. 없으면 null — 호출 측에서 null 체크 필요</summary>
     public NuisanceTypeSO NuisanceSettings => nuisanceTypeSettings;
 
-    /// <summary>주소불일치 케이스 설정. 없으면 null</summary>
+    /// <summary>불일치 케이스 설정. 없으면 null</summary>
     public MismatchSettingSO MismatchSetting => mismatchSetting;
 
     public QuestionDataList QuestionList => questionDataList;

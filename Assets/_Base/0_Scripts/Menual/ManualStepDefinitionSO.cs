@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 [CreateAssetMenu(
     fileName = "Step_New",
-    menuName  = "Manual/Step Definition",
+    menuName  = "Game/Manual/Step Definition",
     order     = 1)]
 public class ManualStepDefinitionSO : ScriptableObject
 {

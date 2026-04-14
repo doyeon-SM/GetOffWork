@@ -10,7 +10,7 @@ using UnityEngine;
 ///   allItems에 판매할 ItemBase SO를 모두 등록
 ///   UIStore의 storeItemManager 슬롯에 이 에셋 연결
 /// </summary>
-[CreateAssetMenu(fileName = "StoreItemManager", menuName = "Game/StoreItemManager")]
+[CreateAssetMenu(fileName = "StoreItemManager", menuName = "Game/Setting/StoreItemManager")]
 public class StoreItemManager : ScriptableObject
 {
     [Header("판매 가능한 전체 아이템 목록")]

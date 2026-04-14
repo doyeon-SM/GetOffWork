@@ -8,8 +8,8 @@ using UnityEngine;
 ///   Project 창 우클릭 > Create > Game > Manual > Address Mismatch Setting
 /// </summary>
 [CreateAssetMenu(
-    fileName = "AddressMismatchSetting",
-    menuName  = "Game/Manual/Mismatch Setting")]
+    fileName = "MismatchSetting",
+    menuName  = "Game/Setting/Mismatch Setting")]
 public class MismatchSettingSO : ScriptableObject
 {
     [Header("주소불일치 케이스 등장 확률")]

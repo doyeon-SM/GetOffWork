@@ -489,14 +489,20 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
 
         bool hasAnyMismatch     = currentComplaint.HasAnyMismatch;
         bool isCompleted        = currentManual.IsCompleted;
-        bool isValidRejection   = isRejection && hasAnyMismatch;   // 불일치 + 반려 버튼
-        bool isInvalidRejection = isRejection && !hasAnyMismatch;  // 정상인데 반려
-        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted; // 불일치인데 인쇄/전자전송 완료
+        bool isValidRejection   = isRejection && hasAnyMismatch;
+        bool isInvalidRejection = isRejection && !hasAnyMismatch;
+        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted;
+
+        // ── 이 응대에서 발생할 스탯 변화를 누적할 임시 이벤트 ──────────────
+        // source는 마지막에 결정되므로 일단 Fail로 초기화
+        var pendingEvt = new StatChangeEvent { source = StatChangeSource.ServiceFail };
+        bool isSuccess = false; // 응대 성공 여부 — 마지막에 확정
 
         // 인내심 소진 패널티
         if (patienceExpired)
         {
             playerBase.AddStat(Stat.Stress, 2);
+            pendingEvt.stressDelta += 2;
             Log(TAG_EVAL + " 인내심 소진 → Stress+2");
         }
 
@@ -508,6 +514,10 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (!nEntry.onFinishPenalty.IsEmpty)
             {
                 ApplyNuisancePenalty(nEntry.onFinishPenalty);
+                pendingEvt.stressDelta       += nEntry.onFinishPenalty.stress;
+                pendingEvt.kindnessDelta     += nEntry.onFinishPenalty.kindness;
+                pendingEvt.reliabilityDelta  += nEntry.onFinishPenalty.reliability;
+                pendingEvt.performanceDelta  -= nEntry.onFinishPenalty.performance;
                 Log(TAG_EVAL + " [NuisancePenalty/finish] type:" + currentComplaint.nuisanceType);
             }
         }
@@ -524,15 +534,22 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
+                pendingEvt.performanceDelta += soData.completionReward.Performance;
+                pendingEvt.kindnessDelta    += soData.completionReward.Kindness;
+                pendingEvt.reliabilityDelta += soData.completionReward.Reliability;
+                pendingEvt.payDelta         += soData.completionReward.Pay;
                 Log(TAG_EVAL + " completionReward 적용");
             }
             else
             {
                 int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
                 playerBase.AddPerformance(perfReward);
+                pendingEvt.performanceDelta += perfReward;
                 Log(TAG_EVAL + " Performance+" + perfReward + " [폴백]");
             }
             playerBase.AddStat(Stat.Stress, 1);
+            pendingEvt.stressDelta += 1;
+            isSuccess = true;
             goto Cleanup;
         }
 
@@ -548,12 +565,19 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
             {
                 ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
+                pendingEvt.performanceDelta -= soData.abnormalRejectionPenalty.Performance;
+                pendingEvt.kindnessDelta    -= soData.abnormalRejectionPenalty.Kindness;
+                pendingEvt.stressDelta      += soData.abnormalRejectionPenalty.Stress;
+                pendingEvt.reliabilityDelta -= soData.abnormalRejectionPenalty.Reliability;
+                pendingEvt.payDelta         -= soData.abnormalRejectionPenalty.Pay;
                 Log(TAG_EVAL + " [반려사항 놓침] → abnormalRejectionPenalty 적용");
             }
             else
             {
                 playerBase.AddPerformance(-2);
                 playerBase.AddStat(Stat.Reliability, -1);
+                pendingEvt.performanceDelta -= 2;
+                pendingEvt.reliabilityDelta -= 1;
                 Log(TAG_EVAL + " [반려사항 놓침] → Performance-2, Reliability-1 [폴백]");
             }
             goto Cleanup;
@@ -563,12 +587,12 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         var eval = ManualEvaluator.Evaluate(
             currentManual.RequiredSteps,
             currentManual.ActionQueue,
-            isAddressMismatch: false); // 불일치 케이스는 이미 Case 1/2에서 처리됨
+            isAddressMismatch: false);
         Log(TAG_EVAL + " 평가 — " + eval);
 
         bool isAbnormal = isInvalidRejection
                        || (isCompleted && !eval.IsClean)
-                       || (!isCompleted && !isRejection); // 미완료 + 반려도 아닔
+                       || (!isCompleted && !isRejection);
 
         if (isAbnormal)
         {
@@ -577,21 +601,28 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
             {
                 ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
+                pendingEvt.performanceDelta -= soData.abnormalRejectionPenalty.Performance;
+                pendingEvt.kindnessDelta    -= soData.abnormalRejectionPenalty.Kindness;
+                pendingEvt.stressDelta      += soData.abnormalRejectionPenalty.Stress;
+                pendingEvt.reliabilityDelta -= soData.abnormalRejectionPenalty.Reliability;
+                pendingEvt.payDelta         -= soData.abnormalRejectionPenalty.Pay;
                 Log(TAG_EVAL + " [" + reason + "] → abnormalRejectionPenalty 적용");
             }
             else
             {
                 playerBase.AddPerformance(-2);
                 playerBase.AddStat(Stat.Reliability, -1);
+                pendingEvt.performanceDelta -= 2;
+                pendingEvt.reliabilityDelta -= 1;
                 Log(TAG_EVAL + " [" + reason + "] → Performance-2, Reliability-1 [폴백]");
             }
         }
 
-        if (eval.PerformanceDelta != 0) playerBase.AddPerformance(eval.PerformanceDelta);
-        if (eval.KindnessDelta    != 0) playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);
-        if (eval.StressDelta      != 0) playerBase.AddStat(Stat.Stress,      eval.StressDelta);
-        if (eval.ReliabilityDelta != 0) playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta);
-        if (eval.PayDelta         != 0) playerBase.AddPay(eval.PayDelta);
+        if (eval.PerformanceDelta != 0) { playerBase.AddPerformance(eval.PerformanceDelta); pendingEvt.performanceDelta += eval.PerformanceDelta; }
+        if (eval.KindnessDelta    != 0) { playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);    pendingEvt.kindnessDelta    += eval.KindnessDelta; }
+        if (eval.StressDelta      != 0) { playerBase.AddStat(Stat.Stress,      eval.StressDelta);      pendingEvt.stressDelta      += eval.StressDelta; }
+        if (eval.ReliabilityDelta != 0) { playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta); pendingEvt.reliabilityDelta += eval.ReliabilityDelta; }
+        if (eval.PayDelta         != 0) { playerBase.AddPay(eval.PayDelta);                            pendingEvt.payDelta         += eval.PayDelta; }
 
         if (isCompleted && eval.IsClean)
         {
@@ -599,11 +630,21 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
             if (soData != null && !soData.completionReward.IsEmpty)
             {
                 ApplyReward(soData.completionReward);
+                pendingEvt.performanceDelta += soData.completionReward.Performance;
+                pendingEvt.kindnessDelta    += soData.completionReward.Kindness;
+                pendingEvt.reliabilityDelta += soData.completionReward.Reliability;
+                pendingEvt.payDelta         += soData.completionReward.Pay;
                 Log(TAG_EVAL + " 정상 응대 보상 → completionReward 적용");
             }
+            isSuccess = true;
         }
 
         Cleanup:
+        // ── 이벤트 출처 확정 및 큐 저장 ─────────────────────────────────────
+        pendingEvt.source = isSuccess ? StatChangeSource.ServiceSuccess : StatChangeSource.ServiceFail;
+        var wdm = FindFirstObjectByType<WorkDayManager>();
+        wdm?.EnqueueStatChangeEvent(pendingEvt);
+
         FireClosingLine(currentComplaint);
         currentManual.ClearRequiredReturnItems();
         Log(TAG + " 민원 종료 — " + currentComplaint.complaintType + " / rejected=" + currentComplaint.rejected);

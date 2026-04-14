@@ -12,7 +12,7 @@ public struct ItemStatEffect
 /// 아이템 데이터 ScriptableObject.
 /// maxCount 제거 — 편의점 방문 1회당 1개 구매 가능.
 /// </summary>
-[CreateAssetMenu(fileName = "Item_", menuName = "Game/ItemBase")]
+[CreateAssetMenu(fileName = "Item_", menuName = "Game/Record/ItemBase")]
 public class ItemBase : ScriptableObject
 {
     [Header("기본 정보")]

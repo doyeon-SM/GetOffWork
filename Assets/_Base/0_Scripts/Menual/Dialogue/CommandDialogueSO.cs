@@ -39,7 +39,7 @@ public class NuisanceDialogueEntry
 /// </summary>
 [CreateAssetMenu(
     fileName = "Dialogue_CommandId",
-    menuName  = "Manual/Dialogue/Command Dialogue",
+    menuName  = "Game/Manual/Command Dialogue",
     order     = 10)]
 public class CommandDialogueSO : ScriptableObject
 {
