@@ -61,6 +61,7 @@ public class ServiceDeskManager : MonoBehaviour
     public event Action<ComplaintContext> OnOpenIdCardDetailRequested;
     public event Action<ComplaintContext> OnOpenMonitorRequested;
     public event Action<ComplaintContext> OnMonitorRefreshRequested;
+    public event Action<ComplaintContext> OnPrintNewIdCardRequested;  // AddressChange: 새 ID카드 출력
 
     // ── 생명주기 ─────────────────────────────────────────────────────────
     private void Awake()
@@ -243,7 +244,7 @@ public class ServiceDeskManager : MonoBehaviour
         }
     }
 
-    private Manual CreateManualByComplaint(ComplaintContext complaint)
+private Manual CreateManualByComplaint(ComplaintContext complaint)
     {
         var ud = ServiceDataManager.Instance.UserDatabase;
         switch (complaint.complaintType)
@@ -267,6 +268,14 @@ public class ServiceDeskManager : MonoBehaviour
                         m.manualData = ServiceDataManager.Instance.Fullproxy_Mobile;
                     return m;
                 }
+
+            case ComplaintContext.ComplaintType.AddressChange:
+            {
+                var m = new M_AddressChange(ud);
+                m.manualData = ServiceDataManager.Instance.AddressChange_Manual;
+                return m;
+            }
+
             default: return null;
         }
     }
@@ -308,6 +317,13 @@ public class ServiceDeskManager : MonoBehaviour
         {
             OnPrintDocumentRequested?.Invoke(currentComplaint);
             Log(TAG + " OnPrintDocumentRequested 발행");
+        }
+
+        if (commandId == ManualCommandIds.PrintNewIdCard && result.IsValid)
+        {
+            currentManual.Execute(ManualCommandIds.SpawnNewIdCard);
+            OnPrintNewIdCardRequested?.Invoke(currentComplaint);
+            Log(TAG + " OnPrintNewIdCardRequested 발행");
         }
 
         DispatchUIResult(result);

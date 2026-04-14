@@ -43,12 +43,12 @@ public class IDCardItem : DeskObjectItem
             : displayId;
     }
 
-    protected override void OnItemClicked()
+protected override void OnItemClicked()
     {
         if (serviceDeskManager == null || complaint == null) return;
 
-        // 첫 클릭에만 OpenIdCardDetail 절차 기록
-        if (!detailOpened)
+        // 첫 클릭에만 OpenIdCardDetail 절차 기록 (새 ID카드는 직접 코맨드 불필요)
+        if (!detailOpened && ObjectType != DeskObjectType.NewIDCard)
         {
             serviceDeskManager.ExecuteCommand(ManualCommandIds.OpenIdCardDetail);
             detailOpened = true;
@@ -56,19 +56,32 @@ public class IDCardItem : DeskObjectItem
 
         if (cardView == null)
         {
-            Debug.LogWarning("[IDCardItem] cardView가 null입니다. SetComplaint가 호출됐는지 확인하세요.");
+            Debug.LogWarning("[IDCardItem] cardView가 null입니다.");
             return;
         }
 
-        // displayRecordId가 세팅돼 있으면 해당 레코드를 우선 사용
         string recordId = !string.IsNullOrEmpty(displayRecordId)
             ? displayRecordId
             : complaint.EffectiveTargetRecordId;
 
-        if (serviceDeskManager.TryGetResidentRecord(recordId, out UserRecordData record))
-            cardView.Show(record);
+        if (!serviceDeskManager.TryGetResidentRecord(recordId, out UserRecordData record)) return;
 
-        Debug.Log($"[IDCardItem] 신분증 상세 표시 — recordId={recordId}");
+        if (ObjectType == DeskObjectType.NewIDCard)
+        {
+            // 새 ID카드: 런타임에 수정된 주소(record.address)를 표시
+            // SetIdCard가 호출되지 않은 상태이므로 IdCard필드를 직접 동기화
+            record.IdCardAddress = record.address;
+            record.IdCardId      = record.recordId;
+            record.IdCardPortrait = record.portrait;
+            cardView.Show(record);
+            Debug.Log($"[IDCardItem] 새 ID카드 상세 표시 — 변경 주소={record.address}");
+        }
+        else
+        {
+            // 기존 ID카드: IdCardAddress(변경 전 또는 fake 주소) 표시
+            cardView.Show(record);
+            Debug.Log($"[IDCardItem] 기존 ID카드 상세 표시 — recordId={recordId}");
+        }
     }
 
     protected override void OnItemDropped()

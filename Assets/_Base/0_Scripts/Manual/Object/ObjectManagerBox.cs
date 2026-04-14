@@ -158,6 +158,7 @@ public class ObjectManagerBox : MonoBehaviour
         serviceDeskManager.OnSpawnProxyIdCardRequested  += HandleSpawnProxyIdCard;
         serviceDeskManager.OnPrintDocumentRequested     += HandlePrintDocument;
         serviceDeskManager.OnCustomerCleared            += HandleCustomerCleared;
+        serviceDeskManager.OnPrintNewIdCardRequested    += HandlePrintNewIdCard;
     }
 
     private void OnDisable()
@@ -167,6 +168,7 @@ public class ObjectManagerBox : MonoBehaviour
         serviceDeskManager.OnSpawnProxyIdCardRequested  -= HandleSpawnProxyIdCard;
         serviceDeskManager.OnPrintDocumentRequested     -= HandlePrintDocument;
         serviceDeskManager.OnCustomerCleared            -= HandleCustomerCleared;
+        serviceDeskManager.OnPrintNewIdCardRequested    -= HandlePrintNewIdCard;
     }
 
     // ── IDCard 스폰 ───────────────────────────────────────────────────────
@@ -292,7 +294,52 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
     }
 
     // ── 응대 종료 처리 ────────────────────────────────────────────────────
-    private void HandleCustomerCleared()
+    // ── 새 ID카드 스폰 (AddressChange 전용) ──────────────────────────────────────
+    /// <summary>
+    /// OnPrintNewIdCardRequested 이벤트 핵들러.
+    /// PrintDocument와 동일하게 프린터 위치에서 스폰.
+    /// idCardPrefab을 재활용하며 DeskObjectType.NewIDCard로 설정한다.
+    /// </summary>
+    private void HandlePrintNewIdCard(ComplaintContext complaint)
+    {
+        if (idCardPrefab == null)
+        {
+            Debug.LogWarning($"{TAG} idCardPrefab이 비어있어 새 ID카드를 스폰할 수 없습니다.");
+            return;
+        }
+
+        // 스폰 위치: PrinterObject에서 출력 (없으면 TakeZone 중심)
+        Vector3 spawnPos;
+        if (printerObject != null)
+            spawnPos = printerObject.transform.position + paperSpawnOffset;
+        else if (takeZone != null)
+            spawnPos = takeZone.GetCenterWorldPos() + paperSpawnOffset;
+        else
+            spawnPos = transform.position + paperSpawnOffset;
+
+        GameObject go   = Instantiate(idCardPrefab, spawnPos, Quaternion.identity);
+        DeskObjectItem item = go.GetComponent<DeskObjectItem>();
+
+        if (item == null)
+        {
+            Debug.LogError($"{TAG} idCardPrefab에 DeskObjectItem이 없습니다.");
+            Destroy(go);
+            return;
+        }
+
+        item.Initialize(this, takeZone, targetCamera);
+        item.SetObjectType(DeskObjectType.NewIDCard);
+
+        if (item is IDCardItem idItem)
+            idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
+                displayId: complaint.applicantRecordId);
+
+        // 필수 반납 목록 등록: 새 ID카드를 듌러줘야 함
+        playerspawnedItems.Add(item);
+        Log($"{TAG} 새 ID카드 Spawn 완료 — recordId={complaint.applicantRecordId}");
+    }
+
+        private void HandleCustomerCleared()
     {
         foreach (var item in userspawnedItems)
             if (item != null) Destroy(item.gameObject);
@@ -357,6 +404,38 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
                     Log($"{TAG} 아이템 미반납 → 호출 방어: {line}");
                     serviceDeskManager?.BroadcastCustomerText(line);
                     return false;
+                }
+            }
+        }
+        // ── AddressChange 전용 반납 검사 ──────────────────────────────
+        // 비정상 케이스 1: 기존 ID카드(원본)가 TakeZone에 반납된 경우 차단
+        if (ctx != null && ctx.complaintType == ComplaintContext.ComplaintType.AddressChange)
+        {
+            foreach (var item in userspawnedItems)
+            {
+                if (item != null && item.ObjectType == DeskObjectType.IDCard && item.IsInTakeZone)
+                {
+                    string line = GetRandomLine(returnReminderLines, "기존 신분증은 반납하지 않으셔도 됩니다.");
+                    Log($"{TAG} [AddressChange] 기존 ID카드 반납 시도 → 호출 방어: {line}");
+                    serviceDeskManager?.BroadcastCustomerText(line);
+                    return false;
+                }
+            }
+
+            // 비정상 케이스 2: 새 ID카드가 TakeZone에 있지만 주소가 잘못된 경우 차단
+            foreach (var item in playerspawnedItems)
+            {
+                if (item != null && item.ObjectType == DeskObjectType.NewIDCard && item.IsInTakeZone)
+                {
+                    string entered = ctx.enteredAddress ?? string.Empty;
+                    string requested = ctx.requestedNewAddress ?? string.Empty;
+                    if (!entered.Equals(requested, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        string line = GetRandomLine(returnReminderLines, "입력하신 주소가 요청하신 주소와 다릅니다.");
+                        Log($"{TAG} [AddressChange] 주소 불일치 반납 시도 → 호출 방어: {line}");
+                        serviceDeskManager?.BroadcastCustomerText(line);
+                        return false;
+                    }
                 }
             }
         }

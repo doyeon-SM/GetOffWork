@@ -97,7 +97,7 @@ MonoBehaviour:
   showDebugLog: 0
   ghostAlpha: 0.7
   ghostScale: 1.05
-  objectType: 2
+  objectType: 3
 --- !u!212 &4958897192859984872
 SpriteRenderer:
   serializedVersion: 2

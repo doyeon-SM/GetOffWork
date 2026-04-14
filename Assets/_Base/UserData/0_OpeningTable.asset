@@ -35,3 +35,13 @@ MonoBehaviour:
     nuisanceType: 1
     lines:
     - "00 \uB4F1\uBCF8."
+  - complaintType: 1
+    applicantType: 0
+    nuisanceType: 0
+    lines:
+    - "\uC8FC\uC18C\uBCC0\uACBD\uD558\uB7EC \uC654\uC2B5\uB2C8\uB2E4"
+  - complaintType: 1
+    applicantType: 0
+    nuisanceType: 1
+    lines:
+    - "\uC8FC\uC18C\uBCC0\uACBD"

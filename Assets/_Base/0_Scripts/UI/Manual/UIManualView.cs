@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// 여러 가이드 이미지 그룹을 탭 버튼으로 전환하며,
 /// 각 그룹 내의 이미지를 이전/다음 버튼으로 페이지 넘김 한다.
 /// </summary>
-public class UIMenualView : MonoBehaviour
+public class UIManualView : MonoBehaviour
 {
     // ── Inspector 연결 필드 ──────────────────────────────────────────────────
 

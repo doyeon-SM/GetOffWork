@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class ComplaintContext
 {
-    public enum ComplaintType  { FullID }
+    public enum ComplaintType  { FullID, AddressChange }
     public enum ApplicantType  { Self, Proxy }
     public enum DeliveryType   { None, Print, Mobile }
     public enum NuisanceType   { None, Rudely }
@@ -39,7 +39,25 @@ public class ComplaintContext
     public bool   isIdMismatch;       // ID 불일치 여부 (applicant 또는 target의 fakeID)
     public bool   isPortraitMismatch; // 사진 불일치 여부 (applicant 또는 target의 fakePortrait)
     public bool   mobileNumberAsked;      // 전화번호를 질문했는가
-    public bool   mobileNumberVerified;   // 전화번호 일치 확인 완료됐는가
+public bool   mobileNumberVerified;   // 전화번호 일치 확인 완료됐는가
+
+    // ── 주소 변경 (AddressChange 메뉴얼 전용) ──────────────────────────────
+    /// <summary>ComplaintFactory가 큐에서 꺼낸 민원인의 새 주소 (변경 요청 주소)</summary>
+    public string requestedNewAddress;
+    /// <summary>현재 주소를 질문했는가</summary>
+    public bool   newAddressAsked;
+    /// <summary>모니터 주소 변경창에 입력한 주소</summary>
+    public string enteredAddress;
+    /// <summary>새 ID카드(주소변경본)가 프린터에서 출력됐는가</summary>
+    public bool   newIdCardPrinted;
+    /// <summary>새 ID카드가 TakeZone에 반납됐는가</summary>
+    public bool   newIdCardReturned;
+    /// <summary>
+    /// SubmitNewAddress가 실행된 이후 true.
+    /// 주소 불일치 반려 판정 시 변경 전/후를 구분하는 데 사용한다.
+    /// false: 변경 전 → 불일치이면 정상 반려 가능 / true: 변경 후 → 반려실패
+    /// </summary>
+    public bool   isAddressChangeCommitted;
 
     // ── 대화 임시 보관 ────────────────────────────────────────────────────
     [Header("마지막 대사")]

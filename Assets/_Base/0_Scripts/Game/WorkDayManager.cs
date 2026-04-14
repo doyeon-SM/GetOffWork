@@ -131,6 +131,9 @@ private void Start()
         // 하루 시작 스냅샷 저장
         SnapshotDayStart();
 
+        // 주소 큐 초기화 (매 하루 시작마다 리셋)
+        ComplaintFactory.InitializeAddressQueue();
+
         if (serviceDeskManager != null)
             serviceDeskManager.BeginWorkPhase();
 

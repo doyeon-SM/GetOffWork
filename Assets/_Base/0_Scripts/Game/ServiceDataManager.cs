@@ -23,7 +23,14 @@ public class ServiceDataManager : MonoBehaviour
     [SerializeField] private NuisanceTypeSO nuisanceTypeSettings;
     [SerializeField] private MismatchSettingSO mismatchSetting;
 
-    [Header("질문 설정")]
+    [Header("AddressChange 메뉴얼 SO")]
+    [SerializeField] private ManualDataSO addressChangeManualData;
+
+    [Header("주소 변경 요청 주소 리스트")]
+    [SerializeField] private AddressListSO addressListSO;
+
+    
+[Header("질문 설정")]
     [SerializeField] private QuestionDataList questionDataList;
 
     // ── 프로퍼티 ─────────────────────────────────────────────────────
@@ -41,7 +48,9 @@ public class ServiceDataManager : MonoBehaviour
     /// <summary>불일치 케이스 설정. 없으면 null</summary>
     public MismatchSettingSO MismatchSetting => mismatchSetting;
 
-    public QuestionDataList QuestionList => questionDataList;
+    public QuestionDataList QuestionList         => questionDataList;
+    public ManualDataSO     AddressChange_Manual => addressChangeManualData;
+    public AddressListSO    AddressListSO        => addressListSO;
 
 private void Awake()
     {

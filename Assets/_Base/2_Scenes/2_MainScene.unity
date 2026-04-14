@@ -526,7 +526,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.0045092455}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.0037428632}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -551,8 +551,8 @@ MonoBehaviour:
   m_StartAxis: 1
   m_CellSize: {x: 380, y: 100}
   m_Spacing: {x: 0, y: 0}
-  m_Constraint: 0
-  m_ConstraintCount: 2
+  m_Constraint: 1
+  m_ConstraintCount: 1
 --- !u!1 &435657164
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,7 +1191,7 @@ MonoBehaviour:
   displayName: Menual Guide
   showDebugLog: 1
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
-  menualView: {fileID: 2098769614}
+  ManualView: {fileID: 2098769614}
 --- !u!1 &1063100646
 GameObject:
   m_ObjectHideFlags: 0
@@ -1762,8 +1762,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301799489}
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
-  m_Value: -0.20325203
-  m_Size: 0.99998903
+  m_Value: 0
+  m_Size: 0.99998987
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2962,6 +2962,8 @@ MonoBehaviour:
   fullIDProxyManualData_Mobile: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
   nuisanceTypeSettings: {fileID: 11400000, guid: bc064f774427b4a429ce04944ab93c3e, type: 2}
   mismatchSetting: {fileID: 11400000, guid: 39cefa65f65c90d40ab1b92f70617da6, type: 2}
+  addressChangeManualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+  addressListSO: {fileID: 11400000, guid: bcba52be05092ae4fa45ac48d4804670, type: 2}
   questionDataList: {fileID: 11400000, guid: 04c14c1a0ac73f044840f631617430bf, type: 2}
 --- !u!1 &1980840476
 GameObject:

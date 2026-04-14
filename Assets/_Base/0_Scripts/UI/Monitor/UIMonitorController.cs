@@ -16,7 +16,8 @@ public class UIMonitorController : MonoBehaviour
     [Header("패널 프리팹 (각 화면을 프리팹으로 등록)")]
     [SerializeField] private UIMonitorMainPanel   mainPanelPrefab;
     [SerializeField] private UIMonitorPrintPanel  printPanelPrefab;
-    [SerializeField] private UIMonitorMobilePanel mobilePanelPrefab;
+    [SerializeField] private UIMonitorMobilePanel  mobilePanelPrefab;
+    [SerializeField] private UIMonitorAddressPanel addressPanelPrefab;
 
     [Header("패널이 생성될 루트 Transform")]
     [SerializeField] private RectTransform panelRoot;
@@ -208,5 +209,36 @@ public class UIMonitorController : MonoBehaviour
     {
         if (serviceDeskManager == null) return;
         serviceDeskManager.ExecuteCommand(ManualCommandIds.RejectAddressMismatch);
+    }
+
+
+/// <summary>
+    /// AddressPanel 확정+출력 버튼.
+    /// 절차 6(주소 확정):구실행, 절차 7(새 ID카드 출력)을 연속으로 실행한다.
+    /// </summary>
+    public void OnSubmitAndPrintNewIdCard(string inputAddress)
+    {
+        if (serviceDeskManager == null || string.IsNullOrWhiteSpace(inputAddress)) return;
+
+        // 절차 6: SubmitNewAddress — 유효하면 런타임 UserData 수정
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.SubmitNewAddress, inputAddress);
+
+        // 절차 7: PrintNewIdCard — SubmitNewAddress 성공 이후에만 주소가 context에 저장될 수 있음
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.PrintNewIdCard);
+    }
+
+
+public void GoToAddress()
+    {
+        if (addressPanelPrefab == null)
+        {
+            Debug.LogError("[UIMonitorController] addressPanelPrefab이 할당되지 않았습니다.");
+            return;
+        }
+        ShowPanel(addressPanelPrefab.gameObject, inst =>
+        {
+            var panel = inst.GetComponent<UIMonitorAddressPanel>();
+            panel.Init(this, currentRecord);
+        });
     }
 }

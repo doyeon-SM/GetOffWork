@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -7,6 +9,38 @@ using UnityEngine;
 public static class ComplaintFactory
 {
     private const string TAG = "[ComplaintFactory]";
+
+    // ── 주소 큐 ───────────────────────────────────────────────────────────
+    private static Queue<string> _addressQueue = new Queue<string>();
+
+    /// <summary>
+    /// ServiceDataManager의 AddressListSO를 읽어 주소 큐를 초기화한다.
+    /// WorkDayManager.StartMorningWork() 등 하루 시작 시 호출할 것.
+    /// </summary>
+    public static void InitializeAddressQueue()
+    {
+        _addressQueue.Clear();
+        var so = ServiceDataManager.Instance?.AddressListSO;
+        if (so == null || so.addresses == null || so.addresses.Count == 0)
+        {
+            Debug.LogWarning(TAG + " AddressListSO가 비어있습니다. 주소 큐 초기화 실패.");
+            return;
+        }
+        foreach (var addr in so.addresses)
+            _addressQueue.Enqueue(addr);
+        Debug.Log(TAG + $" 주소 큐 초기화 완료: {_addressQueue.Count}개");
+    }
+
+    /// <summary>주소 큐에서 하나 꺼낸다. 소진 시 소스를 다시 로드해 반복한다.</summary>
+    private static string DequeueAddress()
+    {
+        if (_addressQueue.Count == 0)
+        {
+            Debug.LogWarning(TAG + " 주소 큐 소진 — SO를 다시 로드합니다.");
+            InitializeAddressQueue();
+        }
+        return _addressQueue.Count > 0 ? _addressQueue.Dequeue() : "(주소 없음)";
+    }
 
     private const float DEFAULT_PATIENCE_MIN = 20f;
     private const float DEFAULT_PATIENCE_MAX = 40f;
@@ -22,16 +56,31 @@ public static class ComplaintFactory
 
     // ── 기본 타입 롤 ─────────────────────────────────────────────────────
 
-    private static ComplaintContext RollBaseType()
+private static ComplaintContext RollBaseType()
     {
         var c = new ComplaintContext();
-        c.complaintType = ComplaintContext.ComplaintType.FullID;
-        c.applicantType = Random.value > 0.5f
-            ? ComplaintContext.ApplicantType.Self
-            : ComplaintContext.ApplicantType.Proxy;
-        c.requestedDeliveryType = Random.value > 0.5f
-            ? ComplaintContext.DeliveryType.Print
-            : ComplaintContext.DeliveryType.Mobile;
+
+        // 민원 타입 롭 — 현재 FullID / AddressChange 중 랜덤
+        c.complaintType = UnityEngine.Random.value > 0.5f
+            ? ComplaintContext.ComplaintType.FullID
+            : ComplaintContext.ComplaintType.AddressChange;
+
+        // AddressChange는 Self 전용, 배달 방식 없음
+        if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
+        {
+            c.applicantType         = ComplaintContext.ApplicantType.Self;
+            c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
+            c.requestedNewAddress   = DequeueAddress();
+        }
+        else
+        {
+            c.applicantType = UnityEngine.Random.value > 0.5f
+                ? ComplaintContext.ApplicantType.Self
+                : ComplaintContext.ApplicantType.Proxy;
+            c.requestedDeliveryType = UnityEngine.Random.value > 0.5f
+                ? ComplaintContext.DeliveryType.Print
+                : ComplaintContext.DeliveryType.Mobile;
+        }
 
         var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
         c.nuisanceType = nuisanceSO != null
@@ -49,7 +98,7 @@ public static class ComplaintFactory
         if (ub == null || ub.Records == null || ub.Records.Count == 0) return;
 
         // 신청인 레코드 배정
-        int ai = Random.Range(0, ub.Records.Count);
+        int ai = UnityEngine.Random.Range(0, ub.Records.Count);
         c.applicantRecordId = ub.Records[ai].recordId;
 
         // 대상 레코드 배정
@@ -61,7 +110,7 @@ public static class ComplaintFactory
         {
             if (ub.Records.Count >= 2)
             {
-                int ti = Random.Range(0, ub.Records.Count - 1);
+                int ti = UnityEngine.Random.Range(0, ub.Records.Count - 1);
                 if (ti >= ai) ti++;
                 c.targetRecordId = ub.Records[ti].recordId;
             }
@@ -86,15 +135,15 @@ public static class ComplaintFactory
         ub.TryGetRecord(c.applicantRecordId, out UserRecordData aRec);
         ub.TryGetRecord(c.targetRecordId,    out UserRecordData tRec);
 
-        c.isAddressMismatch = Random.value < addrChance
+        c.isAddressMismatch = UnityEngine.Random.value < addrChance
             && ((aRec != null && aRec.HasAddressMismatch)
                 || (tRec != null && tRec.HasAddressMismatch));
 
-        c.isIdMismatch = Random.value < idChance
+        c.isIdMismatch = UnityEngine.Random.value < idChance
             && ((aRec != null && aRec.HasIdMismatch)
                 || (tRec != null && tRec.HasIdMismatch));
 
-        c.isPortraitMismatch = Random.value < portraitChance
+        c.isPortraitMismatch = UnityEngine.Random.value < portraitChance
             && ((aRec != null && aRec.HasPortraitMismatch)
                 || (tRec != null && tRec.HasPortraitMismatch));
 
@@ -118,7 +167,7 @@ public static class ComplaintFactory
             if (pMax < pMin) pMax = pMin;
         }
 
-        float basePatience = Random.Range(pMin, pMax);
+        float basePatience = UnityEngine.Random.Range(pMin, pMax);
 
         var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
         if (nuisanceSO != null && c.nuisanceType != ComplaintContext.NuisanceType.None)
@@ -137,6 +186,9 @@ public static class ComplaintFactory
     {
         var sd = ServiceDataManager.Instance;
         if (sd == null) return null;
+
+        if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
+            return sd.AddressChange_Manual;
 
         bool isSelf   = c.applicantType == ComplaintContext.ApplicantType.Self;
         bool isPrint  = c.requestedDeliveryType == ComplaintContext.DeliveryType.Print;

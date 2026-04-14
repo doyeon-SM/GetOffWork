@@ -25,3 +25,6 @@ MonoBehaviour:
   - CommandId: ask_mobile_number
     DisplayText: "\uD578\uB4DC\uD3F0 \uBC88\uD638 \uC694\uCCAD"
     VisualType: 0
+  - CommandId: ask_current_address
+    DisplayText: "\uC8FC\uC18C \uC694\uCCAD"
+    VisualType: 0

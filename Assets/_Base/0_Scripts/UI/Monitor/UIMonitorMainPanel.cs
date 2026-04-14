@@ -67,4 +67,13 @@ public class UIMonitorMainPanel : MonoBehaviour
         if (nameText      != null) nameText.text        = string.Empty;
         if (addressText   != null) addressText.text     = string.Empty;
     }
+
+
+/// <summary>
+    /// Address 버튼 클릭 → 주소 변경 패널으로 전환 (AddressChange 메뉴얼에서 사용)
+    /// </summary>
+    public void OnClickAddress()
+    {
+        controller?.GoToAddress();
+    }
 }

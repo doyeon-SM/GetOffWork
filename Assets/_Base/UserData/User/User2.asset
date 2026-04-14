@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c511b7d2b0929b459e6aaa1e7dc77cd, type: 3}
   m_Name: User2
   m_EditorClassIdentifier: Assembly-CSharp::UserRecordData
-  recordId: ID-002
+  recordId: 002
   fullName: "\uAE40\uCCA0\uC218"
   portrait: {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
   address: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C 2"
@@ -20,6 +20,10 @@ MonoBehaviour:
   phoneNumber: 010-1111-1112
   email: "\uAE40\uCCA0\uC218@mail.com"
   fakeAddress: "\uC11C\uC6B8\uC2DC 2"
-  fakeID: 002
+  fakeID: 000
   fakePortrait: {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
   note: 
+  IdCardAddress: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C
+    2"
+  IdCardId: 002
+  IdCardPortrait: {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}

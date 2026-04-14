@@ -9,4 +9,5 @@ public enum DeskObjectType
     IDCard      = 1,   // 방문객 신분증
     ProxyIDCard = 2,   // 대리인 신분증
     PrintedDoc  = 3,   // 출력 등본
+    NewIDCard   = 4,   // 주소변경 새 신분증 (M_AddressChange 전용)
 }

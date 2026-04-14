@@ -94,6 +94,32 @@ public static class ServiceEvaluator
         Manual           manual,
         ref StatChangeEvent evt)
     {
+        // AddressChange case3: 주소 변경 후(isAddressChangeCommitted=true) 반려 허용되지 않음 → 반려실패
+        if (complaint.complaintType == ComplaintContext.ComplaintType.AddressChange
+            && complaint.isAddressChangeCommitted)
+        {
+            Debug.Log(TAG + " [AddressChange/case3] 주소 변경 후 반려 시도 → 반려실패 처리");
+            var penaltyData = GetManualData(manual);
+            if (penaltyData != null && !penaltyData.abnormalRejectionPenalty.IsEmpty)
+            {
+                ApplyPenaltyFromSO(playerBase, penaltyData.abnormalRejectionPenalty);
+                evt.performanceDelta -= penaltyData.abnormalRejectionPenalty.Performance;
+                evt.kindnessDelta    -= penaltyData.abnormalRejectionPenalty.Kindness;
+                evt.stressDelta      += penaltyData.abnormalRejectionPenalty.Stress;
+                evt.reliabilityDelta -= penaltyData.abnormalRejectionPenalty.Reliability;
+                evt.payDelta         -= penaltyData.abnormalRejectionPenalty.Pay;
+            }
+            else
+            {
+                playerBase.AddPerformance(-2);
+                playerBase.AddStat(Stat.Reliability, -1);
+                evt.performanceDelta -= 2;
+                evt.reliabilityDelta -= 1;
+            }
+            return false; // 실패
+        }
+
+        // 일반 정상 반려 (case2: AddressChange 변경 전 또는 FullID 불일치)
         string mismatchLog = $"addr={complaint.isAddressMismatch} id={complaint.isIdMismatch} portrait={complaint.isPortraitMismatch}";
         Debug.Log(TAG + " 정상 반려(불일치) [" + mismatchLog + "] — 절차 평가 무시");
 
@@ -255,7 +281,8 @@ public static class ServiceEvaluator
     private static ManualDataSO GetManualData(Manual manual)
     {
         if (manual is M_FullID_Self  self)  return self.manualData;
-        if (manual is M_FullID_Proxy proxy) return proxy.manualData;
+        if (manual is M_FullID_Proxy   proxy)   return proxy.manualData;
+        if (manual is M_AddressChange  addrChg) return addrChg.manualData;
         return null;
     }
 }
