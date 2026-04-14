@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using TMPro;
+
 using UnityEngine;
 
 public class WorkDayManager : MonoBehaviour
@@ -22,8 +22,8 @@ public class WorkDayManager : MonoBehaviour
     [SerializeField] private float morningDuration   = 300f;
     [SerializeField] private float afternoonDuration = 300f;
 
-    [Header("시간 UI")]
-    [SerializeField] private TMP_Text clockText;
+        [Header("시간 UI")]
+    [SerializeField] private UIClockTimer clockTimer;
 
     [Header("점심 UI 부모")]
     [SerializeField] private Transform lunchUIPanelRoot;
@@ -55,8 +55,10 @@ public class WorkDayManager : MonoBehaviour
     private DayResultData _dayResultData;
 
     public PlayerBase CurrentPlayerBase => playerBase;
-    public DayPhase   CurrentPhase      => currentPhase;
-    public float      CurrentPhaseTimer => phaseTimer;
+    public DayPhase   CurrentPhase         => currentPhase;
+    public float      CurrentPhaseTimer    => phaseTimer;
+    /// <summary>현재 페이즈의 최대 시간(초). UIClockTimer가 비율 계산에 사용.</summary>
+    public float      CurrentPhaseDuration => currentPhase == DayPhase.MorningWork ? morningDuration : afternoonDuration;
 
     // ── Unity 생명주기 ─────────────────────────────────────────────────────
     private void Awake()
@@ -403,22 +405,23 @@ private void Start()
     }
 
     // ── 시간 UI ────────────────────────────────────────────────────────────
-    private void UpdateClockUI()
+private void UpdateClockUI()
     {
-        if (clockText == null) return;
+        if (clockTimer == null) return;
         switch (currentPhase)
         {
             case DayPhase.MorningWork:
-            case DayPhase.AfternoonWork: clockText.text = FormatTime(phaseTimer); break;
-            case DayPhase.LunchBreak:   clockText.text = "점심시간";              break;
-            case DayPhase.Finish:       clockText.text = "00:00";               break;
+            case DayPhase.AfternoonWork:
+                clockTimer.Tick(phaseTimer, currentPhase == DayPhase.MorningWork ? morningDuration : afternoonDuration);
+                break;
+            case DayPhase.LunchBreak:
+                clockTimer.SetLunchBreak();
+                break;
+            case DayPhase.Finish:
+                clockTimer.SetFinished();
+                break;
         }
     }
 
-    private string FormatTime(float time)
-    {
-        int total = Mathf.CeilToInt(time);
-        if (total < 0) total = 0;
-        return $"{total / 60:00}:{total % 60:00}";
-    }
+
 }
