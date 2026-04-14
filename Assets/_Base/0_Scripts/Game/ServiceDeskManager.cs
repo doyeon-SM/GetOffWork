@@ -5,11 +5,7 @@ using UnityEngine;
 public class ServiceDeskManager : MonoBehaviour
 {
     private const string TAG       = "[Desk]";
-    private const string TAG_EVAL  = "[정산]";
     private const string TAG_QUEUE = "[대기열]";
-
-    private const float DEFAULT_PATIENCE_MIN = 20f;
-    private const float DEFAULT_PATIENCE_MAX = 40f;
 
     private enum DeskState { Idle, ServingCustomer }
 
@@ -31,6 +27,7 @@ public class ServiceDeskManager : MonoBehaviour
 
     private readonly Queue<ComplaintContext> waitingQueue = new Queue<ComplaintContext>();
 
+    private WorkDayManager _workDayManager;
     private Manual    currentManual;
     private bool      isWorking;
     private float     nextCustomerTimer;
@@ -275,97 +272,9 @@ public class ServiceDeskManager : MonoBehaviour
     }
 
     // ── 민원 컨텍스트 생성 ────────────────────────────────────────────────
-private ComplaintContext CreateRandomComplaint()
+    private ComplaintContext CreateRandomComplaint()
     {
-        var c = new ComplaintContext();
-        c.complaintType         = ComplaintContext.ComplaintType.FullID;
-        c.applicantType         = UnityEngine.Random.value > 0.5f
-            ? ComplaintContext.ApplicantType.Self
-            : ComplaintContext.ApplicantType.Proxy;
-        c.requestedDeliveryType = UnityEngine.Random.value > 0.5f
-            ? ComplaintContext.DeliveryType.Print
-            : ComplaintContext.DeliveryType.Mobile;
-
-        var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
-        c.nuisanceType = nuisanceSO != null
-            ? nuisanceSO.RollNuisanceType()
-            : ComplaintContext.NuisanceType.None;
-
-        var ub = ServiceDataManager.Instance.UserDatabase;
-        if (ub != null && ub.Records != null && ub.Records.Count > 0)
-        {
-            int ai = UnityEngine.Random.Range(0, ub.Records.Count);
-            c.applicantRecordId = ub.Records[ai].recordId;
-
-            if (c.applicantType == ComplaintContext.ApplicantType.Self)
-            {
-                c.targetRecordId = c.applicantRecordId;
-            }
-            else
-            {
-                if (ub.Records.Count >= 2)
-                {
-                    int ti = UnityEngine.Random.Range(0, ub.Records.Count - 1);
-                    if (ti >= ai) ti++;
-                    c.targetRecordId = ub.Records[ti].recordId;
-                }
-                else
-                {
-                    c.applicantType  = ComplaintContext.ApplicantType.Self;
-                    c.targetRecordId = c.applicantRecordId;
-                    Debug.LogWarning(TAG_QUEUE + " 레코드 1개만 존재 — Proxy 불가, Self로 대체");
-                }
-            }
-
-            // 종류별 불일치 판정 — 각각 독립적으로 확률 체크
-            var mismatchSO     = ServiceDataManager.Instance?.MismatchSetting;
-            float addrChance    = mismatchSO != null ? mismatchSO.AddressspawnChance  : 0f;
-            float idChance      = mismatchSO != null ? mismatchSO.IDspawnChance       : 0f;
-            float portraitChance= mismatchSO != null ? mismatchSO.PortraitspawnChance : 0f;
-
-            ub.TryGetRecord(c.applicantRecordId, out UserRecordData aRec);
-            ub.TryGetRecord(c.targetRecordId,    out UserRecordData tRec);
-
-            // 주소 불일치: fakeAddress가 있는 레코드 + 확률 성공
-            c.isAddressMismatch = UnityEngine.Random.value < addrChance
-                && ((aRec != null && aRec.HasAddressMismatch)
-                    || (tRec != null && tRec.HasAddressMismatch));
-
-            // ID 불일치: fakeID가 있는 레코드 + 확률 성공
-            c.isIdMismatch = UnityEngine.Random.value < idChance
-                && ((aRec != null && aRec.HasIdMismatch)
-                    || (tRec != null && tRec.HasIdMismatch));
-
-            // 사진 불일치: fakePortrait가 있는 레코드 + 확률 성공
-            c.isPortraitMismatch = UnityEngine.Random.value < portraitChance
-                && ((aRec != null && aRec.HasPortraitMismatch)
-                    || (tRec != null && tRec.HasPortraitMismatch));
-
-            aRec.SetIdCard(c.isAddressMismatch, c.isIdMismatch, c.isPortraitMismatch);
-
-            Log(TAG_QUEUE + $" 불일치: addr={c.isAddressMismatch} id={c.isIdMismatch} portrait={c.isPortraitMismatch}");
-        }
-
-        ManualDataSO patienceSO = GetManualDataSOByComplaint(c);
-        float pMin = DEFAULT_PATIENCE_MIN;
-        float pMax = DEFAULT_PATIENCE_MAX;
-        if (patienceSO != null && patienceSO.HasPatienceOverride)
-        {
-            if (patienceSO.patienceMin > 0f) pMin = patienceSO.patienceMin;
-            if (patienceSO.patienceMax > 0f) pMax = patienceSO.patienceMax;
-            if (pMax < pMin) pMax = pMin;
-        }
-
-        float basePatience = UnityEngine.Random.Range(pMin, pMax);
-        if (nuisanceSO != null && c.nuisanceType != ComplaintContext.NuisanceType.None)
-        {
-            var entry = nuisanceSO.GetEntry(c.nuisanceType);
-            basePatience *= entry.patienceMultiplier;
-            Log(TAG_QUEUE + " [" + c.nuisanceType + "] 진상 생성 / 인내심 배율: " + entry.patienceMultiplier);
-        }
-        c.maxPatience     = basePatience;
-        c.currentPatience = basePatience;
-        return c;
+        return ComplaintFactory.Create();
     }
 
     // ── 명령 실행 ─────────────────────────────────────────────────────────
@@ -444,17 +353,15 @@ private ComplaintContext CreateRandomComplaint()
         var entry = nuisanceSO.GetEntry(currentComplaint.nuisanceType);
         if (entry.perMessagePenalty.IsEmpty) return;
 
-        ApplyNuisancePenalty(entry.perMessagePenalty);
+        // 메시지당 진상 패널티는 응대 종료 시 이벤트에 누적되지 않으르로 직접 적용
+        var p = entry.perMessagePenalty;
+        if (p.stress      != 0) playerBase.AddStat(Stat.Stress,      p.stress);
+        if (p.kindness    != 0) playerBase.AddStat(Stat.Kindness,    p.kindness);
+        if (p.reliability != 0) playerBase.AddStat(Stat.Reliability, p.reliability);
+        if (p.performance != 0) playerBase.AddPerformance(-p.performance);
         Log(TAG + " [NuisancePenalty/msg] type:" + currentComplaint.nuisanceType);
     }
 
-    private void ApplyNuisancePenalty(NuisancePenalty penalty)
-    {
-        if (penalty.stress      != 0) playerBase.AddStat(Stat.Stress,      penalty.stress);
-        if (penalty.kindness    != 0) playerBase.AddStat(Stat.Kindness,     penalty.kindness);
-        if (penalty.reliability != 0) playerBase.AddStat(Stat.Reliability,  penalty.reliability);
-        if (penalty.performance != 0) playerBase.AddPerformance(-penalty.performance);
-    }
 
     // ── 인내심 ────────────────────────────────────────────────────────────
     private void UpdateCurrentCustomerPatience()
@@ -482,175 +389,32 @@ private ComplaintContext CreateRandomComplaint()
     }
 
     // ── 민원 종료 & 정산 ──────────────────────────────────────────────────
-private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
+    private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejection = false)
     {
         if (currentManual == null || currentComplaint == null) return;
         if (playerBase == null) return;
 
-        bool hasAnyMismatch     = currentComplaint.HasAnyMismatch;
-        bool isCompleted        = currentManual.IsCompleted;
-        bool isValidRejection   = isRejection && hasAnyMismatch;
-        bool isInvalidRejection = isRejection && !hasAnyMismatch;
-        bool isMissedRejection  = !isRejection && hasAnyMismatch && isCompleted;
+        var evt = ServiceEvaluator.Evaluate(
+            playerBase,
+            currentComplaint,
+            currentManual,
+            patienceExpired,
+            isRejection,
+            out bool isSuccess);
 
-        // ── 이 응대에서 발생할 스탯 변화를 누적할 임시 이벤트 ──────────────
-        // source는 마지막에 결정되므로 일단 Fail로 초기화
-        var pendingEvt = new StatChangeEvent { source = StatChangeSource.ServiceFail };
-        bool isSuccess = false; // 응대 성공 여부 — 마지막에 확정
-
-        // 인내심 소진 패널티
-        if (patienceExpired)
-        {
-            playerBase.AddStat(Stat.Stress, 2);
-            pendingEvt.stressDelta += 2;
-            Log(TAG_EVAL + " 인내심 소진 → Stress+2");
-        }
-
-        // 진상 종료 패널티
-        var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
-        if (nuisanceSO != null && currentComplaint.nuisanceType != ComplaintContext.NuisanceType.None)
-        {
-            var nEntry = nuisanceSO.GetEntry(currentComplaint.nuisanceType);
-            if (!nEntry.onFinishPenalty.IsEmpty)
-            {
-                ApplyNuisancePenalty(nEntry.onFinishPenalty);
-                pendingEvt.stressDelta       += nEntry.onFinishPenalty.stress;
-                pendingEvt.kindnessDelta     += nEntry.onFinishPenalty.kindness;
-                pendingEvt.reliabilityDelta  += nEntry.onFinishPenalty.reliability;
-                pendingEvt.performanceDelta  -= nEntry.onFinishPenalty.performance;
-                Log(TAG_EVAL + " [NuisancePenalty/finish] type:" + currentComplaint.nuisanceType);
-            }
-        }
-
-        // ── Case 1: 불일치 + 정상 반려 ───────────────────────────────────────────
-        if (isValidRejection)
-        {
-            string mismatchLog = $"addr={currentComplaint.isAddressMismatch} "
-                               + $"id={currentComplaint.isIdMismatch} "
-                               + $"portrait={currentComplaint.isPortraitMismatch}";
-            Log(TAG_EVAL + " 정상 반려(불일치) [" + mismatchLog + "] — 절차 평가 무시");
-
-            var soData = GetCurrentManualData();
-            if (soData != null && !soData.completionReward.IsEmpty)
-            {
-                ApplyReward(soData.completionReward);
-                pendingEvt.performanceDelta += soData.completionReward.Performance;
-                pendingEvt.kindnessDelta    += soData.completionReward.Kindness;
-                pendingEvt.reliabilityDelta += soData.completionReward.Reliability;
-                pendingEvt.payDelta         += soData.completionReward.Pay;
-                Log(TAG_EVAL + " completionReward 적용");
-            }
-            else
-            {
-                int perfReward = currentComplaint.applicantType == ComplaintContext.ApplicantType.Self ? 3 : 6;
-                playerBase.AddPerformance(perfReward);
-                pendingEvt.performanceDelta += perfReward;
-                Log(TAG_EVAL + " Performance+" + perfReward + " [폴백]");
-            }
-            playerBase.AddStat(Stat.Stress, 1);
-            pendingEvt.stressDelta += 1;
-            isSuccess = true;
-            goto Cleanup;
-        }
-
-        // ── Case 2: 불일치인데 인쇄물 전달 또는 전자전송 완료 (isMissedRejection) ──
-        if (isMissedRejection)
-        {
-            string mismatchLog = $"addr={currentComplaint.isAddressMismatch} "
-                               + $"id={currentComplaint.isIdMismatch} "
-                               + $"portrait={currentComplaint.isPortraitMismatch}";
-            Log(TAG_EVAL + " 반려사항 놓침(불일치인데 정상응대 완료) [" + mismatchLog + "]");
-
-            var soData = GetCurrentManualData();
-            if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
-            {
-                ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
-                pendingEvt.performanceDelta -= soData.abnormalRejectionPenalty.Performance;
-                pendingEvt.kindnessDelta    -= soData.abnormalRejectionPenalty.Kindness;
-                pendingEvt.stressDelta      += soData.abnormalRejectionPenalty.Stress;
-                pendingEvt.reliabilityDelta -= soData.abnormalRejectionPenalty.Reliability;
-                pendingEvt.payDelta         -= soData.abnormalRejectionPenalty.Pay;
-                Log(TAG_EVAL + " [반려사항 놓침] → abnormalRejectionPenalty 적용");
-            }
-            else
-            {
-                playerBase.AddPerformance(-2);
-                playerBase.AddStat(Stat.Reliability, -1);
-                pendingEvt.performanceDelta -= 2;
-                pendingEvt.reliabilityDelta -= 1;
-                Log(TAG_EVAL + " [반려사항 놓침] → Performance-2, Reliability-1 [폴백]");
-            }
-            goto Cleanup;
-        }
-
-        // ── Case 3: 정상 케이스 평가 (불일치 없음) ─────────────────────────────
-        var eval = ManualEvaluator.Evaluate(
-            currentManual.RequiredSteps,
-            currentManual.ActionQueue,
-            isAddressMismatch: false);
-        Log(TAG_EVAL + " 평가 — " + eval);
-
-        bool isAbnormal = isInvalidRejection
-                       || (isCompleted && !eval.IsClean)
-                       || (!isCompleted && !isRejection);
-
-        if (isAbnormal)
-        {
-            var soData = GetCurrentManualData();
-            string reason = isInvalidRejection ? "비정상 반려" : "정상 응대 실패";
-            if (soData != null && !soData.abnormalRejectionPenalty.IsEmpty)
-            {
-                ApplyPenaltyFromSO(soData.abnormalRejectionPenalty);
-                pendingEvt.performanceDelta -= soData.abnormalRejectionPenalty.Performance;
-                pendingEvt.kindnessDelta    -= soData.abnormalRejectionPenalty.Kindness;
-                pendingEvt.stressDelta      += soData.abnormalRejectionPenalty.Stress;
-                pendingEvt.reliabilityDelta -= soData.abnormalRejectionPenalty.Reliability;
-                pendingEvt.payDelta         -= soData.abnormalRejectionPenalty.Pay;
-                Log(TAG_EVAL + " [" + reason + "] → abnormalRejectionPenalty 적용");
-            }
-            else
-            {
-                playerBase.AddPerformance(-2);
-                playerBase.AddStat(Stat.Reliability, -1);
-                pendingEvt.performanceDelta -= 2;
-                pendingEvt.reliabilityDelta -= 1;
-                Log(TAG_EVAL + " [" + reason + "] → Performance-2, Reliability-1 [폴백]");
-            }
-        }
-
-        if (eval.PerformanceDelta != 0) { playerBase.AddPerformance(eval.PerformanceDelta); pendingEvt.performanceDelta += eval.PerformanceDelta; }
-        if (eval.KindnessDelta    != 0) { playerBase.AddStat(Stat.Kindness,    eval.KindnessDelta);    pendingEvt.kindnessDelta    += eval.KindnessDelta; }
-        if (eval.StressDelta      != 0) { playerBase.AddStat(Stat.Stress,      eval.StressDelta);      pendingEvt.stressDelta      += eval.StressDelta; }
-        if (eval.ReliabilityDelta != 0) { playerBase.AddStat(Stat.Reliability, eval.ReliabilityDelta); pendingEvt.reliabilityDelta += eval.ReliabilityDelta; }
-        if (eval.PayDelta         != 0) { playerBase.AddPay(eval.PayDelta);                            pendingEvt.payDelta         += eval.PayDelta; }
-
-        if (isCompleted && eval.IsClean)
-        {
-            var soData = GetCurrentManualData();
-            if (soData != null && !soData.completionReward.IsEmpty)
-            {
-                ApplyReward(soData.completionReward);
-                pendingEvt.performanceDelta += soData.completionReward.Performance;
-                pendingEvt.kindnessDelta    += soData.completionReward.Kindness;
-                pendingEvt.reliabilityDelta += soData.completionReward.Reliability;
-                pendingEvt.payDelta         += soData.completionReward.Pay;
-                Log(TAG_EVAL + " 정상 응대 보상 → completionReward 적용");
-            }
-            isSuccess = true;
-        }
-
-        Cleanup:
-        // ── 이벤트 출처 확정 및 큐 저장 ─────────────────────────────────────
-        pendingEvt.source = isSuccess ? StatChangeSource.ServiceSuccess : StatChangeSource.ServiceFail;
-        var wdm = FindFirstObjectByType<WorkDayManager>();
-        wdm?.EnqueueStatChangeEvent(pendingEvt);
+        CommitAndClose(evt, isSuccess);
+    }
+    private void CommitAndClose(StatChangeEvent evt, bool isSuccess)
+    {
+        evt.source = isSuccess ? StatChangeSource.ServiceSuccess : StatChangeSource.ServiceFail;
+        _workDayManager?.EnqueueStatChangeEvent(evt);
 
         FireClosingLine(currentComplaint);
         currentManual.ClearRequiredReturnItems();
         Log(TAG + " 민원 종료 — " + currentComplaint.complaintType + " / rejected=" + currentComplaint.rejected);
-        currentManual    = null;
+        currentManual = null;
         currentComplaint = null;
-        deskState        = DeskState.Idle;
+        deskState = DeskState.Idle;
         OnCustomerCleared?.Invoke();
     }
 
@@ -660,52 +424,8 @@ private void FinishCurrentCustomer(bool patienceExpired = false, bool isRejectio
         currentManual    = null;
     }
 
-    // ── ManualDataSO 헬퍼 ────────────────────────────────────────────────
-
-    /// <summary>현재 진행 중인 메뉴얼의 ManualDataSO를 반환한다.</summary>
-    private ManualDataSO GetCurrentManualData()
-    {
-        if (currentManual is M_FullID_Self self)   return self.manualData;
-        if (currentManual is M_FullID_Proxy proxy) return proxy.manualData;
-        return null;
-    }
-
-    /// <summary>
-    /// 아직 Manual이 생성되기 전(CreateRandomComplaint 단계)에
-    /// ComplaintContext 정보만으로 해당 ManualDataSO를 조회한다.
-    /// </summary>
-    private ManualDataSO GetManualDataSOByComplaint(ComplaintContext c)
-    {
-        var sd = ServiceDataManager.Instance;
-        if (sd == null) return null;
-
-        bool isSelf   = c.applicantType == ComplaintContext.ApplicantType.Self;
-        bool isPrint  = c.requestedDeliveryType == ComplaintContext.DeliveryType.Print;
-        bool isMobile = c.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile;
-
-        if (isSelf   && isPrint)  return sd.FullSelf_Print;
-        if (isSelf   && isMobile) return sd.FullSelf_Mobile;
-        if (!isSelf  && isPrint)  return sd.FullProxy_Print;
-        if (!isSelf  && isMobile) return sd.Fullproxy_Mobile;
-        return null;
-    }
-
-    private void ApplyReward(StepReward reward)
-    {
-        if (reward.Performance != 0) playerBase.AddPerformance(reward.Performance);
-        if (reward.Kindness    != 0) playerBase.AddStat(Stat.Kindness,    reward.Kindness);
-        if (reward.Reliability != 0) playerBase.AddStat(Stat.Reliability, reward.Reliability);
-        if (reward.Pay         != 0) playerBase.AddPay(reward.Pay);
-    }
-
-    private void ApplyPenaltyFromSO(StepPenalty penalty)
-    {
-        if (penalty.Performance != 0) playerBase.AddPerformance(-penalty.Performance);
-        if (penalty.Kindness    != 0) playerBase.AddStat(Stat.Kindness,    -penalty.Kindness);
-        if (penalty.Stress      != 0) playerBase.AddStat(Stat.Stress,       penalty.Stress);
-        if (penalty.Reliability != 0) playerBase.AddStat(Stat.Reliability, -penalty.Reliability);
-        if (penalty.Pay         != 0) playerBase.AddPay(-penalty.Pay);
-    }
+    /// <summary>WorkDayManager 참조를 주입한다. WorkDayManager.Start()에서 호출된다.</summary>
+    public void SetWorkDayManager(WorkDayManager wdm) => _workDayManager = wdm;
 
     private void RaiseWaitingQueueChanged() => OnWaitingQueueChanged?.Invoke(waitingQueue.Count);
     private void Log(string message) { if (showDebugLog) Debug.Log(message); }

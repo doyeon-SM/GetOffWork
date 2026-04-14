@@ -64,12 +64,16 @@ public class WorkDayManager : MonoBehaviour
         ResolvePlayerBase();
     }
 
-    private void Start()
+private void Start()
     {
         ResolvePlayerBase();
 
-        if (serviceDeskManager != null && playerBase != null)
-            serviceDeskManager.SetPlayerBase(playerBase);
+        if (serviceDeskManager != null)
+        {
+            if (playerBase != null)
+                serviceDeskManager.SetPlayerBase(playerBase);
+            serviceDeskManager.SetWorkDayManager(this);
+        }
 
         HideLunchUIObjects();
         StartMorningWork();
