@@ -377,7 +377,13 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
             foreach (var requiredType in manual.RequiredReturnItems)
             {
                 bool found = false;
-                foreach (var item in userspawnedItems)
+
+                // NewIDCard는 playerspawnedItems에서 검색, 나머지는 userspawnedItems에서 검색
+                var searchList = (requiredType == DeskObjectType.NewIDCard)
+                    ? playerspawnedItems
+                    : (System.Collections.Generic.List<DeskObjectItem>)userspawnedItems;
+
+                foreach (var item in searchList)
                 {
                     if (item != null && item.ObjectType == requiredType && item.IsInTakeZone)
                     {
@@ -385,9 +391,12 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
                         break;
                     }
                 }
+
                 if (!found)
                 {
-                    string line = GetRandomLine(returnReminderLines, "신분증 돌려주세요.");
+                    string line = (requiredType == DeskObjectType.NewIDCard)
+                        ? GetRandomLine(returnReminderLines, "새 신분증을 반납해 주세요.")
+                        : GetRandomLine(returnReminderLines, "신분증 돌려주세요.");
                     Log($"{TAG} 필수 반납 미완료({requiredType}) → 호출 방어: {line}");
                     serviceDeskManager?.BroadcastCustomerText(line);
                     return false;

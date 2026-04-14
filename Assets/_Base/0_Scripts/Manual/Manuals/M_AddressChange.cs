@@ -203,8 +203,7 @@ public class M_AddressChange : Manual
         // 새 ID카드를 필수 반납 항목으로 등록
         AddRequiredReturnItem(DeskObjectType.NewIDCard);
 
-        return CorrectResponseFromSO(ManualCommandIds.PrintNewIdCard,
-            fallback: "새 신분증이 출력되었습니다.");
+        return CorrectResponseFromSO(ManualCommandIds.PrintNewIdCard);
     }
 
     /// <summary>SpawnNewIdCard — ObjectManagerBox가 새 카드 오브젝트를 스폰할 때 호출.</summary>
@@ -230,7 +229,7 @@ public class M_AddressChange : Manual
         context.completed         = true;
 
         return CorrectResponseFromSO(ManualCommandIds.ReturnNewIdCard,
-            fallback: "감사합니다. 주소 변경이 완료되었습니다.",
+            fallback: "감사합니다.",
             completeNow: true);
     }
 
@@ -249,8 +248,7 @@ public class M_AddressChange : Manual
         if (userDatabase.TryGetRecord(recordId, out UserRecordData record))
         {
             record.address = newAddress;
-            // ID카드 표시용 주소도 갱신 (불일치 없음 상태로 설정)
-            record.IdCardAddress = newAddress;
+            // IdCardAddress는 IDCardItem.OnItemClicked에서 타입별로 분기 처리하므로 여기서 수정하지 않는다.
             Debug.Log($"[M_AddressChange] 런타임 주소 변경 완료: {recordId} → {newAddress}");
         }
         else
