@@ -66,6 +66,25 @@ public class UserRecordDatabase : ScriptableObject
         return true;
     }
 
+/// <summary>
+    /// 이미 DB에 등록된 런타임 레코드의 이름과 주소를 수정한다.
+    /// edit 모드(ID는 동일, 이름/주소만 변경)에서 사용한다.
+    /// </summary>
+    public bool UpdateRuntimeRecord(string recordId, string newName, string newAddress)
+    {
+        if (cache == null) BuildCache();
+        if (!cache.TryGetValue(recordId, out UserRecordData data))
+        {
+            Debug.LogWarning($"[UserRecordDatabase] 수정 실패 — ID를 찾을 수 없음: {recordId}");
+            return false;
+        }
+        data.fullName = newName;
+        data.address  = newAddress;
+        Debug.Log($"[UserRecordDatabase] 런타임 레코드 수정 완료: {recordId} — {newName} / {newAddress}");
+        return true;
+    }
+
+
     /// <summary>특정 런타임 레코드를 캐시에서 제거하고 메모리를 해제한다.</summary>
     public void RemoveRuntimeRecord(string recordId)
     {

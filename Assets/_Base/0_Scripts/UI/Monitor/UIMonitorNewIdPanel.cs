@@ -36,18 +36,27 @@ public class UIMonitorNewIdPanel : MonoBehaviour
     /// GoToNewIdTab에서 호출된다.
     /// isEditMode=true이면 prefillName/Address로 input을 채운다.
     /// </summary>
-    public void Init(UIMonitorController ctrl, bool isEditMode,
-                     string prefillName = "", string prefillAddress = "")
+public void Init(UIMonitorController ctrl, bool isEditMode,
+                     string prefillName = "", string prefillAddress = "", Sprite prefillPortrait = null)
     {
-        controller   = ctrl;
-        _isEditMode  = isEditMode;
+        controller  = ctrl;
+        _isEditMode = isEditMode;
 
         if (nameInputField    != null) nameInputField.text    = prefillName;
         if (addressInputField != null) addressInputField.text = prefillAddress;
 
-        // 초상화는 항상 비워두고 사진 버튼으로만 등록
-        if (portraitImage != null) portraitImage.sprite = null;
-        if (registerButton != null) registerButton.interactable = false;
+        if (isEditMode && prefillPortrait != null)
+        {
+            // edit 모드: 기존 portrait를 자동 세팅 → 사진 버튼 불필요
+            if (portraitImage != null) portraitImage.sprite = prefillPortrait;
+            if (registerButton != null) registerButton.interactable = true;
+        }
+        else
+        {
+            // 신규 등록: 초상화 비우고 사진 버튼으로만 등록
+            if (portraitImage != null) portraitImage.sprite = null;
+            if (registerButton != null) registerButton.interactable = false;
+        }
     }
 
     // ── 버튼 핸들러 ──────────────────────────────────────────────────────

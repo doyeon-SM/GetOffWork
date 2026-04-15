@@ -211,9 +211,9 @@ private ResponseResult HandleGoToNewIdTab(string payload)
         RecordAction(ManualCommandIds.GoToNewIdTab);
 
         // payload 형식: "register" 또는 "edit|prefillName|prefillAddress"
-        bool   isEditMode    = false;
-        string prefillName   = string.Empty;
-        string prefillAddr   = string.Empty;
+        bool   isEditMode  = false;
+        string prefillName = string.Empty;
+        string prefillAddr = string.Empty;
 
         if (!string.IsNullOrEmpty(payload))
         {
@@ -228,9 +228,19 @@ private ResponseResult HandleGoToNewIdTab(string payload)
 
         context.isEditMode = isEditMode;
 
-        // M_NewID가 직접 UI 전환을 트리거
-        var monitorCtrl = Object.FindFirstObjectByType<UIMonitorController>();
-        monitorCtrl?.GoToNewIdTab(isEditMode, prefillName, prefillAddr);
+        // edit 모드일 때 portrait를 자동 등록 상태로 세팅
+        // → 사진 버튼을 누르지 않아도 등록 가능하도록 함
+        if (isEditMode && _runtimeData != null)
+        {
+            context.portraitRegistered = true;
+            var monCtrl = Object.FindFirstObjectByType<UIMonitorController>();
+            monCtrl?.GoToNewIdTab(isEditMode, prefillName, prefillAddr, _runtimeData.portrait);
+        }
+        else
+        {
+            var monCtrl = Object.FindFirstObjectByType<UIMonitorController>();
+            monCtrl?.GoToNewIdTab(isEditMode, prefillName, prefillAddr);
+        }
 
         return CorrectResponse();
     }
@@ -253,9 +263,8 @@ private ResponseResult HandleGoToNewIdTab(string payload)
         return CorrectResponse();
     }
 
-    private ResponseResult HandleRegisterNewUser(string payload)
+private ResponseResult HandleRegisterNewUser(string payload)
     {
-        // payload 형식: "이름|주소" (UIMonitorController.OnRegisterNewUser에서 전달)
         if (!string.IsNullOrWhiteSpace(payload))
         {
             var parts = payload.Split('|');
@@ -267,45 +276,36 @@ private ResponseResult HandleGoToNewIdTab(string payload)
                 context.newAddressEntered = true;
             }
         }
-
         if (!context.portraitRegistered)
             return WrongOrder("초상화를 먼저 등록해 주세요.");
         if (string.IsNullOrWhiteSpace(_enteredName) || string.IsNullOrWhiteSpace(_enteredAddress))
             return WrongOrder("이름과 주소를 입력해 주세요.");
-
-        // 중복 ID 반려 사항
         if (_isDuplicateId)
         {
             Debug.LogWarning("[M_NewID] ID 중복 — 정상 반려 사항.");
-            // 등록 시도는 하지 않고 실패로 처리
             return WrongOrder("해당 ID는 이미 등록된 ID입니다. 반려 처리가 필요합니다.");
         }
-
-        // 방문객 런타임 데이터에 입력값 적용
-        _runtimeData.fullName = _enteredName;
-        _runtimeData.address  = _enteredAddress;
-
-        // DB에 런타임 등록
-        bool success = _userDatabase?.RegisterRuntimeRecord(_runtimeData) ?? false;
-        if (!success)
+        if (context.isEditMode)
         {
-            Debug.LogWarning("[M_NewID] DB 등록 실패.");
-            return WrongOrder("등록에 실패했습니다. ID가 이미 존재합니다.");
+            bool success = _userDatabase?.UpdateRuntimeRecord(context.enteredNewId, _enteredName, _enteredAddress) ?? false;
+            if (!success) { Debug.LogWarning("[M_NewID] DB 수정 실패."); return WrongOrder("수정에 실패했습니다."); }
+            _runtimeData.fullName = _enteredName;
+            _runtimeData.address  = _enteredAddress;
         }
-
+        else
+        {
+            _runtimeData.fullName = _enteredName;
+            _runtimeData.address  = _enteredAddress;
+            bool success = _userDatabase?.RegisterRuntimeRecord(_runtimeData) ?? false;
+            if (!success) { Debug.LogWarning("[M_NewID] DB 등록 실패."); return WrongOrder("등록에 실패했습니다. ID가 이미 존재합니다."); }
+        }
         RecordAction(ManualCommandIds.RegisterNewUser);
         _registeredToDb           = true;
         context.newUserRegistered = true;
-
-        // 데이터 일치 여부 판별: 입력값 vs 생성된 방문객 데이터
         bool nameMismatch    = _enteredName    != _runtimeData.fullName;
         bool addressMismatch = _enteredAddress != _runtimeData.address;
         if (nameMismatch || addressMismatch)
-        {
-            // 오타 → 비정상 반려 대상 (플레이어가 확인 후 반려해야 함)
             Debug.LogWarning($"[M_NewID] 데이터 불일치 — name:{nameMismatch} addr:{addressMismatch}");
-        }
-
         return CorrectResponseFromSO(ManualCommandIds.RegisterNewUser, fallback: "등록되었습니다.");
     }
 

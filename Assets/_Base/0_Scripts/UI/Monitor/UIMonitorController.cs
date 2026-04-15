@@ -265,12 +265,12 @@ public void GoToIdTab()
     }
 
 
-    public void GoToNewIdTab(bool isEditMode, string prefillName = "", string prefillAddress = "")
+public void GoToNewIdTab(bool isEditMode, string prefillName = "", string prefillAddress = "", Sprite prefillPortrait = null)
     {
         if (newIdPanelPrefab == null) { Debug.LogError("[UIMonitorController] newIdPanelPrefab이 할당되지 않았습니다."); return; }
         ShowPanel(newIdPanelPrefab.gameObject, inst =>
         {
-            inst.GetComponent<UIMonitorNewIdPanel>()?.Init(this, isEditMode, prefillName, prefillAddress);
+            inst.GetComponent<UIMonitorNewIdPanel>()?.Init(this, isEditMode, prefillName, prefillAddress, prefillPortrait);
         });
     }
 
