@@ -6,10 +6,10 @@ public class UIServiceDesk : MonoBehaviour
 {
     [SerializeField] private ServiceDeskManager serviceDeskManager;
 
-    [Header("��⿭ UI")]
+    [Header("대기자 UI")]
     [SerializeField] private TMP_Text waitingCountText;
 
-    [Header("�ο��� UI")]
+    [Header("방문객 UI")]
     //[SerializeField] private Image customerImage;
     [SerializeField] private GameObject customerImageRoot;
 
@@ -71,7 +71,7 @@ public class UIServiceDesk : MonoBehaviour
     private void SetWaitingCount(int count)
     {
         if (waitingCountText != null)
-            waitingCountText.text = "����� : " + count.ToString();
+            waitingCountText.text = "대기 : " + count.ToString()+"명";
     }
 
     private void ShowCustomerImage(Sprite sprite)
@@ -108,15 +108,18 @@ public class UIServiceDesk : MonoBehaviour
         }
     }
 
-    private Sprite GetCustomerPortrait(ComplaintContext complaint)
+private Sprite GetCustomerPortrait(ComplaintContext complaint)
     {
         if (serviceDeskManager == null || complaint == null)
             return null;
 
+        // 기존 방문객: DB에서 portrait 조회
         if (serviceDeskManager.TryGetResidentRecord(complaint.applicantRecordId, out UserRecordData record))
-        {
             return record != null ? record.portrait : null;
-        }
+
+        // NewID 방문객: DB 등록 전이므로 CurrentManual(M_NewID)에서 직접 가져오기
+        if (serviceDeskManager.CurrentManual is M_NewID newIdManual)
+            return newIdManual.GetVisitorPortrait();
 
         return null;
     }

@@ -88,16 +88,17 @@ public class UIMonitorIdPanel : MonoBehaviour
     }
 
     /// <summary>등록 버튼 — 미등록 ID이므로 NewID 탭을 빈 폼으로 열기</summary>
-    public void OnClickRegister()
+public void OnClickRegister()
     {
         if (controller == null) return;
-        controller.GoToNewIdTab(isEditMode: false);
+        controller.ExecuteGoToNewIdTab("register");
     }
 
     /// <summary>수정 버튼 — 기존 등록 ID이므로 NewID 탭에 기존 정보 prefill</summary>
-    public void OnClickEdit()
+public void OnClickEdit()
     {
         if (controller == null) return;
+        // 기존 등록 ID의 이름/주소를 payload로 전달
         var deskMgr = FindFirstObjectByType<ServiceDeskManager>();
         string prefillName    = string.Empty;
         string prefillAddress = string.Empty;
@@ -106,7 +107,9 @@ public class UIMonitorIdPanel : MonoBehaviour
             prefillName    = rec.fullName;
             prefillAddress = rec.address;
         }
-        controller.GoToNewIdTab(isEditMode: true, prefillName, prefillAddress);
+        // payload 형식: "edit|prefillName|prefillAddress"
+        string payload = $"edit|{prefillName}|{prefillAddress}";
+        controller.ExecuteGoToNewIdTab(payload);
     }
 
     public void OnClickBack()  => controller?.GoToMain();

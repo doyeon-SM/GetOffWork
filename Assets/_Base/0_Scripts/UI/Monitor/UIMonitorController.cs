@@ -254,6 +254,17 @@ public void GoToIdTab()
         });
     }
 
+/// <summary>
+    /// UIMonitorIdPanel의 등록/수정 버튼에서 호출.
+    /// serviceDeskManager를 통해 GoToNewIdTab 커맨드를 실행한다.
+    /// M_NewID.HandleGoToNewIdTab이 context 세팅 + GoToNewIdTab() UI 전환을 수행한다.
+    /// </summary>
+    public void ExecuteGoToNewIdTab(string payload)
+    {
+        serviceDeskManager?.ExecuteCommand(ManualCommandIds.GoToNewIdTab, payload);
+    }
+
+
     public void GoToNewIdTab(bool isEditMode, string prefillName = "", string prefillAddress = "")
     {
         if (newIdPanelPrefab == null) { Debug.LogError("[UIMonitorController] newIdPanelPrefab이 할당되지 않았습니다."); return; }
@@ -266,7 +277,7 @@ public void GoToIdTab()
 public void OnSearchNewId(string inputId)
     {
         if (serviceDeskManager == null) return;
-        serviceDeskManager.ExecuteCommand(ManualCommandIds.SearchRecordByInput, inputId);
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.SearchNewId, inputId);
         currentRecord = null;
         currentPanelInstance?.GetComponent<UIMonitorIdPanel>()?.RefreshSearchResult(inputId);
     }

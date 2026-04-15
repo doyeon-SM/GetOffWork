@@ -1900,7 +1900,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6932297525825663932}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 5203843278776316368}
+        m_TargetAssemblyTypeName: UIMonitorNewIdPanel, Assembly-CSharp
+        m_MethodName: OnClickRegister
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &7287873510787264558
 GameObject:
   m_ObjectHideFlags: 0

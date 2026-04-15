@@ -43,3 +43,13 @@ MonoBehaviour:
     nuisanceType: 1
     lines:
     - ...
+  - complaintType: 2
+    applicantType: 0
+    nuisanceType: 0
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4"
+  - complaintType: 2
+    applicantType: 0
+    nuisanceType: 1
+    lines:
+    - ...

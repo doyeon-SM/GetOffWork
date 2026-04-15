@@ -245,7 +245,7 @@ public void StopWorkPhase()
         }
     }
 
-private Manual CreateManualByComplaint(ComplaintContext complaint)
+    private Manual CreateManualByComplaint(ComplaintContext complaint)
     {
         var ud = ServiceDataManager.Instance.UserDatabase;
         switch (complaint.complaintType)

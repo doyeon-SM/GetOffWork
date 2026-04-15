@@ -132,8 +132,9 @@ public override ResponseResult Execute(string commandId, string payload = null)
             case ManualCommandIds.SpawnIdCard:           return HandleSpawnIdCard();
             case ManualCommandIds.OpenMonitor:           return HandleOpenMonitor();
             case ManualCommandIds.OpenIdCardDetail:      return HandleOpenIdCardDetail();
-            case ManualCommandIds.SearchRecordByInput:   return HandleSearchNewId(payload);
-            case ManualCommandIds.GoToNewIdTab:          return HandleGoToNewIdTab();
+            case ManualCommandIds.SearchRecordByInput:   return HandleSearchRecordByInput(payload);
+            case ManualCommandIds.SearchNewId:           return HandleSearchNewId(payload);
+            case ManualCommandIds.GoToNewIdTab:          return HandleGoToNewIdTab(payload);
             case ManualCommandIds.RegisterNewIdPortrait: return HandleRegisterPortrait();
             case ManualCommandIds.RegisterNewUser:       return HandleRegisterNewUser(payload);
             default:                                     return WrongOrder("알 수 없는 명령입니다.");
@@ -174,14 +175,24 @@ public override ResponseResult Execute(string commandId, string payload = null)
         context.idCardInspected = true;
         return CorrectResponse(shouldOpenIdCardDetail: true);
     }
-
+    private ResponseResult HandleSearchRecordByInput(string inputId)
+    {
+        context.searchedInputId = inputId;
+        context.searchedByInputId = true;
+        // isAddressMismatch는 민원 생성 시(CreateRandomComplaint)에 미리 결정됨.
+        // Search는 모니터 표시를 트리거하는 용도로만 사용한다.
+        RecordAction(ManualCommandIds.SearchRecordByInput);
+        return CorrectResponse(customerMessage: "", shouldRefreshMonitorData: true);
+    }
 
     private ResponseResult HandleSearchNewId(string inputId)
     {
+        if (!context.searchedByInputId)
+            return WrongOrder("ID를 먼저 조회해 주세요");
         if (string.IsNullOrWhiteSpace(inputId))
             return WrongOrder("ID를 입력해 주세요.");
 
-        RecordAction(ManualCommandIds.SearchRecordByInput);
+        RecordAction(ManualCommandIds.SearchNewId);
         context.enteredNewId    = inputId;
         context.newIdSearched   = true;
 
@@ -192,15 +203,35 @@ public override ResponseResult Execute(string commandId, string payload = null)
         return CorrectResponse(shouldRefreshMonitorData: true);
     }
 
-    private ResponseResult HandleGoToNewIdTab()
+private ResponseResult HandleGoToNewIdTab(string payload)
     {
         if (!context.newIdSearched)
-            return WrongOrder("먼저 ID를 조회해 주세요.");
+            return WrongOrder("먼저 ID를 입력해 주세요.");
 
         RecordAction(ManualCommandIds.GoToNewIdTab);
-        context.isEditMode = !context.wasUnregistered; // 등록된 ID면 수정 모드
 
-        // UI 전환은 UIMonitorIdPanel 버튼(OnClickRegister/OnClickEdit)이 처리
+        // payload 형식: "register" 또는 "edit|prefillName|prefillAddress"
+        bool   isEditMode    = false;
+        string prefillName   = string.Empty;
+        string prefillAddr   = string.Empty;
+
+        if (!string.IsNullOrEmpty(payload))
+        {
+            var parts = payload.Split('|');
+            isEditMode = parts[0].Trim().ToLower() == "edit";
+            if (isEditMode && parts.Length >= 3)
+            {
+                prefillName = parts[1].Trim();
+                prefillAddr = parts[2].Trim();
+            }
+        }
+
+        context.isEditMode = isEditMode;
+
+        // M_NewID가 직접 UI 전환을 트리거
+        var monitorCtrl = Object.FindFirstObjectByType<UIMonitorController>();
+        monitorCtrl?.GoToNewIdTab(isEditMode, prefillName, prefillAddr);
+
         return CorrectResponse();
     }
 

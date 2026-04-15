@@ -32,11 +32,12 @@ public static class ManualCommandIds
     // ── 시스템 전용 (불필요 절차 집계에서 제외) ──────────────────────────
     public const string CallDisplay = "call_display";
 
-        // ── 주민 등록 (NewID 메뉴얼 전용) ──────────────────────────────────
+    // ── 주민 등록 (NewID 메뉴얼 전용) ──────────────────────────────────
     // SearchNewId    삭제 — SearchRecordByInput 재사용
     // GoToIdTab      삭제 — UI가 직접 처리, 기록 불필요
     // InputNewIdInfo 삭제 — RegisterNewUser payload에 통합
     // ReturnIdCard   삭제 — requiredReturnItems(IDCard)로 이미 처리
+    public const string SearchNewId = "search_new_id";
     public const string GoToNewIdTab          = "go_to_new_id_tab";         // 내부용: 등록/수정 분기 시 context.isEditMode 세팅
     public const string RegisterNewIdPortrait = "register_new_id_portrait"; // NewID탭: 초상화 사진 버튼
     public const string RegisterNewUser       = "register_new_user";         // NewID탭: 등록 버튼 (이름|주소 payload)return_id_card";            // 신분증 반납 후 응대 종료;

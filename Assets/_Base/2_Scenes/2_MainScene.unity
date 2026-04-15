@@ -601,7 +601,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.00050432066}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.000773067}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -638,7 +638,6 @@ GameObject:
   m_Component:
   - component: {fileID: 435657166}
   - component: {fileID: 435657165}
-  - component: {fileID: 435657167}
   m_Layer: 0
   m_Name: UserImage
   m_TagString: Untagged
@@ -720,19 +719,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &435657167
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 435657164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3dd9dc6623534834a8bbdb58c87ee5d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UserImageDisplay
-  spriteRenderer: {fileID: 435657165}
 --- !u!1 &525507975
 GameObject:
   m_ObjectHideFlags: 0
