@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class ComplaintContext
 {
-    public enum ComplaintType  { FullID, AddressChange }
+    public enum ComplaintType  { FullID, AddressChange, NewID }
     public enum ApplicantType  { Self, Proxy }
     public enum DeliveryType   { None, Print, Mobile }
     public enum NuisanceType   { None, Rudely }
@@ -58,6 +58,27 @@ public bool   mobileNumberVerified;   // 전화번호 일치 확인 완료됐는
     /// false: 변경 전 → 불일치이면 정상 반려 가능 / true: 변경 후 → 반려실패
     /// </summary>
     public bool   isAddressChangeCommitted;
+
+    // ── 주민 등록 (NewID 메뉴얼 전용) ───────────────────────────────────────────
+    /// <summary>방문객 신분증 ID를 모니터에서 조회했는가</summary>
+    public bool   newIdSearched;
+    /// <summary>조회된 ID가 미등록 상태였는가</summary>
+    public bool   wasUnregistered;
+    /// <summary>모니터 ID탭에 입력한 ID 문자열</summary>
+    public string enteredNewId;
+    /// <summary>NewID탭에서 이름 입력 완료되었는가</summary>
+    public bool   newNameEntered;
+    /// <summary>NewID탭에서 주소 입력 완료되었는가</summary>
+    public bool   newAddressEntered;
+    /// <summary>초상화 등록 완료되었는가</summary>
+    public bool   portraitRegistered;
+    /// <summary>주민 등록(DB 저장)이 완료되었는가</summary>
+    public bool   newUserRegistered;
+    /// <summary>등록된 런타임 UserRecordData (M_NewID 내부에서 저장, 종료 시 정리용)</summary>
+    public UnityEngine.Object runtimeUserData;
+    /// <summary>ID입력이 오타로 재등록 흐름인가 (수정 뺄튼 사용)</summary>
+    public bool   isEditMode;
+
 
     // ── 대화 임시 보관 ────────────────────────────────────────────────────
     [Header("마지막 대사")]

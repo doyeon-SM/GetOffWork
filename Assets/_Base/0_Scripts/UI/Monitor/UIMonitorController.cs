@@ -18,6 +18,9 @@ public class UIMonitorController : MonoBehaviour
     [SerializeField] private UIMonitorPrintPanel  printPanelPrefab;
     [SerializeField] private UIMonitorMobilePanel  mobilePanelPrefab;
     [SerializeField] private UIMonitorAddressPanel addressPanelPrefab;
+    [SerializeField] private UIMonitorIdPanel    idPanelPrefab;
+    [SerializeField] private UIMonitorNewIdPanel newIdPanelPrefab;
+
 
     [Header("패널이 생성될 루트 Transform")]
     [SerializeField] private RectTransform panelRoot;
@@ -241,4 +244,51 @@ public void GoToAddress()
             panel.Init(this, currentRecord);
         });
     }
+
+public void GoToIdTab()
+    {
+        if (idPanelPrefab == null) { Debug.LogError("[UIMonitorController] idPanelPrefab이 할당되지 않았습니다."); return; }
+        ShowPanel(idPanelPrefab.gameObject, inst =>
+        {
+            inst.GetComponent<UIMonitorIdPanel>()?.Init(this);
+        });
+    }
+
+    public void GoToNewIdTab(bool isEditMode, string prefillName = "", string prefillAddress = "")
+    {
+        if (newIdPanelPrefab == null) { Debug.LogError("[UIMonitorController] newIdPanelPrefab이 할당되지 않았습니다."); return; }
+        ShowPanel(newIdPanelPrefab.gameObject, inst =>
+        {
+            inst.GetComponent<UIMonitorNewIdPanel>()?.Init(this, isEditMode, prefillName, prefillAddress);
+        });
+    }
+
+public void OnSearchNewId(string inputId)
+    {
+        if (serviceDeskManager == null) return;
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.SearchRecordByInput, inputId);
+        currentRecord = null;
+        currentPanelInstance?.GetComponent<UIMonitorIdPanel>()?.RefreshSearchResult(inputId);
+    }
+
+    public void OnRegisterNewUser(string inputName, string inputAddress)
+    {
+        if (serviceDeskManager == null) return;
+        string payload = inputName + "|" + inputAddress;
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.RegisterNewUser, payload);
+    }
+
+    public void OnRegisterPortrait()
+    {
+        if (serviceDeskManager == null) return;
+        serviceDeskManager.ExecuteCommand(ManualCommandIds.RegisterNewIdPortrait);
+    }
+
+/// <summary>M_NewID가 초상화 등록 성공 후 NewIdPanel의 SetPortrait를 호출한다.</summary>
+    public void NotifyPortraitRegistered(Sprite portrait)
+    {
+        currentPanelInstance?.GetComponent<UIMonitorNewIdPanel>()?.SetPortrait(portrait);
+    }
+
+
 }

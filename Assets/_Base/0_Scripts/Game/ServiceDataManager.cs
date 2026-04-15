@@ -29,8 +29,13 @@ public class ServiceDataManager : MonoBehaviour
     [Header("주소 변경 요청 주소 리스트")]
     [SerializeField] private AddressListSO addressListSO;
 
+    [Header("주민 등록 메뉴얼 설정")]
+    [SerializeField] private PortraitListSO portraitListSO;
+    [SerializeField] private AddressListSO  fakeAddressListSO;
+    [SerializeField] private ManualDataSO   newIDManualData;
+
     
-[Header("질문 설정")]
+    [Header("질문 설정")]
     [SerializeField] private QuestionDataList questionDataList;
 
     // ── 프로퍼티 ─────────────────────────────────────────────────────
@@ -51,6 +56,9 @@ public class ServiceDataManager : MonoBehaviour
     public QuestionDataList QuestionList         => questionDataList;
     public ManualDataSO     AddressChange_Manual => addressChangeManualData;
     public AddressListSO    AddressListSO        => addressListSO;
+    public PortraitListSO   PortraitList         => portraitListSO;
+    public AddressListSO    FakeAddressListSO    => fakeAddressListSO;
+    public ManualDataSO     NewID_Manual         => newIDManualData;
 
 private void Awake()
     {

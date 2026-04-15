@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8a03febfa10e694784e7f0a2a0aa830, type: 3}
+  m_Name: _PortraitList
+  m_EditorClassIdentifier: Assembly-CSharp::PortraitListSO
+  portraits:
+  - {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+  - {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
+  fakePortraits:
+  - {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
+  - {fileID: -3366272070310193754, guid: 441bc93690cc2324baaef2ae433f5955, type: 3}

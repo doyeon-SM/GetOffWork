@@ -59,18 +59,23 @@ public static class ComplaintFactory
 private static ComplaintContext RollBaseType()
     {
         var c = new ComplaintContext();
-
-        // 민원 타입 롭 — 현재 FullID / AddressChange 중 랜덤
-        c.complaintType = UnityEngine.Random.value > 0.5f
-            ? ComplaintContext.ComplaintType.FullID
-            : ComplaintContext.ComplaintType.AddressChange;
-
-        // AddressChange는 Self 전용, 배달 방식 없음
+        float typeRoll = UnityEngine.Random.value;
+        if (typeRoll < 0.40f)
+            c.complaintType = ComplaintContext.ComplaintType.FullID;
+        else if (typeRoll < 0.70f)
+            c.complaintType = ComplaintContext.ComplaintType.AddressChange;
+        else
+            c.complaintType = ComplaintContext.ComplaintType.NewID;
         if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
         {
             c.applicantType         = ComplaintContext.ApplicantType.Self;
             c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
             c.requestedNewAddress   = DequeueAddress();
+        }
+        else if (c.complaintType == ComplaintContext.ComplaintType.NewID)
+        {
+            c.applicantType         = ComplaintContext.ApplicantType.Self;
+            c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
         }
         else
         {
@@ -81,12 +86,10 @@ private static ComplaintContext RollBaseType()
                 ? ComplaintContext.DeliveryType.Print
                 : ComplaintContext.DeliveryType.Mobile;
         }
-
         var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
         c.nuisanceType = nuisanceSO != null
             ? nuisanceSO.RollNuisanceType()
             : ComplaintContext.NuisanceType.None;
-
         return c;
     }
 
@@ -182,18 +185,17 @@ private static ComplaintContext RollBaseType()
     }
 
     /// <summary>ComplaintContext로 해당 ManualDataSO를 조회한다.</summary>
-    private static ManualDataSO GetManualDataSO(ComplaintContext c)
+private static ManualDataSO GetManualDataSO(ComplaintContext c)
     {
         var sd = ServiceDataManager.Instance;
         if (sd == null) return null;
-
         if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
             return sd.AddressChange_Manual;
-
+        if (c.complaintType == ComplaintContext.ComplaintType.NewID)
+            return sd.NewID_Manual;
         bool isSelf   = c.applicantType == ComplaintContext.ApplicantType.Self;
         bool isPrint  = c.requestedDeliveryType == ComplaintContext.DeliveryType.Print;
         bool isMobile = c.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile;
-
         if (isSelf  && isPrint)  return sd.FullSelf_Print;
         if (isSelf  && isMobile) return sd.FullSelf_Mobile;
         if (!isSelf && isPrint)  return sd.FullProxy_Print;

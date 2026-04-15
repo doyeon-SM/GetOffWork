@@ -92,4 +92,6 @@ MonoBehaviour:
   printPanelPrefab: {fileID: 337818281111534299, guid: 7fccbf2c99d444b4396f1e0b23a03d26, type: 3}
   mobilePanelPrefab: {fileID: 8958944818811292044, guid: e5b652b93d464954abd64be145cc1179, type: 3}
   addressPanelPrefab: {fileID: 5230606875948187282, guid: 8edf220c086693c44b5f61f76d25602d, type: 3}
+  idPanelPrefab: {fileID: 7792835189431707548, guid: b8d13027320825b419a86c54e3edec07, type: 3}
+  newIdPanelPrefab: {fileID: 5203843278776316368, guid: 853825b0bd253f64dac979d50c597008, type: 3}
   panelRoot: {fileID: 5772491757349883996}

@@ -125,7 +125,7 @@ public class ServiceDeskManager : MonoBehaviour
         Log(TAG + " 근무 시작 / 일일 최대 인원: " + MaxCustomerPerDay);
     }
 
-    public void StopWorkPhase()
+public void StopWorkPhase()
     {
         isWorking = false;
         waitingQueue.Clear();
@@ -135,6 +135,7 @@ public class ServiceDeskManager : MonoBehaviour
         RaiseWaitingQueueChanged();
         OnCustomerCleared?.Invoke();
         OnWorkStateChanged?.Invoke(false);
+        ServiceDataManager.Instance?.UserDatabase?.ClearRuntimeRecords();
         Log(TAG + " 근무 종료");
     }
 
@@ -268,14 +269,19 @@ private Manual CreateManualByComplaint(ComplaintContext complaint)
                         m.manualData = ServiceDataManager.Instance.Fullproxy_Mobile;
                     return m;
                 }
-
             case ComplaintContext.ComplaintType.AddressChange:
             {
                 var m = new M_AddressChange(ud);
                 m.manualData = ServiceDataManager.Instance.AddressChange_Manual;
                 return m;
             }
-
+            case ComplaintContext.ComplaintType.NewID:
+            {
+                var sd = ServiceDataManager.Instance;
+                var m = new M_NewID(ud, sd.PortraitList, sd.AddressListSO, sd.FakeAddressListSO);
+                m.manualData = sd.NewID_Manual;
+                return m;
+            }
             default: return null;
         }
     }

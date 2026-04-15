@@ -76,4 +76,9 @@ public class UIMonitorMainPanel : MonoBehaviour
     {
         controller?.GoToAddress();
     }
+
+    public void OnClickID()
+    {
+        controller?.GoToIdTab();
+    }
 }
