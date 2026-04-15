@@ -278,11 +278,12 @@ public static class ServiceEvaluator
     // ── ManualDataSO 헬퍼 ────────────────────────────────────────────────
 
     /// <summary>Manual 인스턴스에서 ManualDataSO를 꺼낸다.</summary>
-    private static ManualDataSO GetManualData(Manual manual)
+private static ManualDataSO GetManualData(Manual manual)
     {
-        if (manual is M_FullID_Self  self)  return self.manualData;
+        if (manual is M_FullID_Self    self)    return self.manualData;
         if (manual is M_FullID_Proxy   proxy)   return proxy.manualData;
         if (manual is M_AddressChange  addrChg) return addrChg.manualData;
+        if (manual is M_NewID          newId)   return newId.manualData;
         return null;
     }
 }

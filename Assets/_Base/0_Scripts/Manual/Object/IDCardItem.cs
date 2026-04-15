@@ -26,6 +26,13 @@ public class IDCardItem : DeskObjectItem
     /// </summary>
     private string cachedAddressBeforeChange;
 
+    /// <summary>
+    /// NewID 등록 전 런타임 UserRecordData 직접 참조.
+    /// DB에 방문객이 없을 때 TryGetResidentRecord 폴백용.
+    /// </summary>
+    private UserRecordData _runtimeRecord;
+
+
     // ── 초기화 ───────────────────────────────────────────────────────────
 
     /// <summary>
@@ -35,7 +42,7 @@ public class IDCardItem : DeskObjectItem
     ///   - 대리인 신분증(ProxyIDCard) → complaint.targetRecordId
     ///   - null/빈 문자열 시 EffectiveTargetRecordId 사용
     /// </summary>
-    public void SetComplaint(
+public void SetComplaint(
         ComplaintContext   ctx,
         ServiceDeskManager manager,
         UIIDCardView       view,
@@ -47,60 +54,52 @@ public class IDCardItem : DeskObjectItem
         displayRecordId    = string.IsNullOrEmpty(displayId)
             ? ctx?.EffectiveTargetRecordId
             : displayId;
-
-        // 주소 변경 전 주소를 미리 캐싱 (SubmitNewAddress 실행 전 시점)
+        _runtimeRecord = ctx?.runtimeUserData as UserRecordData;
         string rid = string.IsNullOrEmpty(displayRecordId)
             ? ctx?.EffectiveTargetRecordId
             : displayRecordId;
         if (!string.IsNullOrEmpty(rid) && manager != null
             && manager.TryGetResidentRecord(rid, out UserRecordData rec))
-        {
             cachedAddressBeforeChange = rec.address;
-        }
+        else if (_runtimeRecord != null)
+            cachedAddressBeforeChange = _runtimeRecord.address;
     }
 
     // ── 클릭 / 드롭 ──────────────────────────────────────────────────────
 
-    protected override void OnItemClicked()
+protected override void OnItemClicked()
     {
         if (serviceDeskManager == null || complaint == null) return;
-
-        // 첫 클릭에만 OpenIdCardDetail 절차 기록 (새 ID카드는 불필요)
         if (!detailOpened && ObjectType != DeskObjectType.NewIDCard)
         {
             serviceDeskManager.ExecuteCommand(ManualCommandIds.OpenIdCardDetail);
             detailOpened = true;
         }
-
-        if (cardView == null)
-        {
-            Debug.LogWarning("[IDCardItem] cardView가 null입니다.");
-            return;
-        }
-
+        if (cardView == null) { Debug.LogWarning("[IDCardItem] cardView null"); return; }
         string recordId = !string.IsNullOrEmpty(displayRecordId)
-            ? displayRecordId
-            : complaint.EffectiveTargetRecordId;
-
-        if (!serviceDeskManager.TryGetResidentRecord(recordId, out UserRecordData record)) return;
-
+            ? displayRecordId : complaint.EffectiveTargetRecordId;
+        UserRecordData record;
+        if (!serviceDeskManager.TryGetResidentRecord(recordId, out record))
+        {
+            if (_runtimeRecord != null)
+            {
+                record = _runtimeRecord;
+                Debug.Log($"[IDCardItem] DB 미등록, 런타임 레코드 사용: {recordId}");
+            }
+            else { Debug.LogWarning($"[IDCardItem] 레코드 미발견: {recordId}"); return; }
+        }
         if (ObjectType == DeskObjectType.NewIDCard)
         {
-            // 새 ID카드: 런타임 수정된 주소(record.address) 표시
             record.IdCardAddress  = record.address;
             record.IdCardId       = record.recordId;
             record.IdCardPortrait = record.portrait;
             cardView.Show(record);
-            Debug.Log($"[IDCardItem] 새 ID카드 상세 표시 — 변경 주소={record.address}");
         }
         else
         {
-            // 기존 ID카드: ApplyRuntimeAddressChange가 IdCardAddress를 덮어쓸 수 있으므로
-            // SetComplaint 시점에 캐싱한 변경 전 주소를 강제 적용
             if (!string.IsNullOrEmpty(cachedAddressBeforeChange))
                 record.IdCardAddress = cachedAddressBeforeChange;
             cardView.Show(record);
-            Debug.Log($"[IDCardItem] 기존 ID카드 상세 표시 — 변경 전 주소={record.IdCardAddress}");
         }
     }
 

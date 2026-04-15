@@ -62,11 +62,10 @@ public class M_NewID : Manual
 
     // ── 초기화 ────────────────────────────────────────────────────────────
 
-    public override void Initialize(ComplaintContext newContext)
+public override void Initialize(ComplaintContext newContext)
     {
         base.Initialize(newContext);
 
-        // 방문객 입장과 동시에 런타임 데이터 생성
         _runtimeData = RuntimeUserGenerator.Generate(
             _userDatabase,
             _portraitList,
@@ -74,21 +73,23 @@ public class M_NewID : Manual
             _fakeAddressList,
             out _isDuplicateId);
 
-        // context에 applicantRecordId로 런타임 ID 등록 (신분증에 표시될 ID)
         context.applicantRecordId = _runtimeData.recordId;
 
-        // fakePortrait 여부를 context에 반영
-        context.isPortraitMismatch = _runtimeData.fakePortrait != null;
+        // 실제 IdCard에 fake가 적용됐는지를 기준으로 mismatch 세팅
+        // (단순히 fakePortrait가 존재하는지가 아니라 IdCardPortrait가 fake인지 확인)
+        context.isPortraitMismatch = _runtimeData.IdCardPortrait != null
+                                     && _runtimeData.IdCardPortrait != _runtimeData.portrait;
+        context.isIdMismatch       = _runtimeData.IdCardId != _runtimeData.recordId;
+        context.isAddressMismatch  = _runtimeData.IdCardAddress != _runtimeData.address;
 
-        // 중복 ID면 context에 반영
         if (_isDuplicateId)
             context.wasUnregistered = false;
 
-        // context에 runtimeUserData 저장 (종료 시 정리 참조용)
         context.runtimeUserData = _runtimeData;
 
         Debug.Log($"[M_NewID] 방문객 생성 — ID:{_runtimeData.recordId} / 이름:{_runtimeData.fullName}" +
-                  $" / 중복:{_isDuplicateId} / fakePortrait:{_runtimeData.fakePortrait != null}");
+                  $" / 중복:{_isDuplicateId} / idMismatch:{context.isIdMismatch}" +
+                  $" / addrMismatch:{context.isAddressMismatch} / portraitMismatch:{context.isPortraitMismatch}");
     }
 
     // ── 절차 정의 ────────────────────────────────────────────────────────
@@ -147,7 +148,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
             return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");
 
         RecordAction(ManualCommandIds.AskSubmitId);
-        AddRequiredReturnItem(DeskObjectType.IDCard);
+        
 
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitId,
             fallback: "네, 여기 있습니다.",
@@ -157,6 +158,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
     private ResponseResult HandleSpawnIdCard()
     {
         context.idCardSpawned = true;
+        AddRequiredReturnItem(DeskObjectType.IDCard);
         return CorrectResponse();
     }
 

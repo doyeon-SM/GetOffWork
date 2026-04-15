@@ -62,7 +62,7 @@ public static UserRecordData Generate(
 
         var data = ScriptableObject.CreateInstance<UserRecordData>();
 
-        // ── ID ───────────────────────────────────────────────────────────────
+        // ── ID ────────────────────────────────────────────────────────────
         string id = GenerateId();
         if (database != null && database.TryGetRecord(id, out _))
         {
@@ -74,39 +74,46 @@ public static UserRecordData Generate(
         // ── 이름 ────────────────────────────────────────────────────────────
         data.fullName = GenerateKoreanName();
 
-        // ── 초상화 (정상 + 가짜) ─────────────────────────────────────────────
+        // ── 초상화 (정상 + 가짜) ────────────────────────────────────────────
         data.portrait     = portraitListSO?.GetRandomPortrait();
         data.fakePortrait = portraitListSO?.GetRandomFakePortrait();
 
-        // ── 주소 ────────────────────────────────────────────────────────────
+        // ── 주소 (정상 + 가짜) ───────────────────────────────────────────
         data.address     = GetRandomFromList(addressListSO?.addresses, "(주소 없음)");
         data.fakeAddress = GetRandomFromList(fakeAddressListSO?.addresses, string.Empty);
 
         // ── 생일 ────────────────────────────────────────────────────────────
         data.birthDate = GenerateBirthDate();
 
-        // ── 전화번호 ───────────────────────────────────────────────────────────
+        // ── 전화번호 ─────────────────────────────────────────────────────────
         data.phoneNumber = GeneratePhoneNumber();
 
-        // ── 이메일 ───────────────────────────────────────────────────────────
+        // ── 이메일 ─────────────────────────────────────────────────────────
         data.email = $"{data.fullName}@mail.com";
 
-        // ── 가짜 ID ──────────────────────────────────────────────────────────
+        // ── 가짜 ID ────────────────────────────────────────────────────────
         data.fakeID = GenerateFakeId(data.recordId);
 
-        // ── IdCard 표시용 값 설정 (SetIdCard 호용) ─────────────────────────────
-        // 기획: 신분증에는 fakePortrait가 표시됨 (반려 사항)
-        // • IdCardAddress : 정상 주소 (주소 위변조 없음)
-        // • IdCardId      : 신분증에 표시할 ID
-        //   - fakePortrait가 있으면(=반려사항): fakeID 표시
-        //   - 없으면: 실제 recordId 표시
-        // • IdCardPortrait: fakePortrait 표시 (M_NewID에서 반려 판정)
-        bool hasFakePortrait = data.fakePortrait != null;
-        data.IdCardAddress  = data.address;
-        data.IdCardId       = hasFakePortrait ? data.fakeID : data.recordId;
-        data.IdCardPortrait = hasFakePortrait ? data.fakePortrait : data.portrait;
+        // ── MismatchSettingSO 확률 기반으로 IdCard 불일치 판정 ───────────────────────
+        // 각 항목은 독립적으로 확률 롤, fakePortrait/fakeID/fakeAddress 가 있어야
+        // 해당 항목이 활성화됨 (fake 데이터가 없으면 롭발 불가)
+        var mismatch = ServiceDataManager.Instance?.MismatchSetting;
+        float addrChance     = mismatch != null ? mismatch.AddressspawnChance   : 0f;
+        float idChance       = mismatch != null ? mismatch.IDspawnChance        : 0f;
+        float portraitChance = mismatch != null ? mismatch.PortraitspawnChance  : 0f;
 
-        Debug.Log(TAG + $" 방문객 생성 완료 — ID:{data.recordId} / 이름:{data.fullName} / fakePortrait:{hasFakePortrait}");
+        bool usesFakeAddress = !string.IsNullOrEmpty(data.fakeAddress)
+                               && UnityEngine.Random.value < addrChance;
+        bool usesFakeId      = UnityEngine.Random.value < idChance;
+        bool usesFakePortrait = data.fakePortrait != null
+                               && UnityEngine.Random.value < portraitChance;
+
+        data.IdCardAddress  = usesFakeAddress  ? data.fakeAddress : data.address;
+        data.IdCardId       = usesFakeId       ? data.fakeID      : data.recordId;
+        data.IdCardPortrait = usesFakePortrait ? data.fakePortrait : data.portrait;
+
+        Debug.Log(TAG + $" 방문객 생성 완료 — ID:{data.recordId} / 이름:{data.fullName}" +
+                  $" / fakeAddr:{usesFakeAddress} / fakeId:{usesFakeId} / fakePortrait:{usesFakePortrait}");
         return data;
     }
 

@@ -16,7 +16,7 @@ public class UserImageDisplay : MonoBehaviour
 
     private ServiceDeskManager _deskManager;
 
-private void Awake()
+    private void Awake()
     {
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -43,6 +43,7 @@ private void Start()
             if (manual != null)
                 SetSprite(manual.GetVisitorPortrait());
         }
+        // 기존 방문객(DB 기반)은 UIServiceDesk가 담당하므로 별도 폴백 없음
     }
 
     private void OnDestroy()
@@ -56,25 +57,28 @@ private void Start()
 
 private void HandleCustomerCalled(ComplaintContext context)
     {
-        if (context.complaintType != ComplaintContext.ComplaintType.NewID)
+        if (context.complaintType == ComplaintContext.ComplaintType.NewID)
         {
-            SetSprite(null);
-            return;
+            // NewID: DB에 없는 런타임 데이터에서 직접 가져오기
+            var manual = _deskManager.CurrentManual as M_NewID;
+            if (manual == null)
+            {
+                Debug.LogWarning("[UserImageDisplay] CurrentManual이 M_NewID가 아닙니다.");
+                SetSprite(null);
+                return;
+            }
+            var portrait = manual.GetVisitorPortrait();
+            if (portrait == null)
+                Debug.LogWarning("[UserImageDisplay] GetVisitorPortrait()가 null. PortraitListSO 할당 확인.");
+            SetSprite(portrait);
         }
-
-        var manual = _deskManager.CurrentManual as M_NewID;
-        if (manual == null)
+        else
         {
-            Debug.LogWarning("[UserImageDisplay] CurrentManual이 M_NewID가 아닙니다.");
-            SetSprite(null);
-            return;
+            // 기존 방문객 (FullID, AddressChange 등): DB에서 portrait 공백
+            // UIServiceDesk도 동일하게 세팅하지만, 충돌 방지를 위해
+            // 여기서는 배제 - UIServiceDesk가 담당
+            // 대신 쿨리어 시 null 처리만 유지
         }
-
-        var portrait = manual.GetVisitorPortrait();
-        if (portrait == null)
-            Debug.LogWarning("[UserImageDisplay] GetVisitorPortrait()가 null입니다. PortraitListSO가 할당되어 있는지 확인하세요.");
-
-        SetSprite(portrait);
     }
 
     private void HandleCustomerCleared()
@@ -86,7 +90,12 @@ private void HandleCustomerCalled(ComplaintContext context)
 
     private void SetSprite(Sprite sprite)
     {
+        // spriteRenderer가 null이면 다시 시도 (레이트 바인딩 대비)
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
             spriteRenderer.sprite = sprite;
+        else
+            Debug.LogError("[UserImageDisplay] SpriteRenderer가 null — UserImage 오브젝트에 SpriteRenderer가 있는지 확인하세요.");
     }
 }
