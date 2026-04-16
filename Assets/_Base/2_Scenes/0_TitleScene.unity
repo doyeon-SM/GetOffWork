@@ -971,7 +971,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e83a1328a06ca554e9e160374042e7f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSceneSoundManager
-  TitleSceneBGM: {fileID: 8300000, guid: 8462ff2400110c045ba6e05f926ed574, type: 3}
+  TitleSceneBGM: {fileID: 8300000, guid: cf13d6efb0ef5804ca777d75201d46c9, type: 3}
   ButtonClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
 --- !u!1 &1938046198
 GameObject:
