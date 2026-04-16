@@ -248,38 +248,34 @@ public void StopWorkPhase()
     private Manual CreateManualByComplaint(ComplaintContext complaint)
     {
         var ud = ServiceDataManager.Instance.UserDatabase;
+        // 대기열 추가 시 확률로 결정된 메뉴얼을 그대로 사용한다
+        var manualData = complaint.assignedManualData;
         switch (complaint.complaintType)
         {
             case ComplaintContext.ComplaintType.FullID:
                 if (complaint.applicantType == ComplaintContext.ApplicantType.Self)
                 {
                     var m = new M_FullID_Self(ud);
-                    if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
-                        m.manualData = ServiceDataManager.Instance.FullSelf_Print;
-                    else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
-                        m.manualData = ServiceDataManager.Instance.FullSelf_Mobile;
+                    m.manualData = manualData;
                     return m;
                 }
                 else
                 {
                     var m = new M_FullID_Proxy(ud);
-                    if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Print)
-                        m.manualData = ServiceDataManager.Instance.FullProxy_Print;
-                    else if (complaint.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile)
-                        m.manualData = ServiceDataManager.Instance.Fullproxy_Mobile;
+                    m.manualData = manualData;
                     return m;
                 }
             case ComplaintContext.ComplaintType.AddressChange:
             {
                 var m = new M_AddressChange(ud);
-                m.manualData = ServiceDataManager.Instance.AddressChange_Manual;
+                m.manualData = manualData;
                 return m;
             }
             case ComplaintContext.ComplaintType.NewID:
             {
                 var sd = ServiceDataManager.Instance;
-                var m = new M_NewID(ud, sd.PortraitList, sd.AddressListSO, sd.FakeAddressListSO);
-                m.manualData = sd.NewID_Manual;
+                var m  = new M_NewID(ud, sd.PortraitList, sd.AddressListSO, sd.FakeAddressListSO);
+                m.manualData = manualData;
                 return m;
             }
             default: return null;

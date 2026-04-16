@@ -601,7 +601,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.00003462941}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.00090680073}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -861,6 +861,7 @@ Transform:
   - {fileID: 988568798}
   - {fileID: 1450168323}
   - {fileID: 1972732986}
+  - {fileID: 2133423744}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &704820531
@@ -3070,17 +3071,12 @@ MonoBehaviour:
   userDatabase: {fileID: 11400000, guid: d60279b98f7d9514ca3657d1774b71cd, type: 2}
   openingLineTable: {fileID: 11400000, guid: 2b2b4729df2391b41a6f0aa2678b0963, type: 2}
   closingLineTable: {fileID: 11400000, guid: ab53824476fbaad4fb9ef811b3add740, type: 2}
-  fullIDSelfManualData_Print: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
-  fullIDSelfManualData_Mobile: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
-  fullIDProxyManualData_Print: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
-  fullIDProxyManualData_Mobile: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
+  manualDataManager: {fileID: 2133423745}
   nuisanceTypeSettings: {fileID: 11400000, guid: bc064f774427b4a429ce04944ab93c3e, type: 2}
   mismatchSetting: {fileID: 11400000, guid: 39cefa65f65c90d40ab1b92f70617da6, type: 2}
-  addressChangeManualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
   addressListSO: {fileID: 11400000, guid: bcba52be05092ae4fa45ac48d4804670, type: 2}
   portraitListSO: {fileID: 11400000, guid: 919ff5a4da6982e469b1e2c60e7f58d9, type: 2}
   fakeAddressListSO: {fileID: 11400000, guid: d2b4807a150f57942b91cb8019114e05, type: 2}
-  newIDManualData: {fileID: 11400000, guid: fc357dc046827604f82952ac1d2894fb, type: 2}
   questionDataList: {fileID: 11400000, guid: 04c14c1a0ac73f044840f631617430bf, type: 2}
 --- !u!1 &1980840476
 GameObject:
@@ -3969,6 +3965,63 @@ MonoBehaviour:
   displayName: Printer
   showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+--- !u!1 &2133423743
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2133423744}
+  - component: {fileID: 2133423745}
+  m_Layer: 0
+  m_Name: ManualDataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2133423744
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133423743}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 670415915}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2133423745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133423743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be18d70f4df0fc14eb057aab22f33964, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ManualDataManager
+  manualEntries:
+  - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+    spawnWeight: 0.5
+  - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+    spawnWeight: 0.5
+  - manualData: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
+    spawnWeight: 0
+  - manualData: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
+    spawnWeight: 0
+  - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+    spawnWeight: 0
+  - manualData: {fileID: 11400000, guid: fc357dc046827604f82952ac1d2894fb, type: 2}
+    spawnWeight: 0
 --- !u!1001 &1619187425243076710
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -56,40 +56,58 @@ public static class ComplaintFactory
 
     // ── 기본 타입 롤 ─────────────────────────────────────────────────────
 
-private static ComplaintContext RollBaseType()
+    private static ComplaintContext RollBaseType()
     {
-        var c = new ComplaintContext();
-        float typeRoll = UnityEngine.Random.value;
-        if (typeRoll < 0.40f)
-            c.complaintType = ComplaintContext.ComplaintType.FullID;
-        else if (typeRoll < 0.70f)
-            c.complaintType = ComplaintContext.ComplaintType.AddressChange;
-        else
-            c.complaintType = ComplaintContext.ComplaintType.NewID;
-        if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
+        var c   = new ComplaintContext();
+        var mmd = ServiceDataManager.Instance?.ManualDataManager;
+
+        // ManualDataManager에서 확률 기반으로 메뉴얼 선택
+        var manual = mmd?.GetRandomManual();
+        if (manual == null)
         {
+            Debug.LogWarning(TAG + " ManualDataManager에서 메뉴얼을 가져오지 못했습니다. FullID/Self/Print로 폴백.");
+            c.complaintType         = ComplaintContext.ComplaintType.FullID;
+            c.applicantType         = ComplaintContext.ApplicantType.Self;
+            c.requestedDeliveryType = ComplaintContext.DeliveryType.Print;
+            return c;
+        }
+
+        // manualTitle로 complaintType, applicantType, deliveryType 결정
+        c.assignedManualData = manual;
+        string title = manual.manualTitle ?? "";
+
+        if (title.IndexOf("AddressChange", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            c.complaintType         = ComplaintContext.ComplaintType.AddressChange;
             c.applicantType         = ComplaintContext.ApplicantType.Self;
             c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
             c.requestedNewAddress   = DequeueAddress();
         }
-        else if (c.complaintType == ComplaintContext.ComplaintType.NewID)
+        else if (title.IndexOf("NewID", StringComparison.OrdinalIgnoreCase) >= 0)
         {
+            c.complaintType         = ComplaintContext.ComplaintType.NewID;
             c.applicantType         = ComplaintContext.ApplicantType.Self;
             c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
         }
-        else
+        else // FullID
         {
-            c.applicantType = UnityEngine.Random.value > 0.5f
-                ? ComplaintContext.ApplicantType.Self
-                : ComplaintContext.ApplicantType.Proxy;
-            c.requestedDeliveryType = UnityEngine.Random.value > 0.5f
-                ? ComplaintContext.DeliveryType.Print
-                : ComplaintContext.DeliveryType.Mobile;
+            c.complaintType = ComplaintContext.ComplaintType.FullID;
+
+            c.applicantType = title.IndexOf("Proxy", StringComparison.OrdinalIgnoreCase) >= 0
+                ? ComplaintContext.ApplicantType.Proxy
+                : ComplaintContext.ApplicantType.Self;
+
+            if (title.IndexOf("Mobile", StringComparison.OrdinalIgnoreCase) >= 0)
+                c.requestedDeliveryType = ComplaintContext.DeliveryType.Mobile;
+            else
+                c.requestedDeliveryType = ComplaintContext.DeliveryType.Print;
         }
+
         var nuisanceSO = ServiceDataManager.Instance?.NuisanceSettings;
         c.nuisanceType = nuisanceSO != null
             ? nuisanceSO.RollNuisanceType()
             : ComplaintContext.NuisanceType.None;
+
         return c;
     }
 
@@ -159,7 +177,8 @@ private static ComplaintContext RollBaseType()
 
     private static void CalculatePatience(ComplaintContext c)
     {
-        var patienceSO = GetManualDataSO(c);
+        // 대기열 추가 시 이미 결정된 assignedManualData의 인내심 설정을 사용한다
+        var patienceSO = c.assignedManualData;
         float pMin = DEFAULT_PATIENCE_MIN;
         float pMax = DEFAULT_PATIENCE_MAX;
 
@@ -184,22 +203,4 @@ private static ComplaintContext RollBaseType()
         c.currentPatience = basePatience;
     }
 
-    /// <summary>ComplaintContext로 해당 ManualDataSO를 조회한다.</summary>
-private static ManualDataSO GetManualDataSO(ComplaintContext c)
-    {
-        var sd = ServiceDataManager.Instance;
-        if (sd == null) return null;
-        if (c.complaintType == ComplaintContext.ComplaintType.AddressChange)
-            return sd.AddressChange_Manual;
-        if (c.complaintType == ComplaintContext.ComplaintType.NewID)
-            return sd.NewID_Manual;
-        bool isSelf   = c.applicantType == ComplaintContext.ApplicantType.Self;
-        bool isPrint  = c.requestedDeliveryType == ComplaintContext.DeliveryType.Print;
-        bool isMobile = c.requestedDeliveryType == ComplaintContext.DeliveryType.Mobile;
-        if (isSelf  && isPrint)  return sd.FullSelf_Print;
-        if (isSelf  && isMobile) return sd.FullSelf_Mobile;
-        if (!isSelf && isPrint)  return sd.FullProxy_Print;
-        if (!isSelf && isMobile) return sd.Fullproxy_Mobile;
-        return null;
-    }
 }

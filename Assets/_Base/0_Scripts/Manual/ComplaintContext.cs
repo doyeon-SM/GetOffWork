@@ -86,6 +86,10 @@ public bool   mobileNumberVerified;   // 전화번호 일치 확인 완료됐는
     public string lastCustomerMessage;
 
     // ── 인내심 ────────────────────────────────────────────────────────────
+    // ── 배정된 메뉴얼 ──────────────────────────────────────────────────────
+    /// <summary>대기열 추가 시 확률로 결정된 ManualDataSO. 호출 시 그대로 사용한다.</summary>
+    public ManualDataSO assignedManualData;
+
     [Header("민원인 인내심")]
     public float maxPatience     = 30f;
     public float currentPatience = 30f;
