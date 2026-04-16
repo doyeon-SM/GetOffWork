@@ -15,6 +15,10 @@ MonoBehaviour:
   portraits:
   - {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
   - {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
+  - {fileID: 314897823003437260, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
+  - {fileID: 7400469384750768597, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
+  - {fileID: 1437474589, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
+  - {fileID: 1749564819, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
   fakePortraits:
   - {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
   - {fileID: -3366272070310193754, guid: 441bc93690cc2324baaef2ae433f5955, type: 3}

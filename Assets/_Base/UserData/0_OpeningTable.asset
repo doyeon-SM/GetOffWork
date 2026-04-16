@@ -17,41 +17,45 @@ MonoBehaviour:
     applicantType: 0
     nuisanceType: 0
     lines:
-    - "\uC8FC\uBBFC\uB4F1\uB85D\uB4F1\uBCF8 \uBC1C\uAE09\uD558\uB7EC \uC654\uC5B4\uC694"
+    - "\uC8FC\uBBFC\uB4F1\uBCF8 \uBC1C\uAE09\uD558\uB7EC \uC654\uC5B4\uC694"
     - "\uB4F1\uBCF8 \uD558\uB098 \uBC1C\uAE09\uD574\uC8FC\uC138\uC694"
   - complaintType: 0
     applicantType: 1
     nuisanceType: 0
     lines:
     - "\uAC00\uC871 \uB300\uC2E0 \uB4F1\uBCF8 \uBC1B\uC73C\uB7EC \uC654\uC2B5\uB2C8\uB2E4"
-    - "\uB300\uB9AC \uBC1C\uAE09 \uAC00\uB2A5\uD55C\uAC00\uC694?"
+    - "\uC8FC\uBBFC\uB4F1\uBCF8 \uB300\uB9AC \uBC1C\uAE09 \uAC00\uB2A5\uD55C\uAC00\uC694?"
   - complaintType: 0
     applicantType: 0
     nuisanceType: 1
     lines:
     - "\uB4F1\uBCF8."
+    - "\uC8FC\uBBFC\uB4F1\uBCF8 "
   - complaintType: 0
     applicantType: 1
     nuisanceType: 1
     lines:
-    - "00 \uB4F1\uBCF8."
+    - "\uAC00\uC871 \uB4F1\uBCF8."
   - complaintType: 1
     applicantType: 0
     nuisanceType: 0
     lines:
     - "\uC8FC\uC18C\uBCC0\uACBD\uD558\uB7EC \uC654\uC2B5\uB2C8\uB2E4"
+    - "\uC774\uC0AC\uD574\uC11C \uC8FC\uC18C\uBCC0\uACBD\uD558\uB7EC \uC654\uC2B5\uB2C8\uB2E4 "
   - complaintType: 1
     applicantType: 0
     nuisanceType: 1
     lines:
     - "\uC8FC\uC18C\uBCC0\uACBD"
+    - "\uC774\uC0AC\uD588\uC5B4 "
   - complaintType: 2
     applicantType: 0
     nuisanceType: 0
     lines:
-    - "\uC774\uC0AC\uC654\uC2B5\uB2C8\uB2E4."
+    - "\uC774\uC0AC\uD574\uC11C \uC8FC\uBBFC\uB4F1\uB85D\uD558\uB7EC \uC654\uC2B5\uB2C8\uB2E4. "
+    - "\uC0C8\uB85C \uC8FC\uBBFC\uB4F1\uB85D\uD558\uB7EC \uC654\uC2B5\uB2C8\uB2E4. "
   - complaintType: 2
     applicantType: 0
     nuisanceType: 1
     lines:
-    - "\uB4F1\uB85D "
+    - "\uC8FC\uBBFC\uB4F1\uB85D "
