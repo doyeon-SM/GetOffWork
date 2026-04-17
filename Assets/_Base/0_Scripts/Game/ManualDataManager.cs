@@ -60,4 +60,14 @@ public class ManualDataManager : MonoBehaviour
     /// 등록된 전체 ManualSpawnEntry 목록을 반환합니다.
     /// </summary>
     public IReadOnlyList<ManualSpawnEntry> GetAllEntries() => manualEntries;
+
+    /// <summary>
+    /// LevelDesignManager에서 날짜별 ManualSpawnEntry 목록을 통째로 교체한다.
+    /// </summary>
+    public void SetEntries(List<ManualSpawnEntry> newEntries)
+    {
+        if (newEntries == null) return;
+        manualEntries = newEntries;
+        Debug.Log("[ManualDataManager] 엔트리 교체 완료: " + manualEntries.Count + "개");
+    }
 }

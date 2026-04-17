@@ -113,6 +113,13 @@ private void Start()
             serviceDeskManager.SetPlayerBase(playerBase);
     }
 
+    /// <summary>LevelDesignManager에서 날짜별 오전/오후 시간을 주입한다. (단위: 초)</summary>
+    public void SetDurations(float morning, float afternoon)
+    {
+        morningDuration   = morning   >= 0f ? morning   : morningDuration;
+        afternoonDuration = afternoon >= 0f ? afternoon : afternoonDuration;
+    }
+
     private void ResolvePlayerBase()
     {
         if (playerBase != null) return;
@@ -124,6 +131,9 @@ private void Start()
     // ── 페이즈 진행 ────────────────────────────────────────────────────────
     private void StartMorningWork()
     {
+        // 레벨 디자인 설정 주입 (morningDuration 등을 덮어쓰므로 phaseTimer 설정 이전에 호출)
+        LevelDesignManager.Instance?.ApplyLevelForCurrentDay();
+
         currentPhase         = DayPhase.MorningWork;
         phaseTimer           = morningDuration;
         isPausedByUI         = false;

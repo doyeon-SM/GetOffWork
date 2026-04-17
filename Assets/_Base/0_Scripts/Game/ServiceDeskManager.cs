@@ -34,6 +34,7 @@ public class ServiceDeskManager : MonoBehaviour
     private DeskState deskState = DeskState.Idle;
     private int       spawnedCustomerCountToday;
 
+    private int       _overrideMaxCustomer = -1; // -1이면 PlayerLevel * 3 기본값 사용
     // ── 공개 프로퍼티 ─────────────────────────────────────────────────────
     public ComplaintContext   CurrentComplaint   => currentComplaint;
     public Manual             CurrentManual      => currentManual;
@@ -42,8 +43,11 @@ public class ServiceDeskManager : MonoBehaviour
     public int                WaitingCount       => waitingQueue.Count;
     public UserRecordDatabase UserDatabase       => ServiceDataManager.Instance.UserDatabase;
 
-    public int  MaxCustomerPerDay    => playerBase != null ? playerBase.PlayerLevel * 3 : 0;
+    public int  MaxCustomerPerDay    => _overrideMaxCustomer > 0 ? _overrideMaxCustomer : (playerBase != null ? playerBase.PlayerLevel * 3 : 0);
+
     public bool HasReachedDailyLimit => spawnedCustomerCountToday >= MaxCustomerPerDay;
+    /// <summary>LevelDesignManager에서 날짜별 최대 손님 수를 주입한다. 0 이하이면 기본값(PlayerLevel * 3)으로 되돌린다.</summary>
+    public void SetMaxCustomerPerDay(int value) => _overrideMaxCustomer = value > 0 ? value : -1;
 
     // ── 이벤트 ───────────────────────────────────────────────────────────
     public event Action<int>              OnWaitingQueueChanged;
