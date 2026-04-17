@@ -52,7 +52,7 @@ public static class ServiceEvaluator
 
     // ── 공통 선처리 ───────────────────────────────────────────────────────
 
-    /// <summary>인내심 소진 패널티 + 진상 종료 패널티를 누적한 초기 이벤트를 반환한다.</summary>
+    /// <summary>인내심 소진 패널티 + 진상 종료 추가결과(onFinishResult)를 누적한 초기 이벤트를 반환한다.</summary>
     private static StatChangeEvent BuildCommonPenalties(
         PlayerBase       playerBase,
         ComplaintContext complaint,
@@ -71,14 +71,14 @@ public static class ServiceEvaluator
         if (nuisanceSO != null && complaint.nuisanceType != ComplaintContext.NuisanceType.None)
         {
             var nEntry = nuisanceSO.GetEntry(complaint.nuisanceType);
-            if (!nEntry.onFinishPenalty.IsEmpty)
+            if (!nEntry.onFinishResult.IsEmpty)
             {
-                ApplyNuisancePenalty(playerBase, nEntry.onFinishPenalty);
-                evt.stressDelta      += nEntry.onFinishPenalty.stress;
-                evt.kindnessDelta    += nEntry.onFinishPenalty.kindness;
-                evt.reliabilityDelta += nEntry.onFinishPenalty.reliability;
-                evt.performanceDelta -= nEntry.onFinishPenalty.performance;
-                Debug.Log(TAG + " [NuisancePenalty/finish] type:" + complaint.nuisanceType);
+                ApplyNuisanceResult(playerBase, nEntry.onFinishResult);
+                evt.stressDelta      += nEntry.onFinishResult.stress;
+                evt.kindnessDelta    += nEntry.onFinishResult.kindness;
+                evt.reliabilityDelta += nEntry.onFinishResult.reliability;
+                evt.performanceDelta += nEntry.onFinishResult.performance;
+                Debug.Log(TAG + " [NuisanceResult/finish] type:" + complaint.nuisanceType);
             }
         }
 
@@ -273,6 +273,15 @@ public static class ServiceEvaluator
         if (penalty.kindness    != 0) playerBase.AddStat(Stat.Kindness,      penalty.kindness);
         if (penalty.reliability != 0) playerBase.AddStat(Stat.Reliability,   penalty.reliability);
         if (penalty.performance != 0) playerBase.AddPerformance(-penalty.performance);
+    }
+
+    /// <summary>진상 종료 결과: stress/kindness/reliability는 그대로, performance는 양수=증가(보상 방향).</summary>
+    private static void ApplyNuisanceResult(PlayerBase playerBase, NuisancePenalty result)
+    {
+        if (result.stress      != 0) playerBase.AddStat(Stat.Stress,       result.stress);
+        if (result.kindness    != 0) playerBase.AddStat(Stat.Kindness,      result.kindness);
+        if (result.reliability != 0) playerBase.AddStat(Stat.Reliability,   result.reliability);
+        if (result.performance != 0) playerBase.AddPerformance(result.performance);
     }
 
     // ── ManualDataSO 헬퍼 ────────────────────────────────────────────────

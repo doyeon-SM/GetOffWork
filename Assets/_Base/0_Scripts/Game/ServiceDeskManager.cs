@@ -34,6 +34,12 @@ public class ServiceDeskManager : MonoBehaviour
     private DeskState deskState = DeskState.Idle;
     private int       spawnedCustomerCountToday;
 
+    // ── perMessagePenalty 누적 (응대 1건당 evt에 합산용) ─────────────────────
+    private int   _msgPenaltyPerformance;
+    private int   _msgPenaltyStress;
+    private int   _msgPenaltyKindness;
+    private int   _msgPenaltyReliability;
+
     private int       _overrideMaxCustomer = -1; // -1이면 PlayerLevel * 3 기본값 사용
     // ── 공개 프로퍼티 ─────────────────────────────────────────────────────
     public ComplaintContext   CurrentComplaint   => currentComplaint;
@@ -123,6 +129,7 @@ public class ServiceDeskManager : MonoBehaviour
         waitingQueue.Clear();
         ClearCurrentCustomerInternal();
         deskState = DeskState.Idle;
+        ResetMessagePenaltyAccumulators();
         ScheduleNextCustomerArrival();
         RaiseWaitingQueueChanged();
         OnWorkStateChanged?.Invoke(true);
@@ -446,6 +453,14 @@ public void StopWorkPhase()
         currentManual    = null;
     }
 
+
+    private void ResetMessagePenaltyAccumulators()
+    {
+        _msgPenaltyPerformance  = 0;
+        _msgPenaltyStress       = 0;
+        _msgPenaltyKindness     = 0;
+        _msgPenaltyReliability  = 0;
+    }
     /// <summary>WorkDayManager 참조를 주입한다. WorkDayManager.Start()에서 호출된다.</summary>
     public void SetWorkDayManager(WorkDayManager wdm) => _workDayManager = wdm;
 

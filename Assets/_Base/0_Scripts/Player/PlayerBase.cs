@@ -10,15 +10,15 @@ public class PlayerBase : MonoBehaviour
 {
     public static PlayerBase Instance { get; private set; }
 
-    [Header("�÷��̾� �⺻ ����")]
+    [Header("플레이어 기본 정보")]
     [SerializeField] private int playerLevel = 1;
     [SerializeField] private PlayerStat baseStats;
 
-    [Header("���� ����")]
+    [Header("게임 목표")]
     [SerializeField] private int[] promotions = { 30 };
     [SerializeField] private int promotionIndex = 0;
 
-    [Header("���� ��ǥ ����")]
+    [Header("일일 목표 성과")]
     [SerializeField] private int goalPerformance = 10;
 
     public int PlayerLevel => playerLevel;
@@ -63,7 +63,7 @@ public class PlayerBase : MonoBehaviour
     {
         if (promotions == null || promotions.Length == 0)
         {
-            Debug.LogError("[PlayerBase] promotions�� ��� �ֽ��ϴ�.");
+            Debug.LogError("[PlayerBase] promotions null");
             return 0;
         }
 
@@ -106,7 +106,7 @@ public bool AddPerformance(int amount)
     {
         if (!baseStats.CanAddPay(amount))
         {
-            Debug.Log("������ ����");
+            Debug.Log("[PlayerBase] Null CanAddPay");
             return false;
         }
 
@@ -129,7 +129,7 @@ public bool AddPerformance(int amount)
         {
             promotionIndex++;
             playerLevel++;
-            Debug.Log($"���� �Ϸ�! ���� ���� : {playerLevel}");
+            Debug.Log($"승진! 플레이어 레벨 상승 : {playerLevel}");
         }
     }
 
@@ -177,16 +177,16 @@ public bool AddPerformance(int amount)
         switch (endingType)
         {
             case PlayerEnding.NormalEnding:
-                Debug.Log("�⺻ ����");
+                Debug.Log("Happy Ending");
                 break;
             case PlayerEnding.PerformanceLess:
-                Debug.Log("���� ���� ����");
+                Debug.Log("일일 성과 미달 해고");
                 break;
             case PlayerEnding.Stressfull:
-                Debug.Log("��Ʈ���� ���� ����");
+                Debug.Log("화병 퇴사");
                 break;
             case PlayerEnding.Unkindness:
-                Debug.Log("ģ���� ���� ����");
+                Debug.Log("불친절 해고");
                 break;
         }
     }

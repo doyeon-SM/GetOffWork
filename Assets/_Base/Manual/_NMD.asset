@@ -21,8 +21,8 @@ MonoBehaviour:
       reliability: 0
       performance: 0
     patienceMultiplier: 1
-    onFinishPenalty:
-      stress: 0
+    onFinishResult:
+      stress: 3
       kindness: 0
       reliability: 0
-      performance: 0
+      performance: 3

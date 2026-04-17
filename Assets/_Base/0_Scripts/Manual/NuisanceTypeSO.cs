@@ -71,8 +71,8 @@ public class NuisanceTypeEntry
     [Range(0.1f, 3f)]
     public float patienceMultiplier = 1f;
 
-    [Header("민원 종료 시 추가 패널티 (해당 타입을 상대한 경우)")]
-    public NuisancePenalty onFinishPenalty;
+    [Header("민원 종료 시 추가 결과 (진상 응대 보상/결과. 양수 = Stress증가, Kindness·Reliability·Performance 변화)")]
+    public NuisancePenalty onFinishResult;
 
     public static NuisanceTypeEntry Default(ComplaintContext.NuisanceType type)
     {
@@ -82,7 +82,7 @@ public class NuisanceTypeEntry
             spawnChance        = 0f,
             perMessagePenalty  = default,
             patienceMultiplier = 1f,
-            onFinishPenalty    = default,
+            onFinishResult     = default,
         };
     }
 }

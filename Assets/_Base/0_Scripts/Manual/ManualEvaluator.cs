@@ -95,10 +95,49 @@ public static class ManualEvaluator
             {
                 ApplyPenalty(ref result, step.OmissionPenalty);
                 Debug.Log($"[Evaluator] 누락: {step.CommandId} → OmissionPenalty 적용");
+
+                // IsOrdered 스텝이 누락된 경우에도 순서위반 패널티 적용:
+                // 이전 IsOrdered 스텝 중 실제 수행된 것이 있으면 순서 위반으로 간주
+                if (step.IsOrdered && si > 0)
+                {
+                    bool prevOrderedWasExecuted = false;
+                    for (int prev = si - 1; prev >= 0; prev--)
+                    {
+                        if (!requiredSteps[prev].IsOrdered) continue;
+                        if (stepQueueIndex[prev] != -1) { prevOrderedWasExecuted = true; break; }
+                        // 이전 IsOrdered도 누락이면 그 위를 계속 탐색
+                    }
+
+                    // 이전에 수행된 IsOrdered 스텝이 존재하거나,
+                    // 이 스텝이 IsOrdered 시퀀스의 첫 번째가 아니라면(아무것도 안 함) 순서위반
+                    // → 아무것도 안 한 경우: 이전 IsOrdered 스텝도 모두 누락이므로 순서위반 불발
+                    if (prevOrderedWasExecuted)
+                    {
+                        ApplyPenalty(ref result, step.OrderPenalty);
+                        Debug.Log($"[Evaluator] 누락+순서위반: {step.CommandId} → OrderPenalty 추가 적용");
+                    }
+                    else
+                    {
+                        // 아무것도 하지 않은 경우 — 이전 IsOrdered 스텝도 모두 미수행
+                        // 이 경우엔 '순서가 있는데 아무것도 안 함' → 모든 IsOrdered 스텝에 순서위반
+                        // → 첫 번째 IsOrdered 스텝인지 확인: si==0이거나 앞의 IsOrdered가 없으면 첫 번째
+                        bool isFirstOrdered = true;
+                        for (int prev = si - 1; prev >= 0; prev--)
+                        {
+                            if (requiredSteps[prev].IsOrdered) { isFirstOrdered = false; break; }
+                        }
+                        // 첫 번째 IsOrdered가 아니면(즉 이전 IsOrdered 스텝이 있고 그것도 누락) → 순서위반 적용
+                        if (!isFirstOrdered)
+                        {
+                            ApplyPenalty(ref result, step.OrderPenalty);
+                            Debug.Log($"[Evaluator] 누락+순서위반(전체누락): {step.CommandId} → OrderPenalty 추가 적용");
+                        }
+                    }
+                }
                 continue;
             }
 
-            // 순서 위반 검사 (IsOrdered인 단계만)
+            // 순서 위반 검사 (IsOrdered인 단계만, 실제로 수행된 경우)
             bool orderViolated = false;
             if (step.IsOrdered && si > 0)
             {
