@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
-
 using UnityEngine;
 
 public class WorkDayManager : MonoBehaviour
 {
+    public static WorkDayManager Instance;
     public enum DayPhase
     {
         MorningWork,
@@ -22,7 +23,7 @@ public class WorkDayManager : MonoBehaviour
     [SerializeField] private float morningDuration   = 300f;
     [SerializeField] private float afternoonDuration = 300f;
 
-        [Header("시간 UI")]
+    [Header("시간 UI")]
     [SerializeField] private UIClockTimer clockTimer;
 
     [Header("점심 UI 부모")]
@@ -59,10 +60,18 @@ public class WorkDayManager : MonoBehaviour
     public float      CurrentPhaseTimer    => phaseTimer;
     /// <summary>현재 페이즈의 최대 시간(초). UIClockTimer가 비율 계산에 사용.</summary>
     public float      CurrentPhaseDuration => currentPhase == DayPhase.MorningWork ? morningDuration : afternoonDuration;
-
+    // event
+    public event Action<int, float, float, float> OnUIPlayerStatUpdate;
+    
     // ── Unity 생명주기 ─────────────────────────────────────────────────────
     private void Awake()
     {
+        if(Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
         ResolvePlayerBase();
     }
 
@@ -255,7 +264,7 @@ private void Start()
         int pickCount = Mathf.Min(count, validOptions.Count);
         for (int i = 0; i < pickCount; i++)
         {
-            int idx = Random.Range(0, validOptions.Count);
+            int idx = UnityEngine.Random.Range(0, validOptions.Count);
             result.Add(validOptions[idx]);
             validOptions.RemoveAt(idx);
         }
@@ -323,6 +332,8 @@ private void Start()
     {
         if (_dayResultData == null) return;
         _dayResultData.statChangeProgress.Enqueue(evt);
+        //ui event invoke
+        OnUIPlayerStatUpdate?.Invoke(evt.performanceDelta, evt.stressDelta, evt.kindnessDelta, evt.reliabilityDelta);
         Debug.Log($"[WorkDayManager] StatChangeEvent enqueued — source:{evt.source} "
                 + $"P:{evt.performanceDelta} S:{evt.stressDelta:F2} K:{evt.kindnessDelta:F2} "
                 + $"R:{evt.reliabilityDelta:F2} Pay:{evt.payDelta}");

@@ -462,6 +462,35 @@ public void StopWorkPhase()
         _msgPenaltyReliability  = 0;
     }
     /// <summary>WorkDayManager 참조를 주입한다. WorkDayManager.Start()에서 호출된다.</summary>
+    // ── 진상 퇴치 메뉴얼 ──────────────────────────────────────────────────
+    /// <summary>
+    /// 진상 퇴치 메뉴얼을 발동한다. UI(SOSManualGroup 버튼)에서 호출된다.
+    /// SOS처럼 강제 종료가 필요한 메뉴얼은 먼저 현재 응대를 평가 없이 클리어한 뒤
+    /// AntiNuisanceManual.Activate()를 호출한다.
+    /// </summary>
+    public void ExecuteAntiNuisanceManual(AntiNuisanceManual manual)
+    {
+        if (manual == null || playerBase == null) return;
+
+        bool hadActiveCustomer = HasActiveCustomer;
+
+        // 강제 종료가 필요한 메뉴얼(SOS 등): 평가 없이 즉시 응대 클리어
+        if (hadActiveCustomer)
+        {
+            currentManual?.ClearRequiredReturnItems();
+            Log(TAG + $" [진상퇴치:{manual.GetTitle()}] 현재 응대 강제 종료");
+            currentManual    = null;
+            currentComplaint = null;
+            deskState        = DeskState.Idle;
+            ResetMessagePenaltyAccumulators();
+            OnCustomerCleared?.Invoke();
+        }
+
+        // 스탯 변화 적용 + StatChangeEvent 기록
+        manual.Activate(playerBase, _workDayManager, hadActiveCustomer);
+        Log(TAG + $" [진상퇴치:{manual.GetTitle()}] 발동 완료");
+    }
+
     public void SetWorkDayManager(WorkDayManager wdm) => _workDayManager = wdm;
 
     private void RaiseWaitingQueueChanged() => OnWaitingQueueChanged?.Invoke(waitingQueue.Count);

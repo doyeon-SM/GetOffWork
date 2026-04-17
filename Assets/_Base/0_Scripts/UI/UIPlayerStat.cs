@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using TMPro;
 
 public class UIPlayerStat : MonoBehaviour
@@ -15,9 +16,6 @@ public class UIPlayerStat : MonoBehaviour
     [SerializeField] private RectTransform sliderFillRect;
 
     [Header("Stat Text UI")]
-    //[SerializeField] private TMP_Text kindnessText;
-    //[SerializeField] private TMP_Text stressText;
-    //[SerializeField] private TMP_Text reliabilityText;
     [SerializeField] private TMP_Text payText;
 
     [Header("원형 스탯 바 (Radial)")]
@@ -30,13 +28,46 @@ public class UIPlayerStat : MonoBehaviour
     [SerializeField] private UIInventorySlot inventorySlot1;
     [SerializeField] private UIInventorySlot inventorySlot2;
 
+    [Header("Stat Update Text UI")]
+    [SerializeField] private TMP_Text updatePerformance;
+    [SerializeField] private TMP_Text updateStress;
+    [SerializeField] private TMP_Text updateKindness;
+    [SerializeField] private TMP_Text updateReliability;
+
     private void Awake()
     {
         playerbase      = PlayerBase.Instance;
         playerInventory = PlayerInventory.Instance;
+        ResetUI();
     }
 
-    private void OnGUI()
+    private void Start()
+    {
+        TrySubscribe();
+    }
+
+    private void OnEnable()
+    {
+        TrySubscribe();
+    }
+
+    private void OnDisable()
+    {
+        if (WorkDayManager.Instance != null)
+            WorkDayManager.Instance.OnUIPlayerStatUpdate -= HandleUIPlayerStatUpdate;
+    }
+
+    private void TrySubscribe()
+    {
+        if (WorkDayManager.Instance != null)
+        {
+            // 중복 구독 방지: 먼저 해제 후 재구독
+            WorkDayManager.Instance.OnUIPlayerStatUpdate -= HandleUIPlayerStatUpdate;
+            WorkDayManager.Instance.OnUIPlayerStatUpdate += HandleUIPlayerStatUpdate;
+        }
+    }
+
+    private void LateUpdate()
     {
         RefreshUI();
     }
@@ -49,6 +80,14 @@ public class UIPlayerStat : MonoBehaviour
         UpdateStatTexts();
         UpdateRadialBars();
         RefreshInventorySlots();
+    }
+
+    private void ResetUI()
+    {
+        if (updatePerformance != null) updatePerformance.text = "";
+        if (updateStress      != null) updateStress.text      = "";
+        if (updateKindness    != null) updateKindness.text    = "";
+        if (updateReliability != null) updateReliability.text = "";
     }
 
     // ── Performance ───────────────────────────────────────────────────────
@@ -86,10 +125,7 @@ public class UIPlayerStat : MonoBehaviour
 
     private void UpdateStatTexts()
     {
-        //if (kindnessText    != null) kindnessText.text    = ToPercent(playerbase.Kindness);
-        //if (stressText      != null) stressText.text      = ToPercent(playerbase.Stress);
-        //if (reliabilityText != null) reliabilityText.text = ToPercent(playerbase.Reliability);
-        if (payText         != null) payText.text         = playerbase.Pay.ToString();
+        if (payText != null) payText.text = playerbase.Pay.ToString();
     }
 
     // ── 원형 슬라이더 ─────────────────────────────────────────────────────
@@ -110,7 +146,42 @@ public class UIPlayerStat : MonoBehaviour
         inventorySlot2?.Refresh();
     }
 
-    // ── 유틸 ─────────────────────────────────────────────────────────────
+    // ── 스탯 변화 표시 ────────────────────────────────────────────────────
+
+    private void HandleUIPlayerStatUpdate(int p, float s, float k, float r)
+    {
+        if (p != 0)
+        {
+            string v = p > 0 ? $"+{p}" : p.ToString();
+            StartCoroutine(ViewUpdatePlayerStat(v, updatePerformance));
+        }
+        if (s != 0)
+        {
+            int sv = Mathf.RoundToInt(s * 100f);
+            string v = sv > 0 ? $"+{sv}" : sv.ToString();
+            StartCoroutine(ViewUpdatePlayerStat(v, updateStress));
+        }
+        if (k != 0)
+        {
+            int kv = Mathf.RoundToInt(k * 100f);
+            string v = kv > 0 ? $"+{kv}" : kv.ToString();
+            StartCoroutine(ViewUpdatePlayerStat(v, updateKindness));
+        }
+        if (r != 0)
+        {
+            int rv = Mathf.RoundToInt(r * 100f);
+            string v = rv > 0 ? $"+{rv}" : rv.ToString();
+            StartCoroutine(ViewUpdatePlayerStat(v, updateReliability));
+        }
+    }
+
+    IEnumerator ViewUpdatePlayerStat(string value, TMP_Text text)
+    {
+        if (text == null) yield break;
+        text.text = value;
+        yield return new WaitForSeconds(1f);
+        text.text = "";
+    }
 
     private string ToPercent(float v)
     {
