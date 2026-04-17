@@ -389,6 +389,14 @@ public void StopWorkPhase()
         if (p.reliability != 0) playerBase.AddStat(Stat.Reliability, p.reliability);
         if (p.performance != 0) playerBase.AddPerformance(-p.performance);
         Log(TAG + " [NuisancePenalty/msg] type:" + currentComplaint.nuisanceType);
+
+        // 메시지당 스탯 변화를 UI에 즉시 반영
+        _workDayManager?.NotifyStatChangedUI(
+            performanceDelta: p.performance != 0 ? -p.performance : 0,
+            stressDelta:      p.stress,
+            kindnessDelta:    p.kindness,
+            reliabilityDelta: p.reliability
+        );
     }
 
 

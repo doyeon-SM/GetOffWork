@@ -328,6 +328,15 @@ private void Start()
     /// <summary>
     /// 외부(ServiceDeskManager 등)에서 스탯 변화 이벤트를 큐에 추가한다.
     /// </summary>
+    /// <summary>
+    /// 스탯 변화량을 UI 이벤트로만 발행한다. StatChangeEvent 큐에는 추가하지 않는다.
+    /// perMessagePenalty 등 응대 중 즉시 발생하는 스탯 변화를 UI에 반영할 때 사용한다.
+    /// </summary>
+    public void NotifyStatChangedUI(int performanceDelta, float stressDelta, float kindnessDelta, float reliabilityDelta)
+    {
+        OnUIPlayerStatUpdate?.Invoke(performanceDelta, stressDelta, kindnessDelta, reliabilityDelta);
+    }
+
     public void EnqueueStatChangeEvent(StatChangeEvent evt)
     {
         if (_dayResultData == null) return;
