@@ -11,6 +11,7 @@ public class PlayerBase : MonoBehaviour
     public static PlayerBase Instance { get; private set; }
 
     [Header("플레이어 기본 정보")]
+    [SerializeField] private string playerName = "Player";
     [SerializeField] private int playerLevel = 1;
     [SerializeField] private PlayerStat baseStats;
 
@@ -21,6 +22,7 @@ public class PlayerBase : MonoBehaviour
     [Header("일일 목표 성과")]
     [SerializeField] private int goalPerformance = 10;
 
+    public string PlayerName => playerName;
     public int PlayerLevel => playerLevel;
     public int Performance => baseStats.Performance;
     public float Kindness => baseStats.Kindness;
@@ -57,6 +59,13 @@ public class PlayerBase : MonoBehaviour
         promotionIndex = 0;
         goalPerformance = Mathf.Max(0, startGoalPerformance);
         baseStats = initialStats;
+    }
+
+    /// <summary>타이틀 씬 입력창에서 호출 — 플레이어 이름을 저장합니다.</summary>
+    public void SetPlayerName(string name)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+            playerName = name.Trim();
     }
 
     public int GetMaxPerformance()
