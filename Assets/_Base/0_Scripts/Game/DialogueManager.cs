@@ -47,6 +47,7 @@ public class DialogueManager : MonoBehaviour
         lineIndex = 0;
         isPlaying = true;
         dialogueUI.SetPanelVisible(true);
+        WorkDayManager.Instance?.PauseTimer();  // 대화 중 시계 정지
         OnDialogueStart?.Invoke();
         ShowCurrentLine();
     }
@@ -79,6 +80,7 @@ public class DialogueManager : MonoBehaviour
         isPlaying = false;
         currentData = null;
         dialogueUI.SetPanelVisible(false);
+        WorkDayManager.Instance?.ResumeTimer(); // 대화 종료 시 시계 재개
         OnDialogueEnd?.Invoke();
     }
 }

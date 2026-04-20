@@ -87,6 +87,7 @@ private void Start()
         }
 
         HideLunchUIObjects();
+        isPausedByUI = true;   // 신문/대화가 끝날 때까지 시계 정지
         StartMorningWork();
         UpdateClockUI();
     }
@@ -127,6 +128,18 @@ private void Start()
     {
         morningDuration   = morning   >= 0f ? morning   : morningDuration;
         afternoonDuration = afternoon >= 0f ? afternoon : afternoonDuration;
+    }
+
+    /// <summary>신문/대화 등 외부 UI가 시계를 일시정지할 때 호출.</summary>
+    public void PauseTimer()
+    {
+        isPausedByUI = true;
+    }
+
+    /// <summary>신문/대화 등 외부 UI가 닫힌 뒤 시계를 재개할 때 호출.</summary>
+    public void ResumeTimer()
+    {
+        isPausedByUI = false;
     }
 
     private void ResolvePlayerBase()

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29682c4ef764512459f89507ce0ffc17, type: 3}
+  m_Name: 0_NewspaperData
+  m_EditorClassIdentifier: Assembly-CSharp::NewspaperData
+  defaultSprite: {fileID: 21300000, guid: 8e599cc3f61b44c41941935c2b57e259, type: 3}
+  dayEntries:
+  - targetDay: 1
+    sprite: {fileID: -3366272070310193754, guid: 441bc93690cc2324baaef2ae433f5955, type: 3}
+  eventEntries: []
