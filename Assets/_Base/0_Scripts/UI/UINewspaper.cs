@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System;
 
 /// <summary>
@@ -13,6 +14,9 @@ public class UINewspaper : MonoBehaviour
 
     [Header("신문 이미지")]
     [SerializeField] private Image newspaperImage;
+
+    [Header("신문 대문 텍스트")]
+    [SerializeField] private TMP_Text newsheadlineText;
 
     [Header("닫기 버튼")]
     [SerializeField] private Button closeButton;
@@ -45,6 +49,14 @@ public class UINewspaper : MonoBehaviour
         {
             newspaperImage.sprite = sprite;
             newspaperImage.gameObject.SetActive(sprite != null);
+        }
+
+        // 헤드라인 텍스트
+        if (newsheadlineText != null)
+        {
+            string headline = newspaperData != null ? newspaperData.ResolveHeadline(currentDay, eventType) : string.Empty;
+            newsheadlineText.text = headline;
+            newsheadlineText.gameObject.SetActive(!string.IsNullOrEmpty(headline));
         }
 
         // 시계 정지

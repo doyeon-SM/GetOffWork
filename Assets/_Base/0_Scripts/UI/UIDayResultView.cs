@@ -206,14 +206,14 @@ public class UIDayResultView : MonoBehaviour
         if (performanceText == null) return;
         int   max = _data.maxPerformance;
         float pct = max > 0 ? (float)_dispPerformance / max * 100f : 0f;
-        performanceText.text = $"성과: {_dispPerformance} / {max} ({pct:F0}%)";
+        performanceText.text = $"{_dispPerformance} / {max} ({pct:F0}%)";
     }
 
     private void RefreshStatTexts()
     {
-        if (stressText      != null) stressText.text      = $"스트레스: {Mathf.RoundToInt(_dispStress      * 100f)}%";
-        if (kindnessText    != null) kindnessText.text    = $"친절함: {Mathf.RoundToInt(_dispKindness    * 100f)}%";
-        if (reliabilityText != null) reliabilityText.text = $"신뢰도: {Mathf.RoundToInt(_dispReliability * 100f)}%";
+        if (stressText      != null) stressText.text      = $"{Mathf.RoundToInt(_dispStress      * 100f)}%";
+        if (kindnessText    != null) kindnessText.text    = $"{Mathf.RoundToInt(_dispKindness    * 100f)}%";
+        if (reliabilityText != null) reliabilityText.text = $"{Mathf.RoundToInt(_dispReliability * 100f)}%";
     }
 
     private void RefreshWageTexts()

@@ -23,7 +23,6 @@ public class NewspaperData : ScriptableObject
     /// <summary>CurrentDay와 eventType을 받아 표시할 Sprite를 반환.</summary>
     public Sprite Resolve(int currentDay, EventDayType? eventType)
     {
-        // 이벤트 항목 우선 탐색
         if (eventType.HasValue)
         {
             foreach (var e in eventEntries)
@@ -31,7 +30,6 @@ public class NewspaperData : ScriptableObject
                     return e.sprite;
         }
 
-        // Day 항목 탐색 (currentDay 이하 중 가장 큰 targetDay)
         DayNewspaperEntry best = null;
         foreach (var d in dayEntries)
         {
@@ -42,6 +40,27 @@ public class NewspaperData : ScriptableObject
 
         return defaultSprite;
     }
+
+    /// <summary>CurrentDay와 eventType을 받아 표시할 헤드라인 텍스트를 반환.</summary>
+    public string ResolveHeadline(int currentDay, EventDayType? eventType)
+    {
+        if (eventType.HasValue)
+        {
+            foreach (var e in eventEntries)
+                if (e.eventType == eventType.Value)
+                    return e.eventhaedline;
+        }
+
+        DayNewspaperEntry best = null;
+        foreach (var d in dayEntries)
+        {
+            if (d.targetDay > currentDay) continue;
+            if (best == null || d.targetDay > best.targetDay) best = d;
+        }
+        if (best != null) return best.haedline;
+
+        return string.Empty;
+    }
 }
 
 [Serializable]
@@ -50,6 +69,7 @@ public class DayNewspaperEntry
     [Tooltip("이 Day 이상부터 이 이미지를 사용")]
     public int targetDay;
     public Sprite sprite;
+    public string haedline;
 }
 
 [Serializable]
@@ -57,4 +77,5 @@ public class EventNewspaperEntry
 {
     public EventDayType eventType;
     public Sprite sprite;
+    public string eventhaedline;
 }

@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29682c4ef764512459f89507ce0ffc17, type: 3}
   m_Name: 0_NewspaperData
   m_EditorClassIdentifier: Assembly-CSharp::NewspaperData
-  defaultSprite: {fileID: 21300000, guid: 8e599cc3f61b44c41941935c2b57e259, type: 3}
+  defaultSprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
   dayEntries:
   - targetDay: 1
-    sprite: {fileID: -3366272070310193754, guid: 441bc93690cc2324baaef2ae433f5955, type: 3}
-  eventEntries: []
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    haedline: Day1
+  eventEntries:
+  - eventType: 0
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    eventhaedline: EventDay
