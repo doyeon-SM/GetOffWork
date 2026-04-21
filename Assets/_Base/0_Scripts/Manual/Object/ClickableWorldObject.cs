@@ -29,13 +29,13 @@ public abstract class ClickableWorldObject : MonoBehaviour, IClickableObject
 
         _outlineObject = new GameObject("HoverOutline");
         _outlineObject.transform.SetParent(_targetRenderer.transform, false);
-        _outlineObject.transform.localPosition = Vector3.zero;
+        _outlineObject.transform.localPosition = new Vector3(0,0,0.1f);
         _outlineObject.transform.localScale = Vector3.one;
 
         _outlineRenderer = _outlineObject.AddComponent<SpriteRenderer>();
         _outlineRenderer.sprite = _targetRenderer.sprite;
         _outlineRenderer.sortingLayerID = _targetRenderer.sortingLayerID;
-        _outlineRenderer.sortingOrder = _targetRenderer.sortingOrder - 1;
+        _outlineRenderer.sortingOrder = _targetRenderer.sortingOrder ;
         _outlineRenderer.color = hoverOutlineColor;
 
         float scale = 1f + hoverOutlineThickness;

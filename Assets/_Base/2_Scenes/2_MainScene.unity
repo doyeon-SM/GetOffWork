@@ -747,6 +747,9 @@ MonoBehaviour:
   displayName: Call Dispaly
   showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+  hoverOutlineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverOutlineThickness: 0.05
+  enableHoverEffect: 1
   serviceDeskManager: {fileID: 2056565261}
   callSFX: {fileID: 8300000, guid: e278b9a46cd11674fac9bf8d58b15f51, type: 3}
 --- !u!212 &349926693
@@ -878,7 +881,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.000051381016}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.0008324519}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -1774,6 +1777,9 @@ MonoBehaviour:
   displayName: Menual Guide
   showDebugLog: 1
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+  hoverOutlineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverOutlineThickness: 0.05
+  enableHoverEffect: 1
   ManualView: {fileID: 2098769614}
 --- !u!1 &1063100646
 GameObject:
@@ -2447,7 +2453,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999094
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4034,6 +4040,9 @@ MonoBehaviour:
   displayName: Postit(Question)
   showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+  hoverOutlineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverOutlineThickness: 0.05
+  enableHoverEffect: 1
   manualPanel: {fileID: 1468743514}
 --- !u!65 &2025601407
 BoxCollider:
@@ -4414,6 +4423,9 @@ MonoBehaviour:
   displayName: Monitor
   showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+  hoverOutlineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverOutlineThickness: 0.05
+  enableHoverEffect: 1
   monitorView: {fileID: 1286014740}
 --- !u!65 &2090212721
 BoxCollider:
@@ -4619,6 +4631,9 @@ MonoBehaviour:
   displayName: Printer
   showDebugLog: 0
   ObjectClickSFX: {fileID: 8300000, guid: 2ad097c84cd7fb84082d07abafa3c973, type: 3}
+  hoverOutlineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverOutlineThickness: 0.05
+  enableHoverEffect: 1
 --- !u!1 &2133423743
 GameObject:
   m_ObjectHideFlags: 0
