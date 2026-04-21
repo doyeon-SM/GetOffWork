@@ -710,7 +710,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 0.00095263106}
+  m_AnchoredPosition: {x: -0.0000868036, y: 0.000011788061}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -2025,7 +2025,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999969
+  m_Size: 0.999979
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4105,6 +4105,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6457844637751102666, guid: 90148e671a0040e40a0c0f675ae43b84, type: 3}
+      propertyPath: 'sosManualGroup.guideImages.Array.data[0]'
+      value: 
+      objectReference: {fileID: -7873138879811686938, guid: 54f098502e56d85449406feddea45702, type: 3}
     - target: {fileID: 8733514787362264019, guid: 90148e671a0040e40a0c0f675ae43b84, type: 3}
       propertyPath: m_Name
       value: P_MenualRoot
