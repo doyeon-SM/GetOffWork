@@ -1,11 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
 
 /// <summary>
-/// MainScene 시작 시 오전 전에 표시되는 신문 UI.
-/// WorkDayManager.PauseTimer() / ResumeTimer() 를 통해 시계를 정지/재개합니다.
+/// HomeScene에서 전날의 신문을 표시하는 UI.
+/// 신문은 HomeScene으로 이동되었으므로 WorkDayManager와 무관하게 동작한다.
+/// onClosed 콜백으로 MorningHomeController에 닫힘을 알린다.
 /// </summary>
 public class UINewspaper : MonoBehaviour
 {
@@ -33,34 +34,29 @@ public class UINewspaper : MonoBehaviour
     }
 
     /// <summary>
-    /// 신문을 열고 시계를 정지시킵니다.
-    /// onClosed: 닫기 버튼 후 실행할 콜백 (오전 시작 등).
+    /// 신문을 열고 onClosed 콜백을 등록한다.
+    /// HomeScene에서는 WorkDayManager가 없으므로 시계 제어를 하지 않는다.
     /// </summary>
     public void Open(Action onClosed = null)
     {
         this.onClosed = onClosed;
 
-        // 이미지 결정
         int currentDay = GameFlowManager.Instance != null ? GameFlowManager.Instance.CurrentDay : 1;
         EventDayType? eventType = GetTodayEventType(currentDay);
-        Sprite sprite = newspaperData != null ? newspaperData.Resolve(currentDay, eventType) : null;
 
+        Sprite sprite = newspaperData != null ? newspaperData.Resolve(currentDay, eventType) : null;
         if (newspaperImage != null)
         {
             newspaperImage.sprite = sprite;
             newspaperImage.gameObject.SetActive(sprite != null);
         }
 
-        // 헤드라인 텍스트
+        string headline = newspaperData != null ? newspaperData.ResolveHeadline(currentDay, eventType) : string.Empty;
         if (newsheadlineText != null)
         {
-            string headline = newspaperData != null ? newspaperData.ResolveHeadline(currentDay, eventType) : string.Empty;
             newsheadlineText.text = headline;
             newsheadlineText.gameObject.SetActive(!string.IsNullOrEmpty(headline));
         }
-
-        // 시계 정지
-        WorkDayManager.Instance?.PauseTimer();
 
         newspaperPanel.SetActive(true);
     }
@@ -68,17 +64,11 @@ public class UINewspaper : MonoBehaviour
     private void OnCloseClicked()
     {
         newspaperPanel.SetActive(false);
-
-        // 시계 재개
-        WorkDayManager.Instance?.ResumeTimer();
-
         onClosed?.Invoke();
     }
 
-    /// <summary>LevelDesignManager와 동일한 판정 로직으로 오늘 이벤트 타입을 반환.</summary>
     private EventDayType? GetTodayEventType(int day)
     {
-        // Weekend: 1~5 평일, 6 주말 사이클
         int weekPos = (day - 1) % 6;
         if (weekPos == 5) return EventDayType.Weekend;
         return null;

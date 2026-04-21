@@ -9,6 +9,7 @@ public class UIQuestionButton : MonoBehaviour
     [SerializeField] private TMP_Text label;
 
     private string commandId;
+    public string CommandId => commandId;
     private Action<string> onClick;
 
     public void Setup(QuestionData data, Action<string> clickCallback)

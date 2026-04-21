@@ -58,6 +58,7 @@ public class ServiceDeskManager : MonoBehaviour
     // ── 이벤트 ───────────────────────────────────────────────────────────
     public event Action<int>              OnWaitingQueueChanged;
     public event Action<ComplaintContext> OnCustomerCalled;
+    public event Action<string>            OnCommandExecuted;   // 튜토리얼 hook용
     public event Action                   OnCustomerCleared;
     public event Action<bool>             OnWorkStateChanged;
 
@@ -340,6 +341,7 @@ public void StopWorkPhase()
         }
 
         DispatchUIResult(result);
+        OnCommandExecuted?.Invoke(commandId); // 튜토리얼 hook
 
         if (showDebugLog)
         {
