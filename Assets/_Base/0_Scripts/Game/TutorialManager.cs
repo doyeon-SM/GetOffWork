@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
@@ -24,6 +24,10 @@ public class TutorialManager : MonoBehaviour
     private bool           _isActive         = false;
     private bool           _flowDecided      = false;
 
+    // Print/Mobile 각각 완료 여부 추적
+    private bool _printCompleted  = false;
+    private bool _mobileCompleted = false;
+
     private const string BranchCommandPrint  = "select_print";
     private const string BranchCommandMobile = "select_mobile";
 
@@ -41,7 +45,6 @@ public class TutorialManager : MonoBehaviour
 
     private void Start()
     {
-        // 씬 전환 감지: MainScene 진입 시 새 ServiceDeskManager를 찾아 재구독
         SceneManager.sceneLoaded += OnSceneLoaded;
         RebindServiceDesk();
     }
@@ -54,14 +57,12 @@ public class TutorialManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 씬이 바뀔 때마다 ServiceDeskManager를 새로 찾아서 재구독
         RebindServiceDesk();
     }
 
     private void RebindServiceDesk()
     {
         UnsubscribeDeskEvents();
-
         var desk = FindFirstObjectByType<ServiceDeskManager>();
         if (desk != null)
         {
@@ -89,22 +90,29 @@ public class TutorialManager : MonoBehaviour
     // ── 튜토리얼 시작 / 종료 ─────────────────────────────────────────────
     public void StartTutorial()
     {
-        if (tutorialFlowPrint == null)
-        // StartTutorial 시점에 구독이 확실히 완료되도록 재확인
         if (serviceDeskManager == null)
             RebindServiceDesk();
 
+        if (tutorialFlowPrint == null)
         {
             Debug.LogWarning("[TutorialManager] tutorialFlowPrint SO가 연결되지 않았습니다.");
             return;
         }
 
-        _currentFlow      = tutorialFlowPrint;
+        _printCompleted  = false;
+        _mobileCompleted = false;
+
+        BeginFlow(tutorialFlowPrint);
+        Debug.Log("[TutorialManager] 튜토리얼 시작 (Print 경로 먼저)");
+    }
+
+    /// <summary>지정한 FlowSO를 처음부터 시작한다.</summary>
+    private void BeginFlow(TutorialFlowSO flow)
+    {
+        _currentFlow      = flow;
         _currentStepIndex = 0;
         _flowDecided      = false;
         _isActive         = true;
-
-        Debug.Log("[TutorialManager] 튜토리얼 시작");
         ApplyCurrentStep();
     }
 
@@ -114,7 +122,7 @@ public class TutorialManager : MonoBehaviour
         TutorialHighlighter.Instance?.ClearAll();
         TutorialHintUI.Instance?.Hide();
         OnTutorialEnd?.Invoke();
-        Debug.Log("[TutorialManager] 튜토리얼 완료");
+        Debug.Log("[TutorialManager] 튜토리얼 완전 종료");
     }
 
     // ── 커맨드 hook ───────────────────────────────────────────────────────
@@ -153,11 +161,6 @@ public class TutorialManager : MonoBehaviour
         AdvanceStep();
     }
 
-    /// <summary>
-    /// 분기 커맨드(select_print/mobile) 수신 시:
-    /// 1. targetFlow로 교체
-    /// 2. 현재 인덱스의 다음 단계로 즉시 진행 (분기 커맨드 자체는 별도 SO가 없으므로)
-    /// </summary>
     private void SwitchFlow(TutorialFlowSO targetFlow, string branchCommandId)
     {
         if (targetFlow == null)
@@ -168,9 +171,8 @@ public class TutorialManager : MonoBehaviour
 
         _flowDecided = true;
 
-        // 현재 stepId를 targetFlow에서 찾아 같은 위치로 교체
-        string currentStepId  = GetCurrentStepId();
-        int    idxInTarget    = targetFlow.FindStepIndex(currentStepId);
+        string currentStepId = GetCurrentStepId();
+        int    idxInTarget   = targetFlow.FindStepIndex(currentStepId);
 
         if (idxInTarget >= 0)
         {
@@ -184,19 +186,7 @@ public class TutorialManager : MonoBehaviour
         }
 
         Debug.Log($"[TutorialManager] Flow 전환: {targetFlow.flowName} (branch={branchCommandId})");
-
-        // 분기 커맨드는 항상 다음 단계로 진행 (select_print/mobile SO가 별도로 있는 경우도 처리)
-        var step = GetCurrentStep();
-        if (step != null && step.expectedCommandId == branchCommandId)
-        {
-            // select_print/select_mobile이 현재 단계의 완료 커맨드인 경우
-            AdvanceStep();
-        }
-        else
-        {
-            // 현재 단계(TUT_ASK_DELIVERY)를 완료하고 분기 이후 첫 단계로 이동
-            AdvanceStep();
-        }
+        AdvanceStep();
     }
 
     // ── 단계 진행 ─────────────────────────────────────────────────────────
@@ -210,11 +200,53 @@ public class TutorialManager : MonoBehaviour
 
         if (_currentStepIndex >= _currentFlow.steps.Count)
         {
-            EndTutorial();
+            OnFlowCompleted();
             return;
         }
 
         ApplyCurrentStep();
+    }
+
+    /// <summary>
+    /// 한 경로(Print or Mobile)가 끝났을 때 호출.
+    /// 둘 다 완료됐으면 EndTutorial(), 아니면 남은 경로를 시작한다.
+    /// </summary>
+    private void OnFlowCompleted()
+    {
+        bool wasPrint  = (_currentFlow == tutorialFlowPrint);
+        bool wasMobile = (_currentFlow == tutorialFlowMobile);
+
+        if (wasPrint)  _printCompleted  = true;
+        if (wasMobile) _mobileCompleted = true;
+
+        Debug.Log($"[TutorialManager] 경로 완료 — print={_printCompleted} mobile={_mobileCompleted}");
+
+        TutorialHighlighter.Instance?.ClearAll();
+        TutorialHintUI.Instance?.Hide();
+
+        // 둘 다 완료 → 진짜 종료
+        if (_printCompleted && _mobileCompleted)
+        {
+            EndTutorial();
+            return;
+        }
+
+        // 아직 안 한 경로 시작
+        if (!_mobileCompleted && tutorialFlowMobile != null)
+        {
+            Debug.Log("[TutorialManager] Mobile 경로 시작");
+            BeginFlow(tutorialFlowMobile);
+        }
+        else if (!_printCompleted && tutorialFlowPrint != null)
+        {
+            Debug.Log("[TutorialManager] Print 경로 시작");
+            BeginFlow(tutorialFlowPrint);
+        }
+        else
+        {
+            // FlowSO 미연결 등 예외
+            EndTutorial();
+        }
     }
 
     private void ApplyCurrentStep()

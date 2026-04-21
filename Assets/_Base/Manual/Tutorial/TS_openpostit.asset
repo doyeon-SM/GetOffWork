@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
   stepId: TUT_OPEN_POSTIT
   expectedCommandId: 
-  completedByCall: 0
+  completedByCall: 1
   targetType: 1
   worldObjectName: Postit
   uiCommandId: 
