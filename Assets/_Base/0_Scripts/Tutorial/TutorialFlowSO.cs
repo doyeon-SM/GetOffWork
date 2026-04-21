@@ -20,7 +20,13 @@ public class TutorialFlowSO : ScriptableObject
     public int FindStepIndex(string stepId)
     {
         for (int i = 0; i < steps.Count; i++)
-            if (steps[i] != null && steps[i].stepId == stepId) return i;
+        {
+            if (steps[i] != null && steps[i].stepId == stepId)
+            {
+                Debug.Log($"[TutorialFlowSO] FindStepIndex() stepId = {stepId} | stepId index = {i}");
+                return i;
+            }            
+        }
         return -1;
     }
 }

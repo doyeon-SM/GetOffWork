@@ -103,7 +103,7 @@ public class TutorialManager : MonoBehaviour
         _mobileCompleted = false;
 
         BeginFlow(tutorialFlowPrint);
-        Debug.Log("[TutorialManager] 튜토리얼 시작 (Print 경로 먼저)");
+        Debug.Log("[TutorialManager] 튜토리얼 시작");
     }
 
     /// <summary>지정한 FlowSO를 처음부터 시작한다.</summary>
@@ -113,6 +113,8 @@ public class TutorialManager : MonoBehaviour
         _currentStepIndex = 0;
         _flowDecided      = false;
         _isActive         = true;
+        Debug.Log($"[TutorialManager] BeginFlow(TutorialFlowSO flow) | currentFlow = {flow.flowName}");
+
         ApplyCurrentStep();
     }
 
@@ -252,8 +254,13 @@ public class TutorialManager : MonoBehaviour
     private void ApplyCurrentStep()
     {
         var step = GetCurrentStep();
-        if (step == null) return;
+        if (step == null)
+        {
+            Debug.Log($"[TutorialManager] ApplyCurrentStep step null");
+            return; 
+        }
 
+        Debug.Log($"[TutorialManager] ApplyCurrentStep step = {step.stepId}");
         TutorialHighlighter.Instance?.Highlight(step);
         TutorialHintUI.Instance?.Show(step.hintText);
         OnStepChanged?.Invoke(step.stepId);
@@ -262,12 +269,17 @@ public class TutorialManager : MonoBehaviour
     // ── 레거시 호환 API ───────────────────────────────────────────────────
     public void SetStep(string stepId)
     {
-        if (_currentFlow == null) return;
+        if (_currentFlow == null)
+        {
+            Debug.Log("[TutorialManager] SetStep _currentFlow Null");
+            return; 
+        }
         int idx = _currentFlow.FindStepIndex(stepId);
         if (idx < 0) return;
         _currentStepIndex = idx;
         ApplyCurrentStep();
         OnStepChanged?.Invoke(CurrentStep);
+        Debug.Log($"[TutorialManager] SetStep stepId = {stepId} | index = {idx}");
     }
 
     // ── 내부 헬퍼 ────────────────────────────────────────────────────────

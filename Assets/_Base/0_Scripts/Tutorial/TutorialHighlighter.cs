@@ -212,6 +212,7 @@ public class TutorialHighlighter : MonoBehaviour
         if (highlightOverlayPrefab != null)
         {
             overlay = Instantiate(highlightOverlayPrefab, targetCanvas.transform);
+            Debug.Log("[TutorialHighlighter] overlay instantiate");
         }
         else
         {
@@ -305,6 +306,8 @@ public class TutorialHighlighter : MonoBehaviour
         overlayRect.anchoredPosition = new Vector2(cx, cy);
         overlayRect.sizeDelta        = new Vector2(w, h);
         overlayRect.SetAsLastSibling();
+
+        Debug.Log("[TutorialHighlighter] syncoverlaytotarget set complete");
     }
 
     // ── 펄스 애니메이션 ───────────────────────────────────────────────────
