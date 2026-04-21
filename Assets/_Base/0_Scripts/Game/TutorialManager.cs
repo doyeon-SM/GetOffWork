@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
@@ -90,6 +90,10 @@ public class TutorialManager : MonoBehaviour
     public void StartTutorial()
     {
         if (tutorialFlowPrint == null)
+        // StartTutorial 시점에 구독이 확실히 완료되도록 재확인
+        if (serviceDeskManager == null)
+            RebindServiceDesk();
+
         {
             Debug.LogWarning("[TutorialManager] tutorialFlowPrint SO가 연결되지 않았습니다.");
             return;
