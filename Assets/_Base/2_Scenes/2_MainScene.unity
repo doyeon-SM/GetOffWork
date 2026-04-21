@@ -2025,7 +2025,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.999979
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2203,6 +2203,9 @@ MonoBehaviour:
   serviceDeskManager: {fileID: 2056565261}
   waitingCountText: {fileID: 2053663734}
   customerImageRoot: {fileID: 435657164}
+  enterExitDuration: 1
+  enterStartY: -1
+  enterEndY: 0
 --- !u!4 &1450168323
 Transform:
   m_ObjectHideFlags: 0
@@ -2231,6 +2234,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIConversationText
   serviceDeskManager: {fileID: 2056565261}
+  customerTextBox: {fileID: 1980840476}
   customerText: {fileID: 1622144103}
 --- !u!1 &1468743509
 GameObject:
