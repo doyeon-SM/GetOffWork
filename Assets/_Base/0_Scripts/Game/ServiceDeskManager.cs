@@ -310,6 +310,7 @@ public void StopWorkPhase()
         {
             currentManual.RecordReturnAction(commandId);
             Log(TAG + " Paper 반납 확인 커맨드 발행");
+            OnCommandExecuted?.Invoke(commandId); // 튜토리얼 hook (early return 전)
             return;
         }
 

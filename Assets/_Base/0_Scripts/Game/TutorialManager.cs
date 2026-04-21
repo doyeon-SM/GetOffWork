@@ -1,16 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
-/// <summary>
-/// 튜토리얼 단계를 관리하는 싱글턴.
-///
-/// [흐름]
-/// - StartTutorial() 호출 시 tutorialFlowPrint(기본)로 시작
-/// - select_print / select_mobile 커맨드 감지 시점에 activeFlow를 확정하고
-///   해당 FlowSO의 이후 단계를 이어서 진행한다.
-/// - 각 FlowSO는 공통 단계(손님 호출 ~ 발급방식 선택)를 앞쪽에 동일하게 포함한다.
-///   분기 이후 단계만 Print SO / Mobile SO가 다르다.
-/// </summary>
 public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance { get; private set; }
@@ -28,13 +19,11 @@ public class TutorialManager : MonoBehaviour
     public UnityEvent<string> OnStepChanged;
     public UnityEvent         OnTutorialEnd;
 
-    // ── 내부 상태 ─────────────────────────────────────────────────────────
     private TutorialFlowSO _currentFlow;
     private int            _currentStepIndex = 0;
     private bool           _isActive         = false;
-    private bool           _flowDecided      = false; // print/mobile 분기 결정 여부
+    private bool           _flowDecided      = false;
 
-    // 분기 직전 단계의 expectedCommandId — 이 커맨드가 올 때까지는 flow를 교체하지 않는다.
     private const string BranchCommandPrint  = "select_print";
     private const string BranchCommandMobile = "select_mobile";
 
@@ -52,12 +41,35 @@ public class TutorialManager : MonoBehaviour
 
     private void Start()
     {
-        if (serviceDeskManager == null)
-            serviceDeskManager = FindFirstObjectByType<ServiceDeskManager>();
-        SubscribeDeskEvents();
+        // 씬 전환 감지: MainScene 진입 시 새 ServiceDeskManager를 찾아 재구독
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        RebindServiceDesk();
     }
 
-    private void OnDestroy() => UnsubscribeDeskEvents();
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnsubscribeDeskEvents();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // 씬이 바뀔 때마다 ServiceDeskManager를 새로 찾아서 재구독
+        RebindServiceDesk();
+    }
+
+    private void RebindServiceDesk()
+    {
+        UnsubscribeDeskEvents();
+
+        var desk = FindFirstObjectByType<ServiceDeskManager>();
+        if (desk != null)
+        {
+            serviceDeskManager = desk;
+            SubscribeDeskEvents();
+            Debug.Log($"[TutorialManager] ServiceDeskManager 연결: {desk.gameObject.name}");
+        }
+    }
 
     // ── 이벤트 구독 ───────────────────────────────────────────────────────
     private void SubscribeDeskEvents()
@@ -83,7 +95,6 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        // Print FlowSO로 시작 (공통 앞부분이 동일하므로 어느 쪽이든 무관)
         _currentFlow      = tutorialFlowPrint;
         _currentStepIndex = 0;
         _flowDecided      = false;
@@ -107,9 +118,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (!_isActive) return;
 
-        // ── 분기 결정 ─────────────────────────────────────────────────────
-        // select_print / select_mobile 이 오면 flow를 확정하고 해당 flow의
-        // 같은 인덱스부터 이어서 진행한다.
+        // 분기 결정: select_print / select_mobile 수신 시 flow 교체 후 다음 단계 진행
         if (!_flowDecided)
         {
             if (commandId == BranchCommandPrint)
@@ -124,7 +133,7 @@ public class TutorialManager : MonoBehaviour
             }
         }
 
-        // ── 일반 단계 완료 확인 ───────────────────────────────────────────
+        // 일반 단계 완료 확인
         var step = GetCurrentStep();
         if (step == null || step.completedByCall) return;
 
@@ -141,8 +150,9 @@ public class TutorialManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 분기 커맨드 수신 시 호출.
-    /// 현재 인덱스를 유지한 채 targetFlow로 교체하고, 해당 커맨드 단계를 완료 처리한다.
+    /// 분기 커맨드(select_print/mobile) 수신 시:
+    /// 1. targetFlow로 교체
+    /// 2. 현재 인덱스의 다음 단계로 즉시 진행 (분기 커맨드 자체는 별도 SO가 없으므로)
     /// </summary>
     private void SwitchFlow(TutorialFlowSO targetFlow, string branchCommandId)
     {
@@ -154,9 +164,9 @@ public class TutorialManager : MonoBehaviour
 
         _flowDecided = true;
 
-        // 현재 스텝 ID를 기준으로 targetFlow에서 같은 위치를 찾아 교체
-        string currentStepId = GetCurrentStepId();
-        int idxInTarget = targetFlow.FindStepIndex(currentStepId);
+        // 현재 stepId를 targetFlow에서 찾아 같은 위치로 교체
+        string currentStepId  = GetCurrentStepId();
+        int    idxInTarget    = targetFlow.FindStepIndex(currentStepId);
 
         if (idxInTarget >= 0)
         {
@@ -165,17 +175,24 @@ public class TutorialManager : MonoBehaviour
         }
         else
         {
-            // 현재 단계가 targetFlow에 없으면 그냥 교체 후 인덱스 유지
             _currentFlow = targetFlow;
-            Debug.LogWarning($"[TutorialManager] 현재 stepId '{currentStepId}'를 {targetFlow.flowName}에서 찾지 못했습니다. 인덱스를 유지합니다.");
+            Debug.LogWarning($"[TutorialManager] '{currentStepId}'를 {targetFlow.flowName}에서 찾지 못했습니다.");
         }
 
         Debug.Log($"[TutorialManager] Flow 전환: {targetFlow.flowName} (branch={branchCommandId})");
 
-        // 분기 커맨드 자체가 현재 단계의 완료 조건인지 확인
+        // 분기 커맨드는 항상 다음 단계로 진행 (select_print/mobile SO가 별도로 있는 경우도 처리)
         var step = GetCurrentStep();
         if (step != null && step.expectedCommandId == branchCommandId)
+        {
+            // select_print/select_mobile이 현재 단계의 완료 커맨드인 경우
             AdvanceStep();
+        }
+        else
+        {
+            // 현재 단계(TUT_ASK_DELIVERY)를 완료하고 분기 이후 첫 단계로 이동
+            AdvanceStep();
+        }
     }
 
     // ── 단계 진행 ─────────────────────────────────────────────────────────
@@ -184,7 +201,7 @@ public class TutorialManager : MonoBehaviour
         if (_currentFlow == null) return;
 
         _currentStepIndex++;
-        Debug.Log($"[TutorialManager] Step → index={_currentStepIndex} / {CurrentStep}");
+        Debug.Log($"[TutorialManager] Step → index={_currentStepIndex} ({CurrentStep})");
         OnStepChanged?.Invoke(CurrentStep);
 
         if (_currentStepIndex >= _currentFlow.steps.Count)
