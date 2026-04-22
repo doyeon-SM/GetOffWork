@@ -15,3 +15,4 @@ MonoBehaviour:
   flowName: Outro
   steps:
   - {fileID: 11400000, guid: d8a81fde03cb5bf47be238fe318c280f, type: 2}
+  - {fileID: 11400000, guid: 248cb5cffa832d94d8e96bee29ff9d62, type: 2}

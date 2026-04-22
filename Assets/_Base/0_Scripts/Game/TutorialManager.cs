@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -114,8 +114,9 @@ public class TutorialManager : MonoBehaviour
     {
         if (serviceDeskManager == null) RebindServiceDesk();
 
-        // 손님 도착 일시정지 (예/아니요 팝업 동안)
+        // 손님 도착 일시정지 + 시간 정지 (튜토리얼 동안)
         serviceDeskManager?.PauseArrival();
+        WorkDayManager.Instance?.PauseTimer();
 
         // 예/아니요 팝업 표시
         var prompt = FindFirstObjectByType<UITutorialPrompt>(FindObjectsInactive.Include);
@@ -158,6 +159,7 @@ public class TutorialManager : MonoBehaviour
     public void OnPromptDeclined()
     {
         serviceDeskManager?.ResumeArrival();
+        WorkDayManager.Instance?.ResetAndResumeDay();
         Debug.Log("[TutorialManager] 튜토리얼 거절");
     }
 
@@ -277,10 +279,17 @@ public class TutorialManager : MonoBehaviour
 
     public void EndTutorial()
     {
-        _isActive = false;
+        if (!_isActive && _currentFlow == null) return; // 중복 호출 방지
+        _isActive    = false;
+        _currentFlow = null;  // 재진입 완전 차단
         if (_autoAdvanceCoroutine != null) { StopCoroutine(_autoAdvanceCoroutine); _autoAdvanceCoroutine = null; }
+        QuestionObject.OnPostitClicked -= HandlePostitClicked;
+        MonitorObject.OnMonitorClicked -= HandleMonitorClicked;
         TutorialHighlighter.Instance?.ClearAll();
         TutorialHintUI.Instance?.Hide();
+        // 튜토리얼 종료 후 시간 초기화 및 1일차 본격 시작
+        WorkDayManager.Instance?.ResetAndResumeDay();
+        serviceDeskManager?.ResumeArrival();
         OnTutorialEnd?.Invoke();
         Debug.Log("[TutorialManager] 튜토리얼 완전 종료");
     }
@@ -386,9 +395,16 @@ public class TutorialManager : MonoBehaviour
 
         Debug.Log($"[TutorialManager] Flow 완료 — {_currentFlow?.flowName}");
 
+        // ★ Outro를 가장 먼저 체크 (이후 _printCompleted&&_mobileCompleted 조건보다 우선)
+        // 우선순위가 낮으면 Outro 완료 시에도 BeginOutro()가 재호출돼 무한루프 발생
+        if (isOutro)
+        {
+            EndTutorial();
+            return;
+        }
+
         if (isIntro)
         {
-            // Intro 완료 → Print 경로 시작 (강제 손님은 이미 대기열에 있음)
             if (tutorialFlowPrint == null)
             {
                 Debug.LogWarning("[TutorialManager] tutorialFlowPrint 없음 → 튜토리얼 종료");
@@ -419,14 +435,7 @@ public class TutorialManager : MonoBehaviour
 
         if (_printCompleted && _mobileCompleted)
         {
-            // Desk 완료 → Outro
             BeginOutro();
-            return;
-        }
-
-        if (isOutro)
-        {
-            EndTutorial();
             return;
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -127,11 +127,13 @@ public class ServiceDeskManager : MonoBehaviour
         ResolvePlayerBase();
         isWorking                 = true;
         spawnedCustomerCountToday = 0;
-        waitingQueue.Clear();
+        // 튜토리얼 중(_arrivalPaused)이면 강제 손님이 이미 대기열에 있으므로 Clear 하지 않음
+        if (!_arrivalPaused) waitingQueue.Clear();
         ClearCurrentCustomerInternal();
         deskState = DeskState.Idle;
         ResetMessagePenaltyAccumulators();
-        ScheduleNextCustomerArrival();
+        // 튜토리얼 중이면 랜덤 손님 스케줄 시작 안 함
+        if (!_arrivalPaused) ScheduleNextCustomerArrival();
         RaiseWaitingQueueChanged();
         OnWorkStateChanged?.Invoke(true);
         Log(TAG + " 근무 시작 / 일일 최대 인원: " + MaxCustomerPerDay);
@@ -187,24 +189,31 @@ public void StopWorkPhase()
     /// 튜토리얼용: 강제 내용의 손님을 대기열 앞에 삽입한다.
     /// deliveryType을 포함한 ComplaintContext를 직접 전달하면 딜하에 제일 먼저 추가된다.
     /// </summary>
+    /// <summary>
+    /// 튜토리얼용 강제 손님을 대기열 끝에 추가한다.
+    /// Print → Mobile 순으로 호출하면 [Print, Mobile] 순서가 보장된다.
+    /// spawnedCustomerCountToday는 증가시키지 않아 일일 제한에 영향을 주지 않는다.
+    /// </summary>
     public void EnqueueForcedComplaint(ComplaintContext forced)
     {
         if (forced == null) return;
         forced.ResetPatience();
-        // 대기열 앞에 삽입 (다음 호출 시 제일 먼저 나오도록)
-        var tmp = new System.Collections.Generic.Queue<ComplaintContext>(waitingQueue);
-        //waitingQueue.Clear();
-        waitingQueue.Enqueue(forced);
-        foreach (var c in tmp) waitingQueue.Enqueue(c);
-        spawnedCustomerCountToday++;
+        waitingQueue.Enqueue(forced); // 뒤에 단순 추가 (순서 보장)
+        // spawnedCustomerCountToday 증가 없음 → 일일 제한 카운트 제외
         RaiseWaitingQueueChanged();
-        Log(TAG_QUEUE + " [튜토리얼] 강제 손님 삽입: " + forced.requestedDeliveryType);
+        Log(TAG_QUEUE + " [튜토리얼] 강제 손님 추가: " + forced.requestedDeliveryType
+            + " / 대기: " + waitingQueue.Count);
     }
 
     /// <summary>손님 도착 타이머를 일시정지/재개한다. (튜토리얼 예/아니요 대기용)</summary>
     private bool _arrivalPaused = false;
     public void PauseArrival()  { _arrivalPaused = true;  Log(TAG_QUEUE + " 도착 일시정지"); }
-    public void ResumeArrival() { _arrivalPaused = false; Log(TAG_QUEUE + " 도착 재개"); }
+    public void ResumeArrival()
+    {
+        _arrivalPaused = false;
+        if (isWorking) ScheduleNextCustomerArrival(); // 재개 시 다음 손님 타이머 시작
+        Log(TAG_QUEUE + " 도착 재개");
+    }
 
 
     // ── 손님 호출 ─────────────────────────────────────────────────────────

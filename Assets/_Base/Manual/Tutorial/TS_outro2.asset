@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e244c308b20a2b40b9993a4cb535750, type: 3}
-  m_Name: TS_callend
+  m_Name: TS_outro2
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
-  stepId: TUT_CALL_END
+  stepId: TUT_OUTRO_2
   expectedCommandId: 
-  completedByCall: 1
-  targetType: 1
-  worldObjectName: Calldisplay
+  completedByCall: 0
+  targetType: 0
+  worldObjectName: 
   uiCommandId: 
   uiGameObjectName: 
-  hintText: "\uBBFC\uC6D0 \uD574\uACB0 \uC808\uCC28\uC5D0 \uB300\uD55C \uC124\uBA85\uC744
-    \uC885\uB8CC\uD569\uB2C8\uB2E4."
+  hintText: "\uD589\uC6B4\uC744 \uBE55\uB2C8\uB2E4. \uD1F4\uADFC\uC744 \uC704\uD574\uC11C!"
   autoAdvance: 1
   autoAdvanceDelay: 1
   completedByPostit: 0

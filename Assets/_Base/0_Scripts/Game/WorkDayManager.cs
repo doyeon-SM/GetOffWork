@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -142,6 +142,18 @@ private void Start()
         isPausedByUI = false;
     }
 
+    /// <summary>
+    /// 튜토리얼 종료 시 호출. phaseTimer를 morningDuration으로 초기화하고
+    /// 타이머를 재개해 1일차 오전 업무를 본격 시작한다.
+    /// </summary>
+    public void ResetAndResumeDay()
+    {
+        phaseTimer   = morningDuration;
+        isPausedByUI = false;
+        UpdateClockUI();
+        Debug.Log("[WorkDayManager] 튜토리얼 종료 → 1일차 오전 업무 본격 시작 / phaseTimer=" + phaseTimer);
+    }
+
     private void ResolvePlayerBase()
     {
         if (playerBase != null) return;
@@ -158,7 +170,9 @@ private void Start()
 
         currentPhase         = DayPhase.MorningWork;
         phaseTimer           = morningDuration;
-        isPausedByUI         = false;
+        // 튜토리얼 중이면 isPausedByUI를 건드리지 않음 (PauseTimer 호출됨)
+        if (TutorialManager.Instance == null || !TutorialManager.Instance.IsActive)
+            isPausedByUI = false;
         lunchChoiceCompleted = false;
         selectedLunchOption  = null;
 
