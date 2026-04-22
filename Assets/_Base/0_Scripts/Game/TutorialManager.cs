@@ -266,6 +266,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (tutorialFlowOutro == null || tutorialFlowOutro.steps.Count == 0)
         {
+            Debug.Log("[TutorialManager] tutorialflowoutro null");
             EndTutorial();
             return;
         }
@@ -393,7 +394,7 @@ public class TutorialManager : MonoBehaviour
         bool isMobile = (_currentFlow == tutorialFlowMobile);
         bool isOutro  = (_currentFlow == tutorialFlowOutro);
 
-        Debug.Log($"[TutorialManager] Flow 완료 — {_currentFlow?.flowName}");
+        Debug.Log($"[TutorialManager] Flow 완료 — {_currentFlow?.flowName} {isIntro}{isPrint}{isMobile}{isOutro}");
 
         // ★ Outro를 가장 먼저 체크 (이후 _printCompleted&&_mobileCompleted 조건보다 우선)
         // 우선순위가 낮으면 Outro 완료 시에도 BeginOutro()가 재호출돼 무한루프 발생
@@ -435,6 +436,7 @@ public class TutorialManager : MonoBehaviour
 
         if (_printCompleted && _mobileCompleted)
         {
+            Debug.Log("[TutorialManger] Outro 경로 시작");
             BeginOutro();
             return;
         }

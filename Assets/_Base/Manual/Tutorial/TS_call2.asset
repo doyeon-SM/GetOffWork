@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TS_call2
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
   stepId: TUT_CALL_2
-  expectedCommandId: 
+  expectedCommandId: call_display
   completedByCall: 1
   targetType: 1
   worldObjectName: Calldisplay

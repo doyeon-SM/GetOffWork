@@ -21,5 +21,5 @@ MonoBehaviour:
   uiGameObjectName: 
   hintText: "\uBAA8\uB974\uB294\uAC74 \uBA54\uB274\uC5BC\uC744 \uD1B5\uD574 \uD655\uC778\uD558\uC138\uC694."
   autoAdvance: 1
-  autoAdvanceDelay: 1
+  autoAdvanceDelay: 3
   completedByPostit: 0

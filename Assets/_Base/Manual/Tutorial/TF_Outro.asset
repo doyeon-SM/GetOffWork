@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialFlowSO
   flowName: Outro
   steps:
+  - {fileID: 11400000, guid: 24f7fdba38ca9af438c1e3b291af236c, type: 2}
   - {fileID: 11400000, guid: d8a81fde03cb5bf47be238fe318c280f, type: 2}
   - {fileID: 11400000, guid: 248cb5cffa832d94d8e96bee29ff9d62, type: 2}
