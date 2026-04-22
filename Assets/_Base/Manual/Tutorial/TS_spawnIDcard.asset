@@ -13,13 +13,15 @@ MonoBehaviour:
   m_Name: TS_spawnIDcard
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
   stepId: TUT_SPAWN_IDCARD
-  expectedCommandId: spawn_idcard
+  expectedCommandId: 
   completedByCall: 0
-  targetType: 1
-  worldObjectName: IDCard
+  targetType: 0
+  worldObjectName: 
   uiCommandId: 
   uiGameObjectName: 
-  hintText: 
-  autoAdvance: 0
+  hintText: "\uBC1B\uC740 \uC2E0\uBD84\uC99D\uC740 \uB2E4\uC2DC \uBC18\uB0A9\uD574\uC57C\uD558\uACE0,
+    \uC2E0\uBD84\uC99D\uC744 \uB20C\uB7EC \uC790\uC138\uD558\uAC8C \uD655\uC778\uD560
+    \uC218 \uC788\uC5B4\uC694."
+  autoAdvance: 1
   autoAdvanceDelay: 1
   completedByPostit: 0

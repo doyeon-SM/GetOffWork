@@ -19,4 +19,8 @@ MonoBehaviour:
   worldObjectName: Monitor
   uiCommandId: 
   uiGameObjectName: 
-  hintText: 
+  hintText: "\uBAA8\uB2C8\uD130\uB97C \uB20C\uB7EC \uD544\uC694\uD55C \uC791\uC5C5\uC744
+    \uC774\uC5B4\uAC00\uC138\uC694."
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0

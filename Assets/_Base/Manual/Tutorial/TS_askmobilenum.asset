@@ -19,4 +19,8 @@ MonoBehaviour:
   worldObjectName: 
   uiCommandId: ask_mobile_number
   uiGameObjectName: 
-  hintText: 
+  hintText: "\"\uD578\uB4DC\uD3F0 \uBC88\uD638 \uC694\uCCAD\"\uBC84\uD2BC\uC744 \uB20C\uB7EC
+    \uD578\uB4DC\uD3F0 \uBC88\uD638\uB97C \uC694\uCCAD\uD558\uC138\uC694. "
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0

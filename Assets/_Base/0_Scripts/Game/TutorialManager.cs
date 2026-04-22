@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -73,6 +73,7 @@ public class TutorialManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
         UnsubscribeDeskEvents();
         QuestionObject.OnPostitClicked -= HandlePostitClicked;
+        MonitorObject.OnMonitorClicked     -= HandleMonitorClicked;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => RebindServiceDesk();
@@ -322,6 +323,16 @@ public class TutorialManager : MonoBehaviour
         AdvanceStep();
     }
 
+    private void HandleMonitorClicked()
+    {
+        if (!_isActive) return;
+        var step = GetCurrentStep();
+        if (step == null) return;
+        // Monitor 클릭으로 완료되는 단계: expectedCommandId가 open_monitor인 경우
+        if (step.expectedCommandId == ManualCommandIds.OpenMonitor)
+            AdvanceStep();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Flow 전환 (select_print / select_mobile)
     // ─────────────────────────────────────────────────────────────────────────
@@ -431,8 +442,14 @@ public class TutorialManager : MonoBehaviour
 
         // 포스트잇 이벤트 구독 (필요한 단계만)
         QuestionObject.OnPostitClicked -= HandlePostitClicked;
+        MonitorObject.OnMonitorClicked     -= HandleMonitorClicked;
         if (step.completedByPostit)
-            QuestionObject.OnPostitClicked += HandlePostitClicked;
+                        QuestionObject.OnPostitClicked += HandlePostitClicked;
+
+        // Monitor 클릭 이벤트: expectedCommandId == open_monitor인 단계
+        MonitorObject.OnMonitorClicked -= HandleMonitorClicked;
+        if (step.expectedCommandId == ManualCommandIds.OpenMonitor)
+            MonitorObject.OnMonitorClicked += HandleMonitorClicked;
 
         TutorialHighlighter.Instance?.Highlight(step);
         TutorialHintUI.Instance?.Show(step.hintText);

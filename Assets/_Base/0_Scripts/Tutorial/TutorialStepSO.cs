@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 튜토리얼 한 단계를 정의하는 ScriptableObject.
@@ -54,4 +54,5 @@ public enum TutorialHighlightTargetType
     WorldObject,    // ClickableWorldObject (CallDisplay, Printer 등)
     QuestionButton, // UIQuestionPanel 내 버튼 (commandId 기준)
     UIGameObject,   // 임의 UI GameObject 이름 기준
+    DeskObject,     // DeskObjectItem (이름으로 탐색, IDCard/Paper 등 동적 생성 오브젝트)
 }

@@ -15,11 +15,13 @@ MonoBehaviour:
   stepId: TUT_OPEN_ID
   expectedCommandId: open_idcard_detail
   completedByCall: 0
-  targetType: 1
-  worldObjectName: IDCard
+  targetType: 4
+  worldObjectName: IDCard(Clone)
   uiCommandId: 
   uiGameObjectName: 
-  hintText: 
+  hintText: "\uC2E0\uBD84\uC99D\uC744 \uB20C\uB7EC \uC0C1\uC138\uC815\uBCF4\uB97C
+    \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uAC00\uC9DC\uC815\uBCF4\uC5D0
+    \uC8FC\uC758\uD558\uC138\uC694!"
   autoAdvance: 0
   autoAdvanceDelay: 1
   completedByPostit: 0

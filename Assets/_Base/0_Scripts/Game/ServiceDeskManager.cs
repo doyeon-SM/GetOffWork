@@ -193,7 +193,7 @@ public void StopWorkPhase()
         forced.ResetPatience();
         // 대기열 앞에 삽입 (다음 호출 시 제일 먼저 나오도록)
         var tmp = new System.Collections.Generic.Queue<ComplaintContext>(waitingQueue);
-        waitingQueue.Clear();
+        //waitingQueue.Clear();
         waitingQueue.Enqueue(forced);
         foreach (var c in tmp) waitingQueue.Enqueue(c);
         spawnedCustomerCountToday++;

@@ -34,8 +34,12 @@ public class TutorialHighlighter : MonoBehaviour
     private ClickableWorldObject _currentWorldObj;
 
     // 생성된 UI 오버레이 목록
-    private readonly List<GameObject> _overlays = new();
+        private readonly List<GameObject> _overlays = new();
     private Coroutine _pulseCoroutine;
+
+    // 현재 하이라이트 중인 DeskObjectItem
+    private DeskObjectItem _currentDeskObj;
+    private Color          _deskObjOriginalColor;
 
     private void Awake()
     {
@@ -65,9 +69,12 @@ public class TutorialHighlighter : MonoBehaviour
             case TutorialHighlightTargetType.QuestionButton:
                 HighlightQuestionButton(step.uiCommandId);
                 break;
-            case TutorialHighlightTargetType.UIGameObject:
+                        case TutorialHighlightTargetType.UIGameObject:
                 HighlightUIGameObject(step.uiGameObjectName);
                 break;
+            case TutorialHighlightTargetType.DeskObject:
+                StartCoroutine(FindAndHighlightDeskObject(step.worldObjectName));
+                break;   break;
             case TutorialHighlightTargetType.None:
             default:
                 break;
@@ -75,7 +82,7 @@ public class TutorialHighlighter : MonoBehaviour
     }
 
     /// <summary>모든 하이라이트를 제거한다.</summary>
-    public void ClearAll()
+        public void ClearAll()
     {
         // WorldObject 하이라이트 해제
         if (_currentWorldObj != null)
@@ -84,12 +91,19 @@ public class TutorialHighlighter : MonoBehaviour
             _currentWorldObj = null;
         }
 
+        // DeskObject 하이라이트 해제
+        if (_currentDeskObj != null)
+        {
+            RestoreDeskObjectColor(_currentDeskObj);
+            _currentDeskObj = null;
+        }
+
         // UI 오버레이 제거
         foreach (var ov in _overlays)
             if (ov != null) Destroy(ov);
         _overlays.Clear();
 
-        // 펄스 중단
+        // 펜스 중단
         if (_pulseCoroutine != null)
         {
             StopCoroutine(_pulseCoroutine);
@@ -116,7 +130,62 @@ public class TutorialHighlighter : MonoBehaviour
         Debug.LogWarning($"[TutorialHighlighter] WorldObject '{goName}' 를 찾지 못했습니다.");
     }
 
-    // ── QuestionButton 하이라이트 ─────────────────────────────────────────
+
+    // ── DeskObject 하이라이트 ──────────────────────────────────────────────────
+
+    private IEnumerator FindAndHighlightDeskObject(string goName)
+    {
+        if (string.IsNullOrEmpty(goName)) yield break;
+
+        // DeskObjectItem은 동적 생성되므로 최대 3초 대기
+        float waited = 0f;
+        DeskObjectItem found = null;
+
+        while (waited < 3f)
+        {
+            foreach (var item in FindObjectsByType<DeskObjectItem>(FindObjectsSortMode.None))
+            {
+                if (item.gameObject.name == goName)
+                {
+                    found = item;
+                    break;
+                }
+            }
+            if (found != null) break;
+            yield return new WaitForSeconds(0.1f);
+            waited += 0.1f;
+        }
+
+        if (found == null)
+        {
+            Debug.LogWarning($"[TutorialHighlighter] DeskObject '{goName}' 를 찾지 못했습니다.");
+            yield break;
+        }
+
+        _currentDeskObj = found;
+        ApplyDeskObjectHighlight(found);
+    }
+
+    private void ApplyDeskObjectHighlight(DeskObjectItem item)
+    {
+        var sr = item.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = item.GetComponentInChildren<SpriteRenderer>();
+        if (sr == null) return;
+
+        _deskObjOriginalColor = sr.color;
+        sr.color = highlightColor;
+    }
+
+    private void RestoreDeskObjectColor(DeskObjectItem item)
+    {
+        if (item == null) return;
+        var sr = item.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = item.GetComponentInChildren<SpriteRenderer>();
+        if (sr == null) return;
+        sr.color = _deskObjOriginalColor;
+    }
+
+        // ── QuestionButton 하이라이트 ─────────────────────────────────────────
 
     private void HighlightQuestionButton(string commandId)
     {

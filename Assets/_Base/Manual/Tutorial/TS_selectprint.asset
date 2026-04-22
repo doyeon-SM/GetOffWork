@@ -19,4 +19,7 @@ MonoBehaviour:
   worldObjectName: 
   uiCommandId: 
   uiGameObjectName: B_SelectPrint
-  hintText: 
+  hintText: "\uC778\uC1C4 \uD654\uBA74\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0

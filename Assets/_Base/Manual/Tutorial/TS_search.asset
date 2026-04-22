@@ -19,4 +19,8 @@ MonoBehaviour:
   worldObjectName: 
   uiCommandId: 
   uiGameObjectName: B_Search
-  hintText: 
+  hintText: "ID \uC22B\uC790 8\uC790\uB9AC\uB97C \uAC80\uC0C9\uD558\uC5EC \uC815\uBCF4\uAC00
+    \uC62C\uBC14\uB978\uC9C0 \uD655\uC778\uD558\uC138\uC694."
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0
