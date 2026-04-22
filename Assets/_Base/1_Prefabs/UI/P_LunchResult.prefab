@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD655\uC778"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c9f4eb7b86db8264c9d99a1fcacd7992, type: 2}
-  m_sharedMaterial: {fileID: 4182747491822329732, guid: c9f4eb7b86db8264c9d99a1fcacd7992, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4d53622612142284691270eec0081568, type: 2}
+  m_sharedMaterial: {fileID: -7194432874131732980, guid: 4d53622612142284691270eec0081568, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -204,8 +204,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c9f4eb7b86db8264c9d99a1fcacd7992, type: 2}
-  m_sharedMaterial: {fileID: 4182747491822329732, guid: c9f4eb7b86db8264c9d99a1fcacd7992, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4d53622612142284691270eec0081568, type: 2}
+  m_sharedMaterial: {fileID: -7194432874131732980, guid: 4d53622612142284691270eec0081568, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -229,8 +229,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 65
+  m_fontSizeBase: 65
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -342,8 +342,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 4111274870504216756, guid: 5fa39255dc9e90c4e834dd169a46bb26, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -433,8 +433,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 79653d1b8aefdbb45826379f78c4ae01, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

@@ -125,7 +125,7 @@ public class UIPlayerStat : MonoBehaviour
 
     private void UpdateStatTexts()
     {
-        if (payText != null) payText.text = playerbase.Pay.ToString();
+        if (payText != null) payText.text = playerbase.Pay.ToString() + " 원";
     }
 
     // ── 원형 슬라이더 ─────────────────────────────────────────────────────
