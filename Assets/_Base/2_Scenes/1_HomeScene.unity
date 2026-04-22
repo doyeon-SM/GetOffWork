@@ -1371,8 +1371,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 542b7b2d3c14b8a4aa293f47d25eef29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialManager
+  tutorialFlowIntro: {fileID: 11400000, guid: 3b5f7946c55df1842b3f19a51a9ec289, type: 2}
   tutorialFlowPrint: {fileID: 11400000, guid: 97e3f1f48d66ca941bdbe843df4823f2, type: 2}
   tutorialFlowMobile: {fileID: 11400000, guid: 6fe0e745a31d0f645a21b1a744cfd33b, type: 2}
+  tutorialFlowOutro: {fileID: 11400000, guid: f629582e767ed4e41b28d523cdfc8d0f, type: 2}
   serviceDeskManager: {fileID: 0}
   OnStepChanged:
     m_PersistentCalls:

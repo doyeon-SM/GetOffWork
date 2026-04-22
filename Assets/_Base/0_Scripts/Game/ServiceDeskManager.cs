@@ -155,6 +155,7 @@ public void StopWorkPhase()
     private void UpdateWaitingArrival()
     {
         if (HasReachedDailyLimit) return;
+        if (_arrivalPaused)        return; // 튜토리얼 대기 중 타이머 정지
         nextCustomerTimer -= Time.deltaTime;
         if (nextCustomerTimer <= 0f)
         {
@@ -181,6 +182,30 @@ public void StopWorkPhase()
         RaiseWaitingQueueChanged();
         Log(TAG_QUEUE + " 추가 / 대기: " + waitingQueue.Count + " / 오늘: " + spawnedCustomerCountToday + "/" + MaxCustomerPerDay);
     }
+
+    /// <summary>
+    /// 튜토리얼용: 강제 내용의 손님을 대기열 앞에 삽입한다.
+    /// deliveryType을 포함한 ComplaintContext를 직접 전달하면 딜하에 제일 먼저 추가된다.
+    /// </summary>
+    public void EnqueueForcedComplaint(ComplaintContext forced)
+    {
+        if (forced == null) return;
+        forced.ResetPatience();
+        // 대기열 앞에 삽입 (다음 호출 시 제일 먼저 나오도록)
+        var tmp = new System.Collections.Generic.Queue<ComplaintContext>(waitingQueue);
+        waitingQueue.Clear();
+        waitingQueue.Enqueue(forced);
+        foreach (var c in tmp) waitingQueue.Enqueue(c);
+        spawnedCustomerCountToday++;
+        RaiseWaitingQueueChanged();
+        Log(TAG_QUEUE + " [튜토리얼] 강제 손님 삽입: " + forced.requestedDeliveryType);
+    }
+
+    /// <summary>손님 도착 타이머를 일시정지/재개한다. (튜토리얼 예/아니요 대기용)</summary>
+    private bool _arrivalPaused = false;
+    public void PauseArrival()  { _arrivalPaused = true;  Log(TAG_QUEUE + " 도착 일시정지"); }
+    public void ResumeArrival() { _arrivalPaused = false; Log(TAG_QUEUE + " 도착 재개"); }
+
 
     // ── 손님 호출 ─────────────────────────────────────────────────────────
     public void OnClickCallNextCustomer()

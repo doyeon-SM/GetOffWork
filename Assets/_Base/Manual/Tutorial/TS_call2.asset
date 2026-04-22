@@ -19,4 +19,8 @@ MonoBehaviour:
   worldObjectName: Calldisplay
   uiCommandId: 
   uiGameObjectName: 
-  hintText: 
+  hintText: "\uBBFC\uC6D0\uC744 \uC885\uB8CC\uD558\uBA74\uC11C \uB2E4\uC74C \uBBFC\uC6D0\uC778\uC744
+    \uBD80\uB97C\uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0

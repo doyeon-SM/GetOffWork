@@ -10,16 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e244c308b20a2b40b9993a4cb535750, type: 3}
-  m_Name: TS_openpostit
+  m_Name: TS_Intro1
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
-  stepId: TUT_OPEN_POSTIT
+  stepId: TUT_INTRO_1
   expectedCommandId: 
   completedByCall: 0
-  targetType: 1
-  worldObjectName: Postit
+  targetType: 0
+  worldObjectName: 
   uiCommandId: 
   uiGameObjectName: 
-  hintText: "\uD3EC\uC2A4\uD2B8\uC787\uC744 \uB20C\uB7EC \uC9C8\uBB38\uC744 \uC9C4\uD589\uD569\uB2C8\uB2E4."
-  autoAdvance: 0
-  autoAdvanceDelay: 1
-  completedByPostit: 1
+  hintText: "\uB2F9\uC2E0\uC740 \uACF5\uBB34\uC911\uC785\uB2C8\uB2E4. \uBBFC\uC6D0\uC778\uC5D0\uAC8C
+    \uD544\uC694\uD55C\uAC78 \uC81C\uACF5\uD558\uC138\uC694."
+  autoAdvance: 1
+  autoAdvanceDelay: 2
+  completedByPostit: 0

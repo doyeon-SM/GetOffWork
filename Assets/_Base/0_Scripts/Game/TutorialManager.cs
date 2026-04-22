@@ -1,16 +1,34 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 튜토리얼 전체 흐름을 관리한다.
+///
+/// [Phase 1] Prompt   — 예/아니요 팝업 표시 (손님 도착 타이머 정지)
+/// [Phase 2] Intro    — 민원인 무관 순차 대사 (autoAdvance, 1초 자동 진행)
+///                      마지막 단계: Calldisplay 하이라이트 (completedByCall=true)
+/// [Phase 3] Desk     — 강제 Print 손님 → 민원 처리 튜토리얼
+///                      이후 강제 Mobile 손님 → 민원 처리 튜토리얼
+/// [Phase 4] Outro    — Menual 하이라이트 + 마무리 대사 → EndTutorial()
+/// </summary>
 public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance { get; private set; }
 
-    [Header("튜토리얼 흐름 — Print 경로")]
+    // ── Inspector ────────────────────────────────────────────────────────────
+    [Header("Intro 흐름 (민원인 없는 초반 대사)")]
+    [SerializeField] private TutorialFlowSO tutorialFlowIntro;
+
+    [Header("Print 민원 흐름")]
     [SerializeField] private TutorialFlowSO tutorialFlowPrint;
 
-    [Header("튜토리얼 흐름 — Mobile 경로")]
+    [Header("Mobile 민원 흐름")]
     [SerializeField] private TutorialFlowSO tutorialFlowMobile;
+
+    [Header("Outro 흐름 (마무리 대사)")]
+    [SerializeField] private TutorialFlowSO tutorialFlowOutro;
 
     [Header("연결")]
     [SerializeField] private ServiceDeskManager serviceDeskManager;
@@ -19,23 +37,24 @@ public class TutorialManager : MonoBehaviour
     public UnityEvent<string> OnStepChanged;
     public UnityEvent         OnTutorialEnd;
 
+    // ── 내부 상태 ─────────────────────────────────────────────────────────────
     private TutorialFlowSO _currentFlow;
-    private int            _currentStepIndex = 0;
-    private bool           _isActive         = false;
-    private bool           _flowDecided      = false;
+    private int            _currentStepIndex;
+    private bool           _isActive;
+    private bool           _flowDecided;
 
-    // Print/Mobile 각각 완료 여부 추적
-    private bool _printCompleted  = false;
-    private bool _mobileCompleted = false;
+    private bool _printCompleted;
+    private bool _mobileCompleted;
+
+    private Coroutine _autoAdvanceCoroutine;
 
     private const string BranchCommandPrint  = "select_print";
     private const string BranchCommandMobile = "select_mobile";
 
     public string CurrentStep => GetCurrentStepId();
     public bool   IsActive    => _isActive;
-    public bool   IsComplete  => !_isActive;
 
-    // ── 생명주기 ──────────────────────────────────────────────────────────
+    // ── 생명주기 ──────────────────────────────────────────────────────────────
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -53,12 +72,10 @@ public class TutorialManager : MonoBehaviour
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
         UnsubscribeDeskEvents();
+        QuestionObject.OnPostitClicked -= HandlePostitClicked;
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        RebindServiceDesk();
-    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => RebindServiceDesk();
 
     private void RebindServiceDesk()
     {
@@ -72,7 +89,7 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    // ── 이벤트 구독 ───────────────────────────────────────────────────────
+    // ── 이벤트 구독 ───────────────────────────────────────────────────────────
     private void SubscribeDeskEvents()
     {
         if (serviceDeskManager == null) return;
@@ -87,69 +104,203 @@ public class TutorialManager : MonoBehaviour
         serviceDeskManager.OnCustomerCalled  -= HandleCustomerCalled;
     }
 
-    // ── 튜토리얼 시작 / 종료 ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 0: 외부 진입점
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>MainSceneBootstrap에서 1일차에만 호출한다.</summary>
     public void StartTutorial()
     {
-        if (serviceDeskManager == null)
-            RebindServiceDesk();
+        if (serviceDeskManager == null) RebindServiceDesk();
 
-        if (tutorialFlowPrint == null)
+        // 손님 도착 일시정지 (예/아니요 팝업 동안)
+        serviceDeskManager?.PauseArrival();
+
+        // 예/아니요 팝업 표시
+        var prompt = FindFirstObjectByType<UITutorialPrompt>(FindObjectsInactive.Include);
+        if (prompt != null)
         {
-            Debug.LogWarning("[TutorialManager] tutorialFlowPrint SO가 연결되지 않았습니다.");
-            return;
+            prompt.Show();
+            Debug.Log("[TutorialManager] 튜토리얼 여부 팝업 표시");
         }
+        else
+        {
+            // 팝업 없으면 바로 수락
+            Debug.LogWarning("[TutorialManager] UITutorialPrompt 없음 → 자동 수락");
+            OnPromptAccepted();
+        }
+    }
 
+    /// <summary>UITutorialPrompt '예' 클릭 시 호출</summary>
+    public void OnPromptAccepted()
+    {
         _printCompleted  = false;
         _mobileCompleted = false;
 
-        BeginFlow(tutorialFlowPrint);
-        Debug.Log("[TutorialManager] 튜토리얼 시작");
+        // Intro FlowSO가 없으면 바로 강제 손님 준비 후 종료
+        if (tutorialFlowIntro == null || tutorialFlowIntro.steps.Count == 0)
+        {
+            Debug.LogWarning("[TutorialManager] tutorialFlowIntro 없음 → Desk 단계 직행");
+            PrepareAndBeginDesk();
+            return;
+        }
+
+        // 강제 손님을 Intro 시작 전에 미리 대기열에 삽입
+        // (Intro 마지막 단계의 Calldisplay 클릭이 성공하려면 대기열에 손님이 있어야 함)
+        PrepareQueueForTutorial();
+
+        BeginFlow(tutorialFlowIntro);
+        Debug.Log("[TutorialManager] 튜토리얼 시작 — Intro");
     }
 
-    /// <summary>지정한 FlowSO를 처음부터 시작한다.</summary>
+    /// <summary>UITutorialPrompt '아니요' 클릭 시 호출</summary>
+    public void OnPromptDeclined()
+    {
+        serviceDeskManager?.ResumeArrival();
+        Debug.Log("[TutorialManager] 튜토리얼 거절");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 1: Intro (민원인 없는 순차 대사)
+    // ─────────────────────────────────────────────────────────────────────────
+
     private void BeginFlow(TutorialFlowSO flow)
     {
+        if (_autoAdvanceCoroutine != null) { StopCoroutine(_autoAdvanceCoroutine); _autoAdvanceCoroutine = null; }
+
         _currentFlow      = flow;
         _currentStepIndex = 0;
         _flowDecided      = false;
         _isActive         = true;
-        Debug.Log($"[TutorialManager] BeginFlow(TutorialFlowSO flow) | currentFlow = {flow.flowName}");
 
+        Debug.Log($"[TutorialManager] BeginFlow: {flow?.flowName}");
         ApplyCurrentStep();
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 2: Desk (강제 손님 → Print → Mobile)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 튜토리얼용 강제 손님 2명(Print→Mobile)을 대기열 앞에 삽입한다.
+    /// Intro FlowSO 시작 전에 호출해야 Calldisplay 클릭이 성공한다.
+    /// </summary>
+    private void PrepareQueueForTutorial()
+    {
+        if (serviceDeskManager == null) return;
+
+        // Print 손님 삽입
+        var printComplaint = CreateForcedComplaint(ComplaintContext.DeliveryType.Print);
+        serviceDeskManager.EnqueueForcedComplaint(printComplaint);
+
+        // Mobile 손님 삽입 (Print 다음으로)
+        var mobileComplaint = CreateForcedComplaint(ComplaintContext.DeliveryType.Mobile);
+        serviceDeskManager.EnqueueForcedComplaint(mobileComplaint);
+
+        Debug.Log("[TutorialManager] 강제 손님 2명 대기열 삽입 완료");
+    }
+
+    // 호환성 유지용 (내부에서 사용하지 않지만 기존 참조 대비)
+    private void PrepareAndBeginDesk()
+    {
+        PrepareQueueForTutorial();
+        serviceDeskManager?.ResumeArrival();
+
+        if (tutorialFlowPrint == null)
+        {
+            Debug.LogWarning("[TutorialManager] tutorialFlowPrint 없음 → 튜토리얼 종료");
+            EndTutorial();
+            return;
+        }
+
+        BeginFlow(tutorialFlowPrint);
+        Debug.Log("[TutorialManager] Desk 단계 시작 — Print 경로");
+    }
+
+    private ComplaintContext CreateForcedComplaint(ComplaintContext.DeliveryType delivery)
+    {
+        var c = new ComplaintContext();
+        c.complaintType         = ComplaintContext.ComplaintType.FullID;
+        c.applicantType         = ComplaintContext.ApplicantType.Self;
+        c.requestedDeliveryType = delivery;
+        c.nuisanceType          = ComplaintContext.NuisanceType.None;
+
+        // 레코드 배정 (UserDatabase 첫 번째 레코드 사용)
+        var ub = ServiceDataManager.Instance?.UserDatabase;
+        if (ub != null && ub.Records != null && ub.Records.Count > 0)
+        {
+            c.applicantRecordId = ub.Records[0].recordId;
+            c.targetRecordId    = ub.Records[0].recordId;
+            ub.Records[0].SetIdCard(false, false, false);
+        }
+
+        // ManualData 배정 (delivery에 맞는 ManualDataSO 탐색)
+        var mmd = ServiceDataManager.Instance?.ManualDataManager;
+        if (mmd != null)
+        {
+            string keyword = delivery == ComplaintContext.DeliveryType.Print ? "Print" : "Mobile";
+            foreach (var entry in mmd.GetAllEntries())
+            {
+                if (entry.manualData?.manualTitle != null &&
+                    entry.manualData.manualTitle.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    c.assignedManualData = entry.manualData;
+                    break;
+                }
+            }
+        }
+
+        c.maxPatience     = 999f;
+        c.currentPatience = 999f;
+        return c;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 3: Outro
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void BeginOutro()
+    {
+        if (tutorialFlowOutro == null || tutorialFlowOutro.steps.Count == 0)
+        {
+            EndTutorial();
+            return;
+        }
+        BeginFlow(tutorialFlowOutro);
+        Debug.Log("[TutorialManager] Outro 시작");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 종료
+    // ─────────────────────────────────────────────────────────────────────────
 
     public void EndTutorial()
     {
         _isActive = false;
+        if (_autoAdvanceCoroutine != null) { StopCoroutine(_autoAdvanceCoroutine); _autoAdvanceCoroutine = null; }
         TutorialHighlighter.Instance?.ClearAll();
         TutorialHintUI.Instance?.Hide();
         OnTutorialEnd?.Invoke();
         Debug.Log("[TutorialManager] 튜토리얼 완전 종료");
     }
 
-    // ── 커맨드 hook ───────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // 이벤트 핸들러
+    // ─────────────────────────────────────────────────────────────────────────
+
     private void HandleCommandExecuted(string commandId)
     {
         if (!_isActive) return;
 
-        // 분기 결정: select_print / select_mobile 수신 시 flow 교체 후 다음 단계 진행
+        // 분기 결정
         if (!_flowDecided)
         {
-            if (commandId == BranchCommandPrint)
-            {
-                SwitchFlow(tutorialFlowPrint, commandId);
-                return;
-            }
-            if (commandId == BranchCommandMobile)
-            {
-                SwitchFlow(tutorialFlowMobile, commandId);
-                return;
-            }
+            if (commandId == BranchCommandPrint)  { SwitchFlow(tutorialFlowPrint,  commandId); return; }
+            if (commandId == BranchCommandMobile) { SwitchFlow(tutorialFlowMobile, commandId); return; }
         }
 
-        // 일반 단계 완료 확인
         var step = GetCurrentStep();
-        if (step == null || step.completedByCall) return;
+        if (step == null || step.completedByCall || step.completedByPostit || step.autoAdvance) return;
 
         if (step.expectedCommandId == commandId)
             AdvanceStep();
@@ -163,38 +314,41 @@ public class TutorialManager : MonoBehaviour
         AdvanceStep();
     }
 
-    private void SwitchFlow(TutorialFlowSO targetFlow, string branchCommandId)
+    private void HandlePostitClicked()
     {
-        if (targetFlow == null)
-        {
-            Debug.LogWarning($"[TutorialManager] {branchCommandId} 에 해당하는 FlowSO가 null입니다.");
-            return;
-        }
-
-        _flowDecided = true;
-
-        string currentStepId = GetCurrentStepId();
-        int    idxInTarget   = targetFlow.FindStepIndex(currentStepId);
-
-        if (idxInTarget >= 0)
-        {
-            _currentFlow      = targetFlow;
-            _currentStepIndex = idxInTarget;
-        }
-        else
-        {
-            _currentFlow = targetFlow;
-            Debug.LogWarning($"[TutorialManager] '{currentStepId}'를 {targetFlow.flowName}에서 찾지 못했습니다.");
-        }
-
-        Debug.Log($"[TutorialManager] Flow 전환: {targetFlow.flowName} (branch={branchCommandId})");
+        if (!_isActive) return;
+        var step = GetCurrentStep();
+        if (step == null || !step.completedByPostit) return;
         AdvanceStep();
     }
 
-    // ── 단계 진행 ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // Flow 전환 (select_print / select_mobile)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void SwitchFlow(TutorialFlowSO targetFlow, string branchCommandId)
+    {
+        if (targetFlow == null) { Debug.LogWarning($"[TutorialManager] {branchCommandId} FlowSO null"); return; }
+
+        _flowDecided = true;
+        string currentStepId = GetCurrentStepId();
+        int    idx           = targetFlow.FindStepIndex(currentStepId);
+
+        _currentFlow      = targetFlow;
+        _currentStepIndex = idx >= 0 ? idx : _currentStepIndex;
+
+        Debug.Log($"[TutorialManager] Flow 전환: {targetFlow.flowName} ({branchCommandId})");
+        AdvanceStep();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 단계 진행
+    // ─────────────────────────────────────────────────────────────────────────
+
     private void AdvanceStep()
     {
         if (_currentFlow == null) return;
+        if (_autoAdvanceCoroutine != null) { StopCoroutine(_autoAdvanceCoroutine); _autoAdvanceCoroutine = null; }
 
         _currentStepIndex++;
         Debug.Log($"[TutorialManager] Step → index={_currentStepIndex} ({CurrentStep})");
@@ -209,80 +363,97 @@ public class TutorialManager : MonoBehaviour
         ApplyCurrentStep();
     }
 
-    /// <summary>
-    /// 한 경로(Print or Mobile)가 끝났을 때 호출.
-    /// 둘 다 완료됐으면 EndTutorial(), 아니면 남은 경로를 시작한다.
-    /// </summary>
     private void OnFlowCompleted()
     {
-        bool wasPrint  = (_currentFlow == tutorialFlowPrint);
-        bool wasMobile = (_currentFlow == tutorialFlowMobile);
-
-        if (wasPrint)  _printCompleted  = true;
-        if (wasMobile) _mobileCompleted = true;
-
-        Debug.Log($"[TutorialManager] 경로 완료 — print={_printCompleted} mobile={_mobileCompleted}");
-
         TutorialHighlighter.Instance?.ClearAll();
         TutorialHintUI.Instance?.Hide();
 
-        // 둘 다 완료 → 진짜 종료
+        bool isIntro  = (_currentFlow == tutorialFlowIntro);
+        bool isPrint  = (_currentFlow == tutorialFlowPrint);
+        bool isMobile = (_currentFlow == tutorialFlowMobile);
+        bool isOutro  = (_currentFlow == tutorialFlowOutro);
+
+        Debug.Log($"[TutorialManager] Flow 완료 — {_currentFlow?.flowName}");
+
+        if (isIntro)
+        {
+            // Intro 완료 → Print 경로 시작 (강제 손님은 이미 대기열에 있음)
+            if (tutorialFlowPrint == null)
+            {
+                Debug.LogWarning("[TutorialManager] tutorialFlowPrint 없음 → 튜토리얼 종료");
+                EndTutorial();
+                return;
+            }
+            BeginFlow(tutorialFlowPrint);
+            Debug.Log("[TutorialManager] Intro 완료 → Print 경로 시작");
+            return;
+        }
+
+        if (isPrint)  _printCompleted  = true;
+        if (isMobile) _mobileCompleted = true;
+
+        if (isPrint && !_mobileCompleted)
+        {
+            Debug.Log("[TutorialManager] Mobile 경로 시작");
+            BeginFlow(tutorialFlowMobile);
+            return;
+        }
+
+        if (isMobile && !_printCompleted)
+        {
+            Debug.Log("[TutorialManager] Print 경로 시작");
+            BeginFlow(tutorialFlowPrint);
+            return;
+        }
+
         if (_printCompleted && _mobileCompleted)
+        {
+            // Desk 완료 → Outro
+            BeginOutro();
+            return;
+        }
+
+        if (isOutro)
         {
             EndTutorial();
             return;
         }
 
-        // 아직 안 한 경로 시작
-        if (!_mobileCompleted && tutorialFlowMobile != null)
-        {
-            Debug.Log("[TutorialManager] Mobile 경로 시작");
-            BeginFlow(tutorialFlowMobile);
-        }
-        else if (!_printCompleted && tutorialFlowPrint != null)
-        {
-            Debug.Log("[TutorialManager] Print 경로 시작");
-            BeginFlow(tutorialFlowPrint);
-        }
-        else
-        {
-            // FlowSO 미연결 등 예외
-            EndTutorial();
-        }
+        EndTutorial();
     }
 
     private void ApplyCurrentStep()
     {
         var step = GetCurrentStep();
-        if (step == null)
-        {
-            Debug.Log($"[TutorialManager] ApplyCurrentStep step null");
-            return; 
-        }
+        if (step == null) { Debug.Log("[TutorialManager] ApplyCurrentStep: step null"); return; }
 
-        Debug.Log($"[TutorialManager] ApplyCurrentStep step = {step.stepId}");
+        Debug.Log($"[TutorialManager] ApplyCurrentStep: {step.stepId}");
+
+        // 포스트잇 이벤트 구독 (필요한 단계만)
+        QuestionObject.OnPostitClicked -= HandlePostitClicked;
+        if (step.completedByPostit)
+            QuestionObject.OnPostitClicked += HandlePostitClicked;
+
         TutorialHighlighter.Instance?.Highlight(step);
         TutorialHintUI.Instance?.Show(step.hintText);
         OnStepChanged?.Invoke(step.stepId);
+
+        // 자동 진행
+        if (step.autoAdvance)
+            _autoAdvanceCoroutine = StartCoroutine(AutoAdvanceAfter(step.autoAdvanceDelay));
     }
 
-    // ── 레거시 호환 API ───────────────────────────────────────────────────
-    public void SetStep(string stepId)
+    private IEnumerator AutoAdvanceAfter(float delay)
     {
-        if (_currentFlow == null)
-        {
-            Debug.Log("[TutorialManager] SetStep _currentFlow Null");
-            return; 
-        }
-        int idx = _currentFlow.FindStepIndex(stepId);
-        if (idx < 0) return;
-        _currentStepIndex = idx;
-        ApplyCurrentStep();
-        OnStepChanged?.Invoke(CurrentStep);
-        Debug.Log($"[TutorialManager] SetStep stepId = {stepId} | index = {idx}");
+        yield return new WaitForSeconds(delay);
+        _autoAdvanceCoroutine = null;
+        AdvanceStep();
     }
 
-    // ── 내부 헬퍼 ────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // 헬퍼
+    // ─────────────────────────────────────────────────────────────────────────
+
     private TutorialStepSO GetCurrentStep()
     {
         if (_currentFlow == null || _currentStepIndex >= _currentFlow.steps.Count) return null;
@@ -293,5 +464,15 @@ public class TutorialManager : MonoBehaviour
     {
         var step = GetCurrentStep();
         return step != null ? step.stepId : string.Empty;
+    }
+
+    public void SetStep(string stepId)
+    {
+        if (_currentFlow == null) return;
+        int idx = _currentFlow.FindStepIndex(stepId);
+        if (idx < 0) return;
+        _currentStepIndex = idx;
+        ApplyCurrentStep();
+        OnStepChanged?.Invoke(CurrentStep);
     }
 }

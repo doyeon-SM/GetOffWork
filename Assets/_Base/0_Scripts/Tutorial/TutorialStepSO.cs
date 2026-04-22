@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 튜토리얼 한 단계를 정의하는 ScriptableObject.
@@ -32,9 +32,20 @@ public class TutorialStepSO : ScriptableObject
     public string uiGameObjectName;
 
     [Header("설명 텍스트")]
+    [Header("설명 텍스트")]
     [Tooltip("튜토리얼 힌트 텍스트 (화면에 표시)")]
     [TextArea(2, 4)]
     public string hintText;
+
+    [Header("자동 진행")]
+    [Tooltip("true이면 일정 시간 후 자동으로 다음 단계로 넘어간다.")]
+    public bool  autoAdvance      = false;
+    [Tooltip("자동 진행까지 대기 시간 (초)")]
+    public float autoAdvanceDelay = 1f;
+
+    [Header("포스트잇 클릭 완료")]
+    [Tooltip("Postit 클릭으로 완료되는 단계인지")]
+    public bool completedByPostit = false;
 }
 
 public enum TutorialHighlightTargetType
