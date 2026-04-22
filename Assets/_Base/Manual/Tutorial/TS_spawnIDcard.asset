@@ -20,3 +20,6 @@ MonoBehaviour:
   uiCommandId: 
   uiGameObjectName: 
   hintText: 
+  autoAdvance: 0
+  autoAdvanceDelay: 1
+  completedByPostit: 0

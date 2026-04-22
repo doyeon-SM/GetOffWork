@@ -105,7 +105,7 @@ public class ObjectManagerBox : MonoBehaviour
     /// <summary>UI 프리팹들을 씬의 Canvas에 런타임으로 생성한다.</summary>
     private void SpawnUIViews()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = FindMainCanvas();
         if (canvas == null)
         {
             Debug.LogError($"{TAG} Canvas를 찾을 수 없습니다.");
@@ -487,5 +487,18 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         return lines[UnityEngine.Random.Range(0, lines.Count)];
     }
 
-    private void Log(string msg) { if (showDebugLog) Debug.Log(msg); }
+        private void Log(string msg) { if (showDebugLog) Debug.Log(msg); }
+
+    /// <summary>
+    /// ScreenSpaceCamera/Overlay Canvas를 우선 탐색한다.
+    /// TutorialHighlighter와 동일한 로직을 사용해 항상 같은 Canvas를 참조한다.
+    /// </summary>
+    public static Canvas FindMainCanvas()
+    {
+        foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            if (c.renderMode == RenderMode.ScreenSpaceCamera ||
+                c.renderMode == RenderMode.ScreenSpaceOverlay)
+                return c;
+        return FindFirstObjectByType<Canvas>(); // 폴백
+    }
 }

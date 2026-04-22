@@ -46,7 +46,7 @@ public class TutorialHighlighter : MonoBehaviour
     private void Start()
     {
         if (targetCanvas == null)
-            targetCanvas = FindFirstObjectByType<Canvas>();
+                        targetCanvas = ObjectManagerBox.FindMainCanvas();
     }
 
     // ── 공개 API ──────────────────────────────────────────────────────────
@@ -235,79 +235,113 @@ public class TutorialHighlighter : MonoBehaviour
     }
 
     /// <summary>4개의 얇은 Image로 테두리 오버레이를 코드로 생성한다.</summary>
-    private GameObject BuildBorderOverlay(RectTransform targetRect)
+    /// <summary>
+    /// 대상 RectTransform의 4개 코너를 Canvas 로컬 좌표로 올바르게 변환한다.
+    /// ScaleWithScreenSize 등 Canvas 스케일을 자동으로 보정한다.
+    /// </summary>
+    private Vector2[] GetLocalCornersInCanvas(RectTransform targetRect)
     {
-        var root = new GameObject("TutHighlightBorder", typeof(RectTransform));
+        var worldCorners = new Vector3[4];
+        targetRect.GetWorldCorners(worldCorners);
+
+        var canvasRect = targetCanvas.GetComponent<RectTransform>();
+        var cam        = targetCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+                         ? null
+                         : targetCanvas.worldCamera;
+
+        var localCorners = new Vector2[4];
+        for (int i = 0; i < 4; i++)
+        {
+            // 월드 좌표 → 화면 픽셀 좌표
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, worldCorners[i]);
+            // 화면 픽셀 좌표 → Canvas 로컬 좌표 (RectTransform 내부 단위)
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRect, screenPoint, cam, out Vector2 localPoint);
+            localCorners[i] = localPoint;
+        }
+        return localCorners;
+    }
+
+        private GameObject BuildBorderOverlay(RectTransform targetRect)
+    {
+        var root     = new GameObject("TutHighlightBorder", typeof(RectTransform));
         root.transform.SetParent(targetCanvas.transform, false);
 
-        // 대상 rectTransform의 월드 코너를 Canvas 로컬로 변환
-        var corners = new Vector3[4];
-        targetRect.GetWorldCorners(corners);
+        // 루트를 대상 위치/크기로 설정 (Canvas 중심 기준)
+        var corners = GetLocalCornersInCanvas(targetRect);
+        float w  = corners[2].x - corners[0].x;
+        float h  = corners[2].y - corners[0].y;
+        float cx = corners[0].x + w * 0.5f;
+        float cy = corners[0].y + h * 0.5f;
 
-        // Canvas의 RectTransform으로 로컬 변환
-        var canvasRect = targetCanvas.GetComponent<RectTransform>();
-        for (int i = 0; i < 4; i++)
-            corners[i] = canvasRect.InverseTransformPoint(corners[i]);
+        var rootRect              = root.GetComponent<RectTransform>();
+        rootRect.anchorMin        = new Vector2(0.5f, 0.5f);
+        rootRect.anchorMax        = new Vector2(0.5f, 0.5f);
+        rootRect.pivot            = new Vector2(0.5f, 0.5f);
+        rootRect.anchoredPosition = new Vector2(cx, cy);
+        rootRect.sizeDelta        = new Vector2(w, h);
 
-        float left   = corners[0].x;
-        float bottom = corners[0].y;
-        float right  = corners[2].x;
-        float top    = corners[2].y;
-        float w = right - left;
-        float h = top - bottom;
-        float cx = left + w * 0.5f;
-        float cy = bottom + h * 0.5f;
+        // 세그먼트는 루트 내부에서 anchor 스트레칭으로 상대 배치
+        // anchoredPosition=(0,0), sizeDelta로 두께만 지정
+        CreateBorderSegment(root.transform, "Top",
+            anchorMin: new Vector2(0f, 1f), anchorMax: new Vector2(1f, 1f),
+            pivot:     new Vector2(0.5f, 1f),
+            sizeDelta: new Vector2(0f, borderThickness));
 
-        // 상/하/좌/우 테두리 4개
-        CreateBorderSegment(root.transform, "Top",    new Vector2(cx, top    - borderThickness * 0.5f), new Vector2(w + borderThickness * 2, borderThickness));
-        CreateBorderSegment(root.transform, "Bottom", new Vector2(cx, bottom + borderThickness * 0.5f), new Vector2(w + borderThickness * 2, borderThickness));
-        CreateBorderSegment(root.transform, "Left",   new Vector2(left  + borderThickness * 0.5f, cy), new Vector2(borderThickness, h));
-        CreateBorderSegment(root.transform, "Right",  new Vector2(right - borderThickness * 0.5f, cy), new Vector2(borderThickness, h));
+        CreateBorderSegment(root.transform, "Bottom",
+            anchorMin: new Vector2(0f, 0f), anchorMax: new Vector2(1f, 0f),
+            pivot:     new Vector2(0.5f, 0f),
+            sizeDelta: new Vector2(0f, borderThickness));
 
-        // 루트는 RaycastTarget 끄기
+        CreateBorderSegment(root.transform, "Left",
+            anchorMin: new Vector2(0f, 0f), anchorMax: new Vector2(0f, 1f),
+            pivot:     new Vector2(0f, 0.5f),
+            sizeDelta: new Vector2(borderThickness, 0f));
+
+        CreateBorderSegment(root.transform, "Right",
+            anchorMin: new Vector2(1f, 0f), anchorMax: new Vector2(1f, 1f),
+            pivot:     new Vector2(1f, 0.5f),
+            sizeDelta: new Vector2(borderThickness, 0f));
+
         root.transform.SetAsLastSibling();
         return root;
     }
 
-    private void CreateBorderSegment(Transform parent, string segName, Vector2 center, Vector2 size)
+    private void CreateBorderSegment(
+        Transform parent, string segName,
+        Vector2 anchorMin, Vector2 anchorMax,
+        Vector2 pivot,     Vector2 sizeDelta)
     {
-        var go  = new GameObject(segName, typeof(RectTransform), typeof(Image));
+        var go = new GameObject(segName, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(parent, false);
 
-        var img        = go.GetComponent<Image>();
-        img.color      = highlightColor;
+        var img           = go.GetComponent<Image>();
+        img.color         = highlightColor;
         img.raycastTarget = false;
 
-        var rect       = go.GetComponent<RectTransform>();
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.zero;
-        rect.pivot     = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = center;
-        rect.sizeDelta        = size;
+        var rect              = go.GetComponent<RectTransform>();
+        rect.anchorMin        = anchorMin;
+        rect.anchorMax        = anchorMax;
+        rect.pivot            = pivot;
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta        = sizeDelta;
     }
 
     private void SyncOverlayToTarget(RectTransform overlayRect, RectTransform targetRect)
     {
-        // 프리팹 기반 오버레이일 때 위치/크기 동기화
-        var corners = new Vector3[4];
-        targetRect.GetWorldCorners(corners);
-        var canvasRect = targetCanvas.GetComponent<RectTransform>();
-        for (int i = 0; i < 4; i++)
-            corners[i] = canvasRect.InverseTransformPoint(corners[i]);
+        var corners = GetLocalCornersInCanvas(targetRect);
 
-        float w = corners[2].x - corners[0].x;
-        float h = corners[2].y - corners[0].y;
+        float w  = corners[2].x - corners[0].x;
+        float h  = corners[2].y - corners[0].y;
         float cx = corners[0].x + w * 0.5f;
         float cy = corners[0].y + h * 0.5f;
 
-        overlayRect.anchorMin = Vector2.zero;
-        overlayRect.anchorMax = Vector2.zero;
-        overlayRect.pivot     = new Vector2(0.5f, 0.5f);
+        overlayRect.anchorMin        = new Vector2(0.5f, 0.5f);
+        overlayRect.anchorMax        = new Vector2(0.5f, 0.5f);
+        overlayRect.pivot            = new Vector2(0.5f, 0.5f);
         overlayRect.anchoredPosition = new Vector2(cx, cy);
         overlayRect.sizeDelta        = new Vector2(w, h);
         overlayRect.SetAsLastSibling();
-
-        Debug.Log("[TutorialHighlighter] syncoverlaytotarget set complete");
     }
 
     // ── 펄스 애니메이션 ───────────────────────────────────────────────────
