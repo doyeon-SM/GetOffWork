@@ -157,20 +157,20 @@ public class UIPlayerStat : MonoBehaviour
         }
         if (s != 0)
         {
-            int sv = Mathf.RoundToInt(s * 100f);
-            string v = sv > 0 ? $"+{sv}" : sv.ToString();
+            int sv = Mathf.RoundToInt(s);
+            string v = sv > 0 ? $"+{sv}%" : sv.ToString();
             StartCoroutine(ViewUpdatePlayerStat(v, updateStress));
         }
         if (k != 0)
         {
-            int kv = Mathf.RoundToInt(k * 100f);
-            string v = kv > 0 ? $"+{kv}" : kv.ToString();
+            int kv = Mathf.RoundToInt(k);
+            string v = kv > 0 ? $"+{kv}%" : kv.ToString();
             StartCoroutine(ViewUpdatePlayerStat(v, updateKindness));
         }
         if (r != 0)
         {
-            int rv = Mathf.RoundToInt(r * 100f);
-            string v = rv > 0 ? $"+{rv}" : rv.ToString();
+            int rv = Mathf.RoundToInt(r);
+            string v = rv > 0 ? $"+{rv}%" : rv.ToString();
             StartCoroutine(ViewUpdatePlayerStat(v, updateReliability));
         }
     }
@@ -181,10 +181,5 @@ public class UIPlayerStat : MonoBehaviour
         text.text = value;
         yield return new WaitForSeconds(1f);
         text.text = "";
-    }
-
-    private string ToPercent(float v)
-    {
-        return $"{Mathf.Clamp(Mathf.RoundToInt(v * 100f), 0, 100)}%";
     }
 }

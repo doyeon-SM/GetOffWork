@@ -16,11 +16,11 @@ public class PlayerBase : MonoBehaviour
     [SerializeField] private PlayerStat baseStats;
 
     [Header("게임 목표")]
-    [SerializeField] private int[] promotions = { 30 };
+    [SerializeField] private int[] promotions = { 0 };
     [SerializeField] private int promotionIndex = 0;
 
     [Header("일일 목표 성과")]
-    [SerializeField] private int goalPerformance = 10;
+    [SerializeField] private int goalPerformance = 0;
 
     public string PlayerName => playerName;
     public int PlayerLevel => playerLevel;
@@ -125,7 +125,8 @@ public bool AddPerformance(int amount)
 
     public void SetGoalPerformance(int value)
     {
-        goalPerformance = Mathf.Max(0, value);
+        goalPerformance = Mathf.RoundToInt(promotions[playerLevel - 1] * (value % 5) / 5);
+        Debug.Log($"[PlayerBase] SetGoal {goalPerformance}");
     }
 
     public void CheckPromotion()

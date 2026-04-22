@@ -89,9 +89,9 @@ public class UIDayResultView : MonoBehaviour
 
         // 표시 수치를 시작값으로 초기화
         _dispPerformance = data.startPerformance;
-        _dispStress      = data.startStress;
-        _dispKindness    = data.startKindness;
-        _dispReliability = data.startReliability;
+        _dispStress      = data.startStress * 100f;
+        _dispKindness    = data.startKindness*100f;
+        _dispReliability = data.startReliability*100f;
         _dispPay         = data.startPay;
         _pendingWage     = 0;
 
@@ -140,6 +140,7 @@ public class UIDayResultView : MonoBehaviour
             _dispPerformance += evt.performanceDelta;
             // 이벤트별 성과 변화에 따른 일급 누적 (음수 성과 변화는 0)
             _pendingWage += Mathf.Max(0, evt.performanceDelta * 10);
+            Debug.Log($"[UIDayResultView] 성과 변화량 {evt.performanceDelta} 일급 결과: {_pendingWage}");
             ShowDelta(performanceDeltaText, evt.performanceDelta, isPercent: false);
         }
         if (evt.stressDelta != 0)
@@ -205,15 +206,15 @@ public class UIDayResultView : MonoBehaviour
     {
         if (performanceText == null) return;
         int   max = _data.maxPerformance;
-        float pct = max > 0 ? (float)_dispPerformance / max * 100f : 0f;
+        float pct = max > 0 ? (float)_dispPerformance / max : 0f;
         performanceText.text = $"{_dispPerformance} / {max} ({pct:F0}%)";
     }
 
     private void RefreshStatTexts()
     {
-        if (stressText      != null) stressText.text      = $"{Mathf.RoundToInt(_dispStress      * 100f)}%";
-        if (kindnessText    != null) kindnessText.text    = $"{Mathf.RoundToInt(_dispKindness    * 100f)}%";
-        if (reliabilityText != null) reliabilityText.text = $"{Mathf.RoundToInt(_dispReliability * 100f)}%";
+        if (stressText      != null) stressText.text      = $"{Mathf.RoundToInt(_dispStress)}%";
+        if (kindnessText    != null) kindnessText.text    = $"{Mathf.RoundToInt(_dispKindness)}%";
+        if (reliabilityText != null) reliabilityText.text = $"{Mathf.RoundToInt(_dispReliability)}%";
     }
 
     private void RefreshWageTexts()
@@ -246,7 +247,7 @@ public class UIDayResultView : MonoBehaviour
 
         if (isPercent)
         {
-            int pct     = Mathf.RoundToInt(delta * 100f);
+            int pct     = Mathf.RoundToInt(delta);
             target.text = $"{sign}{pct}%";
         }
         else

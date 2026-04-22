@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4422809953488206566
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5758022607088960732}
+  - component: {fileID: 8232394131845217459}
+  m_Layer: 0
+  m_Name: LevelManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5758022607088960732
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4422809953488206566}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -8.76192, y: 4.21559, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8232394131845217459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4422809953488206566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 539b59a6fdb98634dba41af46333ba49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelDesignManager
+  dayLevels:
+  - targetDay: 1
+    maxCustomerPerDay: 5
+    morningDuration: 100
+    afternoonDuration: 0
+    manualEntries:
+    - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+      spawnWeight: 0.7
+    - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+      spawnWeight: 0.3
+  - targetDay: 2
+    maxCustomerPerDay: 10
+    morningDuration: 300
+    afternoonDuration: 300
+    manualEntries:
+    - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+      spawnWeight: 0.35
+    - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+      spawnWeight: 0.35
+    - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+      spawnWeight: 0.3
+  - targetDay: 3
+    maxCustomerPerDay: 10
+    morningDuration: 300
+    afternoonDuration: 300
+    manualEntries:
+    - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+      spawnWeight: 0.2
+    - manualData: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
+      spawnWeight: 0.1
+    - manualData: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
+      spawnWeight: 0.1
+  - targetDay: 4
+    maxCustomerPerDay: 10
+    morningDuration: 300
+    afternoonDuration: 300
+    manualEntries:
+    - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+      spawnWeight: 0.2
+    - manualData: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
+      spawnWeight: 0.15
+    - manualData: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
+      spawnWeight: 0.15
+    - manualData: {fileID: 11400000, guid: fc357dc046827604f82952ac1d2894fb, type: 2}
+      spawnWeight: 0.1
+  eventLevels:
+  - eventType: 0
+    minDay: 5
+    maxCustomerPerDay: 20
+    morningDuration: 400
+    afternoonDuration: 0
+    useAllUnlockedEqualWeight: 1
+    manualEntries: []
+  serviceDeskManager: {fileID: 0}
+  workDayManager: {fileID: 0}
+  manualDataManager: {fileID: 0}

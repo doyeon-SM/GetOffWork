@@ -53,4 +53,5 @@ MonoBehaviour:
     reliability: 0.5
     pay: 0
   PlayerLevel: 1
-  DayGoalPerformance: 10
+  DayGoalPerformance: 30
+  unlockedManuals: []

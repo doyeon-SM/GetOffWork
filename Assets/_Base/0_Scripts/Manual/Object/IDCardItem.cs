@@ -1,13 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 신분증 DeskObjectItem.
 /// ObjectManagerBox가 Spawn 시 SetComplaint()로 참조를 주입한다.
 ///
-/// [주소 표시 규칙]
-/// - IDCard (기존 신분증) : SetComplaint 시점에 캐싱한 변경 전 주소를 표시
-///                         (ApplyRuntimeAddressChange가 record.address를 덮어써도 안전)
-/// - NewIDCard (새 신분증) : 런타임에 수정된 주소(record.address)를 표시
+/// [표시 규칙]
+/// SetComplaint() 시점에 ID카드에 표시할 값(주소/ID/초상화)을 모두 스냅샷으로 캐싱한다.
+/// 이후 대기열의 다른 민원인이 동일한 UserRecordData SO에 SetIdCard()를 호출해도
+/// 이미 캐싱된 값을 사용하므로 오염되지 않는다.
+///
+/// - IDCard (기존 신분증) : SetComplaint 시점의 IdCard* 스냅샷을 표시
+/// - NewIDCard (새 신분증) : 런타임에 수정된 record.address 등을 직접 표시
 /// </summary>
 public class IDCardItem : DeskObjectItem
 {
@@ -19,12 +22,11 @@ public class IDCardItem : DeskObjectItem
     /// <summary>이 신분증 오브젝트가 표시할 레코드 ID.</summary>
     private string displayRecordId;
 
-    /// <summary>
-    /// SetComplaint 시점에 캐싱한 변경 전 주소.
-    /// SubmitNewAddress가 record.address를 런타임 수정하기 전에 기록해두므로
-    /// 기존 ID카드 클릭 시 변경 전 주소를 안정적으로 표시할 수 있다.
-    /// </summary>
-    private string cachedAddressBeforeChange;
+    // ── SetComplaint 시점 스냅샷 (SO 오염 방지) ──────────────────────────
+    private string cachedIdCardAddress;
+    private string cachedIdCardId;
+    private Sprite cachedIdCardPortrait;
+    private string cachedFullName;
 
     /// <summary>
     /// NewID 등록 전 런타임 UserRecordData 직접 참조.
@@ -32,17 +34,16 @@ public class IDCardItem : DeskObjectItem
     /// </summary>
     private UserRecordData _runtimeRecord;
 
-
     // ── 초기화 ───────────────────────────────────────────────────────────
 
     /// <summary>
     /// ObjectManagerBox가 Spawn 직후 호출.
+    /// 이 시점에 IdCard* 값을 스냅샷으로 캐싱해 이후 SO 오염을 방지한다.
     /// displayId : 이 신분증에 표시할 레코드 ID
     ///   - 방문객 신분증(IDCard)      → complaint.applicantRecordId
     ///   - 대리인 신분증(ProxyIDCard) → complaint.targetRecordId
-    ///   - null/빈 문자열 시 EffectiveTargetRecordId 사용
     /// </summary>
-public void SetComplaint(
+    public void SetComplaint(
         ComplaintContext   ctx,
         ServiceDeskManager manager,
         UIIDCardView       view,
@@ -55,19 +56,34 @@ public void SetComplaint(
             ? ctx?.EffectiveTargetRecordId
             : displayId;
         _runtimeRecord = ctx?.runtimeUserData as UserRecordData;
-        string rid = string.IsNullOrEmpty(displayRecordId)
-            ? ctx?.EffectiveTargetRecordId
-            : displayRecordId;
+
+        string rid = !string.IsNullOrEmpty(displayRecordId)
+            ? displayRecordId
+            : ctx?.EffectiveTargetRecordId;
+
         if (!string.IsNullOrEmpty(rid) && manager != null
             && manager.TryGetResidentRecord(rid, out UserRecordData rec))
-            cachedAddressBeforeChange = rec.address;
+        {
+            // ★ SetComplaint 시점에 IdCard* 값을 스냅샷으로 캐싱
+            // 이 이후 다른 민원인의 RollMismatches → SetIdCard가 SO를 덮어써도 안전
+            cachedIdCardAddress  = rec.IdCardAddress;
+            cachedIdCardId       = rec.IdCardId;
+            cachedIdCardPortrait = rec.IdCardPortrait;
+            cachedFullName       = rec.fullName;
+            Debug.Log($"[IDCardItem] 스냅샷 캐싱 — id={cachedIdCardId} addr={cachedIdCardAddress}");
+        }
         else if (_runtimeRecord != null)
-            cachedAddressBeforeChange = _runtimeRecord.address;
+        {
+            cachedIdCardAddress  = _runtimeRecord.IdCardAddress;
+            cachedIdCardId       = _runtimeRecord.IdCardId;
+            cachedIdCardPortrait = _runtimeRecord.IdCardPortrait;
+            cachedFullName       = _runtimeRecord.fullName;
+        }
     }
 
     // ── 클릭 / 드롭 ──────────────────────────────────────────────────────
 
-protected override void OnItemClicked()
+    protected override void OnItemClicked()
     {
         if (serviceDeskManager == null || complaint == null) return;
         if (!detailOpened && ObjectType != DeskObjectType.NewIDCard)
@@ -76,20 +92,19 @@ protected override void OnItemClicked()
             detailOpened = true;
         }
         if (cardView == null) { Debug.LogWarning("[IDCardItem] cardView null"); return; }
-        string recordId = !string.IsNullOrEmpty(displayRecordId)
-            ? displayRecordId : complaint.EffectiveTargetRecordId;
-        UserRecordData record;
-        if (!serviceDeskManager.TryGetResidentRecord(recordId, out record))
-        {
-            if (_runtimeRecord != null)
-            {
-                record = _runtimeRecord;
-                Debug.Log($"[IDCardItem] DB 미등록, 런타임 레코드 사용: {recordId}");
-            }
-            else { Debug.LogWarning($"[IDCardItem] 레코드 미발견: {recordId}"); return; }
-        }
+
         if (ObjectType == DeskObjectType.NewIDCard)
         {
+            // NewIDCard: DB에서 직접 읽어 현재(변경 후) 정보 표시
+            string recordId = !string.IsNullOrEmpty(displayRecordId)
+                ? displayRecordId : complaint.EffectiveTargetRecordId;
+            UserRecordData record;
+            if (!serviceDeskManager.TryGetResidentRecord(recordId, out record))
+            {
+                if (_runtimeRecord != null)
+                    record = _runtimeRecord;
+                else { Debug.LogWarning($"[IDCardItem] 레코드 미발견: {recordId}"); return; }
+            }
             record.IdCardAddress  = record.address;
             record.IdCardId       = record.recordId;
             record.IdCardPortrait = record.portrait;
@@ -97,15 +112,20 @@ protected override void OnItemClicked()
         }
         else
         {
-            if (!string.IsNullOrEmpty(cachedAddressBeforeChange))
-                record.IdCardAddress = cachedAddressBeforeChange;
-            cardView.Show(record);
+            // 기존 IDCard / ProxyIDCard: 스냅샷 캐싱값으로 임시 UserRecordData 구성해 표시
+            // SO를 직접 수정하지 않으므로 다른 민원인 영향 없음
+            var snapshot = ScriptableObject.CreateInstance<UserRecordData>();
+            snapshot.IdCardAddress  = cachedIdCardAddress;
+            snapshot.IdCardId       = cachedIdCardId;
+            snapshot.IdCardPortrait = cachedIdCardPortrait;
+            snapshot.fullName       = cachedFullName;
+            cardView.Show(snapshot);
+            Destroy(snapshot); // 즉시 정리
         }
     }
 
     protected override void OnItemDropped()
     {
-        // NewIDCard가 TakeZone에 드롭될 때 ReturnNewIdCard 커맨드 실행
         if (ObjectType == DeskObjectType.NewIDCard && IsInTakeZone)
         {
             serviceDeskManager?.ExecuteCommand(ManualCommandIds.ReturnNewIdCard);

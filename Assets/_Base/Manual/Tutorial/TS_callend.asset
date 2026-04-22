@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: TS_callend
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStepSO
   stepId: TUT_CALL_END
-  expectedCommandId: call_display
-  completedByCall: 1
+  expectedCommandId: 
+  completedByCall: 0
   targetType: 1
   worldObjectName: Calldisplay
   uiCommandId: 
   uiGameObjectName: 
   hintText: "\uBBFC\uC6D0 \uD574\uACB0 \uC808\uCC28\uC5D0 \uB300\uD55C \uC124\uBA85\uC744
     \uC885\uB8CC\uD569\uB2C8\uB2E4."
-  autoAdvance: 0
-  autoAdvanceDelay: 1
+  autoAdvance: 1
+  autoAdvanceDelay: 3
   completedByPostit: 0

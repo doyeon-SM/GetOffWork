@@ -19,7 +19,7 @@ public class GameFlowManager : MonoBehaviour
     [Header("플레이어 저장 데이터")]
     [SerializeField] private PlayerStat savedPlayerStats = new PlayerStat(0, 0.2f, 0.2f, 0.5f, 0);
     [SerializeField] private int PlayerLevel = 1;
-    [SerializeField] private int DayGoalPerformance = 10;
+    [SerializeField] private int DayGoalPerformance = 20;
 
     [Header("해금된 메뉴얼 목록")]
     [SerializeField] private List<ManualDataSO> unlockedManuals = new();
@@ -103,7 +103,7 @@ public class GameFlowManager : MonoBehaviour
         );
 
         PlayerLevel = 1;
-        DayGoalPerformance = 10;
+        DayGoalPerformance = 20;
 
         ClearUnlockedManuals();
 
@@ -136,7 +136,9 @@ public class GameFlowManager : MonoBehaviour
     {
         currentDay++;
         selectedMorningAction = MorningAction.None;
-
+        PlayerBase.Instance.SetGoalPerformance(currentDay);
+        SavePlayerState(PlayerBase.Instance);
+        
         if (GameSceneManager.Instance == null)
         {
             Debug.LogError("SceneManager Instance가 없습니다.");

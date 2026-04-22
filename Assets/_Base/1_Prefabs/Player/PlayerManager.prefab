@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb24ec3878c33645862b5f8e8dec5d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerBase
+  playerName: Player
   playerLevel: 1
   baseStats:
     performance: 0
@@ -52,7 +53,7 @@ MonoBehaviour:
     stress: 0
     reliability: 0
     pay: 0
-  promotions: 1e000000
+  promotions: 64000000c8000000f4010000
   promotionIndex: 0
   goalPerformance: 0
 --- !u!114 &-5289471087827840877
@@ -68,4 +69,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
   playerBase: {fileID: 693011176043471586}
-  ownedItems: []
