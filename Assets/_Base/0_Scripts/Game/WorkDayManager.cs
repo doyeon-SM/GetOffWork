@@ -420,17 +420,21 @@ private void Start()
 
         if (success)
         {
-            // 정산 UI 표시 후 확인 시 씬 이동
+            // 성과 달성 → 정산 UI → 확인 → 다음날(HomeScene)
             OpenDayResultUI(() =>
             {
-                Debug.Log("[WorkDayManager] 성과 달성 -> HomeScene으로 이동");
+                Debug.Log("[WorkDayManager] 성과 달성 → HomeScene으로 이동");
                 GameFlowManager.Instance?.FinishDayAndGoNext();
             });
         }
         else
         {
-            Debug.Log("[WorkDayManager] 성과 미달성 -> Title로 이동");
-            GameFlowManager.Instance?.ReturnToTitle();
+            // 성과 미달 → 정산 UI → 확인 → 게임오버(TitleScene or EndingScene)
+            OpenDayResultUI(() =>
+            {
+                Debug.Log("[WorkDayManager] 성과 미달 → 게임오버");
+                GameFlowManager.Instance?.TriggerGameOver(PlayerBase.PlayerEnding.PerformanceLess);
+            });
         }
     }
 

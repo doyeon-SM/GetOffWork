@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class GameFlowManager : MonoBehaviour
@@ -103,7 +103,15 @@ public class GameFlowManager : MonoBehaviour
         );
 
         PlayerLevel = 1;
-        DayGoalPerformance = 20;
+        DayGoalPerformance = 20; // 초기값, 이후 SetGoalPerformance(1)로 덮어씌워짐
+
+        // PlayerBase의 승진 사이클 초기화 후 1일차 목표 계산
+        if (PlayerBase.Instance != null)
+        {
+            PlayerBase.Instance.InitializeForNewGame(savedPlayerStats, PlayerLevel, DayGoalPerformance);
+            PlayerBase.Instance.SetGoalPerformance(1);
+            DayGoalPerformance = PlayerBase.Instance.GoalPerformance;
+        }
 
         ClearUnlockedManuals();
 
@@ -161,6 +169,23 @@ public class GameFlowManager : MonoBehaviour
 
         GameSceneManager.Instance.GoTotileScene();
     }
+
+    /// <summary>
+    /// 게임오버 처리. 엔딩 종류를 저장하고 엔딩씬(또는 타이틀)으로 이동한다.
+    /// 추후 3_EndingScene 추가 시 GoToEndingScene()으로 교체하면 된다.
+    /// </summary>
+    public void TriggerGameOver(PlayerBase.PlayerEnding endingType)
+    {
+        Debug.Log($"[GameFlowManager] 게임오버 — {endingType}");
+        // 추후 엔딩씬에서 참조할 수 있도록 저장
+        LastEnding = endingType;
+        if (GameSceneManager.Instance == null) return;
+        // 현재: TitleScene / 추후: GoToEndingScene()으로 교체
+        GameSceneManager.Instance.GoToEndingScene();
+    }
+
+    /// <summary>마지막 엔딩 종류. EndingScene에서 참조용.</summary>
+    public PlayerBase.PlayerEnding LastEnding { get; private set; }
 
     public void SavePlayerState(PlayerBase playerBase)
     {

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnitySceneManager = UnityEngine.SceneManagement.SceneManager;
 
 public class GameSceneManager : MonoBehaviour
@@ -11,7 +11,7 @@ public class GameSceneManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // ¾À º¯°æ ½Ã À¯Áö
+            DontDestroyOnLoad(gameObject); // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
         else
         {
@@ -40,10 +40,29 @@ public class GameSceneManager : MonoBehaviour
 
     /// <summary>
     /// -> TitleScene(0)
-    /// °ÔÀÓ Á¾·á or °ÔÀÓ ¿À¹ö
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ or ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// </summary>
+    /// <summary>
+    /// -> TitleScene(0)
     /// </summary>
     public void GoTotileScene()
     {
         UnitySceneManager.LoadScene(0);
+    }
+
+    /// <summary>
+    /// -> EndingScene(3) â€” ì¶”í›„ ì¶”ê°€ë  ì—”ë”©ì”¬
+    /// í˜„ì¬ëŠ” TitleScene(0)ìœ¼ë¡œ í´ë°±
+    /// </summary>
+    public void GoToEndingScene()
+    {
+        int sceneCount = UnitySceneManager.sceneCountInBuildSettings;
+        if (sceneCount > 3)
+            UnitySceneManager.LoadScene(3);
+        else
+        {
+            Debug.LogWarning("[GameSceneManager] EndingScene(3) ë¯¸ë“±ë¡ â€” TitleSceneìœ¼ë¡œ í´ë°±");
+            UnitySceneManager.LoadScene(0);
+        }
     }
 }

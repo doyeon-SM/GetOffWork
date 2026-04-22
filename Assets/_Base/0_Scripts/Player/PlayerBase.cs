@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 public enum Stat
 {
     Kindness,
@@ -18,6 +18,8 @@ public class PlayerBase : MonoBehaviour
     [Header("게임 목표")]
     [SerializeField] private int[] promotions = { 0 };
     [SerializeField] private int promotionIndex = 0;
+    /// <summary>현재 승진 사이클이 시작된 날(currentDay 기준, 1-indexed)</summary>
+    [SerializeField] private int cycleStartDay = 1;
 
     [Header("일일 목표 성과")]
     [SerializeField] private int goalPerformance = 0;
@@ -57,6 +59,7 @@ public class PlayerBase : MonoBehaviour
     {
         playerLevel = startLevel;
         promotionIndex = 0;
+        cycleStartDay = 1;
         goalPerformance = Mathf.Max(0, startGoalPerformance);
         baseStats = initialStats;
     }
@@ -123,10 +126,18 @@ public bool AddPerformance(int amount)
         return true;
     }
 
+    /// <summary>
+    /// 다음 날의 일일 목표 성과를 설정한다.
+    /// value = currentDay (FinishDayAndGoNext에서 day++ 후 호출)
+    /// goal = promotions[promotionIndex] / 5 * dayInCycle  (dayInCycle: 1~5 클램프)
+    /// </summary>
     public void SetGoalPerformance(int value)
     {
-        goalPerformance = Mathf.RoundToInt(promotions[playerLevel - 1] * (value % 5) / 5);
-        Debug.Log($"[PlayerBase] SetGoal {goalPerformance}");
+        if (promotions == null || promotions.Length == 0) return;
+        int index      = Mathf.Clamp(promotionIndex, 0, promotions.Length - 1);
+        int dayInCycle = Mathf.Clamp(value - cycleStartDay + 1, 1, 5);
+        goalPerformance = Mathf.RoundToInt(promotions[index] / 5f * dayInCycle);
+        Debug.Log($"[PlayerBase] SetGoal day={value} cycleStart={cycleStartDay} dayInCycle={dayInCycle} goal={goalPerformance}");
     }
 
     public void CheckPromotion()
@@ -137,9 +148,32 @@ public bool AddPerformance(int amount)
         while (promotionIndex < promotions.Length &&
                baseStats.Performance >= promotions[promotionIndex])
         {
+            // 승진 보너스: 5일 사이클에서 남은 일수 × 1000원
+            int currentDay  = GameFlowManager.Instance != null ? GameFlowManager.Instance.CurrentDay : cycleStartDay;
+            int dayInCycle  = Mathf.Clamp(currentDay - cycleStartDay + 1, 1, 5);
+            int remainDays  = 5 - dayInCycle;
+            int bonusPay    = remainDays * 1000;
+            if (bonusPay > 0)
+            {
+                AddPay(bonusPay);
+                Debug.Log($"[PlayerBase] 승진 보너스! dayInCycle={dayInCycle} 남은일수={remainDays} +{bonusPay}원");
+            }
+
+            // 다음 사이클 시작일 = 다음 날
+            cycleStartDay = currentDay + 1;
+
             promotionIndex++;
             playerLevel++;
-            Debug.Log($"승진! 플레이어 레벨 상승 : {playerLevel}");
+
+            // 승진 시 스탯 초기화 (스트레스 제외, Pay는 보너스 포함 유지)
+            baseStats = new PlayerStat(
+                performance: 0,
+                kindness:    0.2f,
+                stress:      baseStats.Stress,
+                reliability: 0.5f,
+                pay:         baseStats.Pay
+            );
+            Debug.Log($"[PlayerBase] 승진! 레벨={playerLevel} 다음사이클시작일={cycleStartDay} / 스탯초기화(스트레스 유지)");
         }
     }
 
@@ -172,6 +206,11 @@ public bool AddPerformance(int amount)
                 if (baseStats.Stress >= 1.0f)
                     CheckEnding(PlayerEnding.Stressfull);
                 break;
+
+            case Stat.Reliability:
+                if (baseStats.Reliability <= 0.0f)
+                    CheckEnding(PlayerEnding.PerformanceLess);
+                break;
         }
     }
 
@@ -182,21 +221,23 @@ public bool AddPerformance(int amount)
         Debug.Log($"Player Goal : M{promotions[promotionIndex]} | D{goalPerformance}");
     }
 
+    /// <summary>
+    /// 즉시 게임오버 엔딩 처리.
+    /// NormalEnding은 WorkDayManager.FinishDay()가 담당하므로 여기서는 처리하지 않는다.
+    /// </summary>
     public void CheckEnding(PlayerEnding endingType)
     {
+        Debug.Log($"[PlayerBase] 엔딩 발생: {endingType}");
         switch (endingType)
         {
             case PlayerEnding.NormalEnding:
-                Debug.Log("Happy Ending");
+                // 정상 클리어는 WorkDayManager.FinishDay()에서 처리
                 break;
             case PlayerEnding.PerformanceLess:
-                Debug.Log("일일 성과 미달 해고");
-                break;
             case PlayerEnding.Stressfull:
-                Debug.Log("화병 퇴사");
-                break;
             case PlayerEnding.Unkindness:
-                Debug.Log("불친절 해고");
+                // 즉시 게임오버 → GameFlowManager 경유로 EndingScene(현재는 TitleScene)
+                GameFlowManager.Instance?.TriggerGameOver(endingType);
                 break;
         }
     }
