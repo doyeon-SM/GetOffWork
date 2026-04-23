@@ -46,9 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelDesignManager
   dayLevels:
   - targetDay: 1
-    maxCustomerPerDay: 5
-    morningDuration: 100
-    afternoonDuration: 0
+    maxCustomerPerDay: 10
+    morningDuration: 300
+    afternoonDuration: 300
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
       spawnWeight: 0.7

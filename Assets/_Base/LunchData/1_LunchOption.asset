@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LunchOptionData
   optionName: "\uADF8\uB0E5 \uC2A4\uD2B8\uB808\uC2A4"
   description: "\uADF8\uB0E5 \uC2A4\uD2B8\uB808\uC2A4"
+  effectDescription: "\uC2A4\uD2B8\uB808\uC2A4 10 \uC99D\uAC00"
   statChanges:
   - stat: 1
     amount: 10

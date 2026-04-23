@@ -17,6 +17,18 @@ MonoBehaviour:
   - targetDay: 1
     sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
     haedline: Day1
+  - targetDay: 2
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    haedline: Day2
+  - targetDay: 3
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    haedline: Day3
+  - targetDay: 4
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    haedline: Day4
+  - targetDay: 5
+    sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}
+    haedline: Day5
   eventEntries:
   - eventType: 0
     sprite: {fileID: -1962116829884891331, guid: 70fee79c70152dd4fadf9bdb1571afaa, type: 3}

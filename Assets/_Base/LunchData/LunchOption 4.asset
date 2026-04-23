@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fec741c552bc40f40b824548fa2450f5, type: 3}
+  m_Name: LunchOption 4
+  m_EditorClassIdentifier: Assembly-CSharp::LunchOptionData
+  optionName: "\uB2E8\uCCB4 \uC810\uC2EC\uC2DD\uC0AC"
+  description: "\uC0C1\uC0AC\uBD84\uB4E4\uACFC \uB3D9\uB8CC\uC640 \uC0DD\uC120\uAD6C\uC774
+    \uC9D1\uC73C\uB85C \uC2DD\uC0AC\uB97C \uD558\uB7EC \uAC04\uB2E4."
+  effectDescription: "\uB9DB\uC788\uC5C8\uB2E4. \uD558\uC9C0\uB9CC, \uC0DD\uC120\uB0C4\uC0C8\uAC00
+    \uBBFC\uC6D0\uC778\uB4E4\uC5D0\uAC8C \uBD88\uD3B8\uC744 \uC8FC\uC5C8\uB2E4.\n(\uC2A4\uD2B8\uB808\uC2A4
+    -10%, \uCE5C\uC808\uD568 -20%)"
+  statChanges:
+  - stat: 1
+    amount: -10
+  - stat: 0
+    amount: -20

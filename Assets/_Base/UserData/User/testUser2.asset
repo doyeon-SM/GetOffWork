@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c511b7d2b0929b459e6aaa1e7dc77cd, type: 3}
-  m_Name: User1
+  m_Name: testUser2
   m_EditorClassIdentifier: Assembly-CSharp::UserRecordData
-  recordId: 00000001
-  fullName: "\uD64D\uAE38\uB3D9"
-  portrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
-  address: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C 1"
-  birthDate: 1990.01.01
-  phoneNumber: 010-1111-1111
-  email: "\uD64D\uAE38\uB3D9@mail.com"
-  fakeAddress: "\uC11C\uC6B8\uC2DC 1"
+  recordId: 00000002
+  fullName: "\uAE40\uCCA0\uC218"
+  portrait: {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
+  address: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C 2"
+  birthDate: 1995.01.02
+  phoneNumber: 010-1111-1112
+  email: "\uAE40\uCCA0\uC218@mail.com"
+  fakeAddress: "\uC11C\uC6B8\uC2DC 2"
   fakeID: 000
   fakePortrait: {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
   note: 
   IdCardAddress: "\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uD14C\uD5E4\uB780\uB85C
-    1"
-  IdCardId: 001
-  IdCardPortrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+    2"
+  IdCardId: 002
+  IdCardPortrait: {fileID: 7156064963727093473, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}

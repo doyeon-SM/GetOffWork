@@ -17,8 +17,7 @@ MonoBehaviour:
   description: "\uD604\uB300\uC778\uC758 3\uB300 \uC601\uD5A5\uC18C \uB2C8\uD1A0\uD2F4\uC744
     \uCDA9\uC804\uD560 \uC218 \uC788\uB2E4."
   icon: {fileID: 5348037993738455246, guid: bdd027c3a872c234486897daead888b5, type: 3}
-  price: 5000
-  maxCount: 3
+  price: 500
   effects:
   - effectType: 1
     value: -15

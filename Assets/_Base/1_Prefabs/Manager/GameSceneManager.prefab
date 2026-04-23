@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8506961632142544952}
   - component: {fileID: 4248350733718609526}
+  - component: {fileID: 6188269345504646428}
   m_Layer: 0
   m_Name: GameSceneManager
   m_TagString: Untagged
@@ -44,3 +45,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b9f0285d7fb56d4aa76abe00113c17e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneManager
+--- !u!114 &6188269345504646428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2772153237307869108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b310cba7204b64f9bdf91993c0c56d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseManager
+  optionPanelPrefab: {fileID: 7236444585839200176, guid: 031e3f78f9f84bd47b20dedfd16eeb7b, type: 3}
+  uiRoot: {fileID: 0}

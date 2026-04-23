@@ -34,7 +34,7 @@ public class UILunchResult : MonoBehaviour
             return;
         }
 
-        List<string> lines = new List<string>();
+        /*List<string> lines = new List<string>();
 
         for (int i = 0; i < selectedOption.statChanges.Count; i++)
         {
@@ -44,9 +44,11 @@ public class UILunchResult : MonoBehaviour
 
             string sign = change.amount >= 0 ? "+" : "";
             lines.Add($"{change.stat}: {sign}{change.amount}");
-        }
+        }*/
 
-        resultText.text = string.Join("\n", lines);
+        //resultText.text = string.Join("\n", lines);
+
+        resultText.text = selectedOption.effectDescription != null ? selectedOption.effectDescription : string.Empty;
     }
 
     private void OnClickConfirm()

@@ -16,8 +16,7 @@ MonoBehaviour:
   itemName: "\uCE94\uCEE4\uD53C"
   description: "\uD604\uB300\uC778\uC758 3\uB300 \uC601\uD5A5\uC18C \uCE74\uD398\uC778"
   icon: {fileID: -653000837305474696, guid: 38f1fe265b6aea347ba0df710c32efe3, type: 3}
-  price: 1000
-  maxCount: 3
+  price: 100
   effects:
   - effectType: 1
     value: -5

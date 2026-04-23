@@ -10,11 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6159d88a459c3945b2b75e182c5b9e9, type: 3}
-  m_Name: testDialogue
+  m_Name: Day1_Dialogue
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
   dialogueId: 
   lines:
   - speakerName: 
     speakerPortrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
-    dialogueText: "\uCD9C\uADFC\uD558\uC790"
-    choices: []
+    dialogueText: "\uC720\uC2AC\uC2DC \uC2DC\uCCAD \uACF5\uBB34\uC6D0\uC73C\uB85C
+      \uCCAB \uCD9C\uADFC\uD558\uB294 \uB0A0\uC774\uB2E4. "
+  - speakerName: 
+    speakerPortrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+    dialogueText: "\uBC8C\uC368 \uD1F4\uADFC\uD558\uACE0 \uC2F6\uC9C0\uB9CC \uC5F4\uC2EC\uD788
+      \uC77C\uD574\uBCF4\uC790. "

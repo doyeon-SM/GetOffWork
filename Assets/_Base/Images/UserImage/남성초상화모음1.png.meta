@@ -129,7 +129,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_0"
+      name: man2
       rect:
         serializedVersion: 2
         x: 23
@@ -151,7 +151,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_1"
+      name: man3
       rect:
         serializedVersion: 2
         x: 512
@@ -173,7 +173,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_2"
+      name: man4
       rect:
         serializedVersion: 2
         x: 31
@@ -195,7 +195,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_3"
+      name: man5
       rect:
         serializedVersion: 2
         x: 514
@@ -203,7 +203,7 @@ TextureImporter:
         width: 504
         height: 492
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -232,10 +232,10 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_0": 314897823003437260
-      "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_1": 7400469384750768597
-      "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_2": 1437474589
-      "\uB0A8\uC131\uCD08\uC0C1\uD654\uBAA8\uC74C1_3": 1749564819
+      man2: 314897823003437260
+      man3: 7400469384750768597
+      man4: 1437474589
+      man5: 1749564819
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

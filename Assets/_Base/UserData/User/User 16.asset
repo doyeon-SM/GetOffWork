@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c511b7d2b0929b459e6aaa1e7dc77cd, type: 3}
+  m_Name: User 16
+  m_EditorClassIdentifier: Assembly-CSharp::UserRecordData
+  recordId: 61920458
+  fullName: "\uC720\uC11C\uC544"
+  portrait: {fileID: 21300000, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
+  address: "\uC720\uC2AC\uC2DC \uC18C\uB2F4\uAD6C \uAC00\uB85C 1"
+  birthDate: 2008.09.09
+  phoneNumber: 010-8294-0173
+  email: dbtjdk@mail.com
+  fakeAddress: "\uC724\uC2AC\uC2DC \uB77C\uB77C\uAD6C \uAC00\uB2F4\uB3D9 1"
+  fakeID: 41004484
+  fakePortrait: {fileID: 21300000, guid: 43f08c2ce75c0cf40a58c2f1fcc80b4c, type: 3}
+  note: 
+  IdCardAddress: 
+  IdCardId: 
+  IdCardPortrait: {fileID: 0}
