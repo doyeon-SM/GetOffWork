@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 진상 퇴치 메뉴얼의 추상 기반 클래스.
@@ -40,10 +40,10 @@ public abstract class AntiNuisanceManual
     /// </summary>
     protected void EnqueueStatChange(
         WorkDayManager workDayManager,
-        int   performanceDelta,
-        float stressDelta,
-        float kindnessDelta,
-        float reliabilityDelta)
+        int performanceDelta,
+        int stressDelta,       // 정수 % 단위 (예: 3 = +3%)
+        int kindnessDelta,     // 정수 % 단위
+        int reliabilityDelta)  // 정수 % 단위
     {
         if (workDayManager == null) return;
 

@@ -1015,7 +1015,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 52.96619}
+  m_AnchoredPosition: {x: -0.0000868036, y: 52.963093}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -2858,8 +2858,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301799489}
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
-  m_Value: -0.00006107785
-  m_Size: 0.8873939
+  m_Value: -0.0000034572388
+  m_Size: 0.8897708
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3895,6 +3895,10 @@ PrefabInstance:
       propertyPath: afternoonDuration
       value: 300
       objectReference: {fileID: 0}
+    - target: {fileID: 6316683502525334460, guid: 869190e9f1690c641a827f9cd5e7b5af, type: 3}
+      propertyPath: customerCancelSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: d0f638612cd89f3419973cccfa1e75c0, type: 3}
     - target: {fileID: 6316683502525334460, guid: 869190e9f1690c641a827f9cd5e7b5af, type: 3}
       propertyPath: dayResultPanelRoot
       value: 

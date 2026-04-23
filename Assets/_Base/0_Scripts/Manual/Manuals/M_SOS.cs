@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 진상 퇴치 메뉴얼 - SOS
@@ -16,10 +16,10 @@ public class M_SOS : AntiNuisanceManual
 
     // ── 스탯 변화량 ───────────────────────────────────────────────────────
     // 음수 = 감소 (스트레스는 감소가 이득, 성과/친절도는 감소가 손해)
-    private const int   PerformanceDelta = -2;
-    private const float StressDelta      = -5f;
-    private const float KindnessDelta    = -5f;
-    private const float ReliabilityDelta =  0f;
+    private const int PerformanceDelta = -2;
+    private const int StressDelta      = -5; // 정수 % 단위
+    private const int KindnessDelta    = -5; // 정수 % 단위
+    private const int ReliabilityDelta =  0;
 
     // ── AntiNuisanceManual 구현 ───────────────────────────────────────────
     public override string CommandId  => AntiNuisanceManualIds.SOS;
@@ -42,8 +42,8 @@ public class M_SOS : AntiNuisanceManual
         }
         // 스탯 즉시 적용
         playerBase.AddPerformance(PerformanceDelta);
-        playerBase.AddStat(Stat.Stress,   Mathf.RoundToInt(StressDelta));
-        playerBase.AddStat(Stat.Kindness, Mathf.RoundToInt(KindnessDelta));
+        playerBase.AddStat(Stat.Stress,   StressDelta);
+        playerBase.AddStat(Stat.Kindness, KindnessDelta);
 
 
         Debug.Log(TAG + $" 발동 — 민원응대 중:{hasActiveCustomer} / " +

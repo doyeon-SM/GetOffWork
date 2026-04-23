@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,7 +37,17 @@ public class WorkDayManager : MonoBehaviour
     [Header("점심 옵션 목록")]
     [SerializeField] private List<LunchOptionData> lunchOptionList = new List<LunchOptionData>();
 
-    [Header("하루 정산 UI (프리팹 or 씬에 배치)")]
+    [Header("영업 종료 시 대기 민원인 패널티")]
+    [Tooltip("대기 민원인 1명 취소 시 효과음")]
+    [SerializeField] private AudioClip customerCancelSfx;
+    [Tooltip("한 명당 패널티 (성과, 스트레스, 친절도 단위: 정수%)")]
+    [SerializeField] private int cancelPenaltyPerformance = -3;
+    [SerializeField] private int cancelPenaltyStress      =  3;
+    [SerializeField] private int cancelPenaltyKindness    = -3;
+    [Tooltip("대기 민원인 취소 간격 (초)")]
+    [SerializeField] private float customerCancelInterval = 0.5f;
+
+        [Header("하루 정산 UI (프리팹 or 씬에 배치)")]
     [Tooltip("null이면 씬에서 UIDayResultView를 FindFirstObjectByType으로 탐색")]
     [SerializeField] private UIDayResultView dayResultViewPrefab;
     [SerializeField] private Transform       dayResultPanelRoot;
@@ -47,6 +58,8 @@ public class WorkDayManager : MonoBehaviour
     private bool            isPausedByUI;
     private bool            isFinished;
     private bool            lunchChoiceCompleted;
+    private Coroutine       _dismissCoroutine;   // 대기 민원인 순차 처리 코루틴
+    private System.Action   _pendingPhaseAction; // 대기 처리 완료 후 실행할 페이즈 전환
 
     private UILunchChoice   currentLunchChoiceUI;
     private UILunchResult   currentLunchResultUI;
@@ -61,7 +74,7 @@ public class WorkDayManager : MonoBehaviour
     /// <summary>현재 페이즈의 최대 시간(초). UIClockTimer가 비율 계산에 사용.</summary>
     public float      CurrentPhaseDuration => currentPhase == DayPhase.MorningWork ? morningDuration : afternoonDuration;
     // event
-    public event Action<int, float, float, float> OnUIPlayerStatUpdate;
+    public event Action<int, int, int, int> OnUIPlayerStatUpdate; // (performanceDelta, stressDelta%, kindnessDelta%, reliabilityDelta%)
     
     // ── Unity 생명주기 ─────────────────────────────────────────────────────
     private void Awake()
@@ -233,12 +246,97 @@ private void Start()
     {
         switch (currentPhase)
         {
-            case DayPhase.MorningWork:   StartLunchBreak(); break;
-            case DayPhase.AfternoonWork: StartFinish();     break;
+            case DayPhase.MorningWork:
+                BeginDismissWaitingThen(StartLunchBreak);
+                break;
+            case DayPhase.AfternoonWork:
+                BeginDismissWaitingThen(StartFinish);
+                break;
             case DayPhase.LunchBreak:
                 Debug.LogWarning("[WorkDayManager] 점심시간은 수동으로 닫혀야 해서 AdvancePhase가 작동하지 않습니다.");
                 break;
         }
+    }
+
+    // ── 영업 종료 대기 민원인 처리 ────────────────────────────────────────
+
+    /// <summary>
+    /// 대기 민원인이 있으면 순차적으로 취소 처리 후 <paramref name="onComplete"/>를 실행한다.
+    /// 없으면 즉시 <paramref name="onComplete"/>를 실행한다.
+    /// </summary>
+    private void BeginDismissWaitingThen(System.Action onComplete)
+    {
+        // 타이머 정지 (대기 처리 중 다시 AdvancePhase가 호출되지 않도록)
+        isPausedByUI = true;
+
+        // ServiceDeskManager의 새 손님 스케줄 중단 + 현재 응대 중 손님 마무리
+        if (serviceDeskManager != null)
+            serviceDeskManager.StopNewArrivalsOnly();
+
+        int waitingCount = serviceDeskManager != null ? serviceDeskManager.WaitingCount : 0;
+
+        if (waitingCount <= 0)
+        {
+            // 대기열 없음 → 즉시 다음 페이즈
+            Debug.Log("[WorkDayManager] 대기열 없음 → 즉시 페이즈 전환");
+            onComplete?.Invoke();
+            return;
+        }
+
+        Debug.Log($"[WorkDayManager] 대기 민원인 {waitingCount}명 취소 처리 시작");
+        _pendingPhaseAction = onComplete;
+        if (_dismissCoroutine != null) StopCoroutine(_dismissCoroutine);
+        _dismissCoroutine = StartCoroutine(DismissWaitingCustomers());
+    }
+
+    /// <summary>
+    /// 대기열의 민원인을 0.5초 텀으로 한 명씩 취소 처리한다.
+    /// 각 취소마다 패널티(성과-3, 스트레스+3, 친절도-3)를 적용하고
+    /// 효과음과 UI 이벤트를 발행한다.
+    /// </summary>
+    private IEnumerator DismissWaitingCustomers()
+    {
+        while (serviceDeskManager != null && serviceDeskManager.WaitingCount > 0)
+        {
+            // 1) 효과음 재생
+            if (customerCancelSfx != null)
+                SoundSettingsManager.Instance?.PlaySfxOneShot(customerCancelSfx);
+
+            // 2) 대기열에서 1명 제거
+            serviceDeskManager.DismissOneWaiting();
+
+            // 3) 패널티 적용 (스탯에 직접 반영)
+            ResolvePlayerBase();
+            if (playerBase != null)
+            {
+                if (cancelPenaltyPerformance != 0) playerBase.AddPerformance(cancelPenaltyPerformance);
+                if (cancelPenaltyStress      != 0) playerBase.AddStat(Stat.Stress,   cancelPenaltyStress);
+                if (cancelPenaltyKindness    != 0) playerBase.AddStat(Stat.Kindness, cancelPenaltyKindness);
+            }
+
+            // 4) StatChangeEvent 기록 (정산 UI에 표시)
+            var evt = new StatChangeEvent
+            {
+                source           = StatChangeSource.CustomerCancelledAtClose,
+                performanceDelta = cancelPenaltyPerformance,
+                stressDelta      = cancelPenaltyStress,   // int % 단위
+                kindnessDelta    = cancelPenaltyKindness, // int % 단위
+                reliabilityDelta = 0,
+            };
+            EnqueueStatChangeEvent(evt);
+
+            Debug.Log($"[WorkDayManager] 대기 민원인 취소 패널티 적용 / 남은 대기: {serviceDeskManager.WaitingCount}");
+
+            // 5) 0.5초 대기 후 다음 명
+            yield return new WaitForSeconds(customerCancelInterval);
+        }
+
+        Debug.Log("[WorkDayManager] 모든 대기 민원인 처리 완료 → 페이즈 전환");
+        _dismissCoroutine = null;
+
+        // 6) 대기열이 모두 비워진 후 다음 페이즈로 전환
+        _pendingPhaseAction?.Invoke();
+        _pendingPhaseAction = null;
     }
 
     // ── 점심 UI ────────────────────────────────────────────────────────────
@@ -359,7 +457,7 @@ private void Start()
     /// 스탯 변화량을 UI 이벤트로만 발행한다. StatChangeEvent 큐에는 추가하지 않는다.
     /// perMessagePenalty 등 응대 중 즉시 발생하는 스탯 변화를 UI에 반영할 때 사용한다.
     /// </summary>
-    public void NotifyStatChangedUI(int performanceDelta, float stressDelta, float kindnessDelta, float reliabilityDelta)
+    public void NotifyStatChangedUI(int performanceDelta, int stressDelta, int kindnessDelta, int reliabilityDelta)
     {
         OnUIPlayerStatUpdate?.Invoke(performanceDelta, stressDelta, kindnessDelta, reliabilityDelta);
     }
@@ -369,6 +467,7 @@ private void Start()
         if (_dayResultData == null) return;
         _dayResultData.statChangeProgress.Enqueue(evt);
         //ui event invoke
+        // StatChangeEvent의 스탯 delta는 0~1 정규화 단위 → UIPlayerStat은 % 단위를 기대하므로 *100 변환
         OnUIPlayerStatUpdate?.Invoke(evt.performanceDelta, evt.stressDelta, evt.kindnessDelta, evt.reliabilityDelta);
         Debug.Log($"[WorkDayManager] StatChangeEvent enqueued — source:{evt.source} "
                 + $"P:{evt.performanceDelta} S:{evt.stressDelta:F2} K:{evt.kindnessDelta:F2} "

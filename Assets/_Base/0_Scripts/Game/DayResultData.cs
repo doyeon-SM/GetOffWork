@@ -1,14 +1,15 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
 
 /// <summary>스탯 변화 이벤트의 출처 구분</summary>
 public enum StatChangeSource
 {
-    ServiceSuccess,  // 응대 성공
-    ServiceFail,     // 응대 실패
-    Lunch,           // 점심시간
-    ItemUse,         // 아이템 사용
+    ServiceSuccess,        // 응대 성공
+    ServiceFail,           // 응대 실패
+    Lunch,                 // 점심시간
+    ItemUse,               // 아이템 사용
+    CustomerCancelledAtClose, // 영업 종료 시 대기 민원인 강제 취소 패널티
 }
 
 /// <summary>
@@ -19,11 +20,11 @@ public enum StatChangeSource
 public struct StatChangeEvent
 {
     public StatChangeSource source;
-    public int   performanceDelta;
-    public float stressDelta;
-    public float kindnessDelta;
-    public float reliabilityDelta;
-    public int   payDelta;
+    public int performanceDelta;  // 정수 (성과 단위)
+    public int stressDelta;       // 정수 % 단위 (예: +3 = +3%)
+    public int kindnessDelta;     // 정수 % 단위
+    public int reliabilityDelta;  // 정수 % 단위
+    public int payDelta;          // 원 단위
 }
 
 /// <summary>

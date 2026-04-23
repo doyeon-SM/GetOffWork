@@ -538,6 +538,30 @@ public void StopWorkPhase()
 
     public void SetWorkDayManager(WorkDayManager wdm) => _workDayManager = wdm;
 
+    /// <summary>
+    /// 영업 종료 시: 새 손님 도착만 중단한다.
+    /// 대기열은 WorkDayManager.DismissWaitingCustomers()가 순차 처리한다.
+    /// </summary>
+    public void StopNewArrivalsOnly()
+    {
+        isWorking         = false; // 새 손님 스케줄 중단
+        nextCustomerTimer = 0f;
+        // 현재 응대 중인 손님은 건드리지 않는다
+        OnWorkStateChanged?.Invoke(false);
+        Log(TAG + " 새 손님 도착 중단 (대기열 유지)");
+    }
+
+    /// <summary>
+    /// 대기열에서 민원인 1명을 제거한다. WorkDayManager 코루틴에서 호출된다.
+    /// </summary>
+    public void DismissOneWaiting()
+    {
+        if (waitingQueue.Count <= 0) return;
+        waitingQueue.Dequeue();
+        RaiseWaitingQueueChanged();
+        Log(TAG + $" [영업종료] 대기 민원인 1명 취소 / 남은 대기: {waitingQueue.Count}");
+    }
+
     private void RaiseWaitingQueueChanged() => OnWaitingQueueChanged?.Invoke(waitingQueue.Count);
     private void Log(string message) { if (showDebugLog) Debug.Log(message); }
 }

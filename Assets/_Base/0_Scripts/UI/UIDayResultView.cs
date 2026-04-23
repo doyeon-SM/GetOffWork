@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -145,7 +145,7 @@ public class UIDayResultView : MonoBehaviour
         }
         if (evt.stressDelta != 0)
         {
-            _dispStress += evt.stressDelta;
+            _dispStress += evt.stressDelta; // int % 단위 그대로 누적
             ShowDelta(stressDeltaText, evt.stressDelta, isPercent: true);
         }
         if (evt.kindnessDelta != 0)
@@ -205,9 +205,11 @@ public class UIDayResultView : MonoBehaviour
     private void RefreshPerformanceText()
     {
         if (performanceText == null) return;
-        int   max = _data.maxPerformance;
-        float pct = max > 0 ? (float)_dispPerformance / max : 0f;
-        performanceText.text = $"{_dispPerformance} / {max} ({pct:F0}%)";
+        int   max      = _data.maxPerformance;
+        // 표시값은 0 이하로 내려가지 않도록 방어
+        int   dispClamped = Mathf.Max(0, _dispPerformance);
+        float pct      = max > 0 ? (float)dispClamped / max : 0f;
+        performanceText.text = $"{dispClamped} / {max} ({pct:F0}%)";
     }
 
     private void RefreshStatTexts()

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
@@ -148,8 +148,9 @@ public class UIPlayerStat : MonoBehaviour
 
     // ── 스탯 변화 표시 ────────────────────────────────────────────────────
 
-    private void HandleUIPlayerStatUpdate(int p, float s, float k, float r)
+    private void HandleUIPlayerStatUpdate(int p, int s, int k, int r)
     {
+        // 모든 파라미터는 이미 정수 단위 (성과: 정수, 스탯: 정수 %)
         if (p != 0)
         {
             string v = p > 0 ? $"+{p}" : p.ToString();
@@ -157,20 +158,17 @@ public class UIPlayerStat : MonoBehaviour
         }
         if (s != 0)
         {
-            int sv = Mathf.RoundToInt(s);
-            string v = sv > 0 ? $"+{sv}%" : sv.ToString();
+            string v = s > 0 ? $"+{s}%" : $"{s}%";
             StartCoroutine(ViewUpdatePlayerStat(v, updateStress));
         }
         if (k != 0)
         {
-            int kv = Mathf.RoundToInt(k);
-            string v = kv > 0 ? $"+{kv}%" : kv.ToString();
+            string v = k > 0 ? $"+{k}%" : $"{k}%";
             StartCoroutine(ViewUpdatePlayerStat(v, updateKindness));
         }
         if (r != 0)
         {
-            int rv = Mathf.RoundToInt(r);
-            string v = rv > 0 ? $"+{rv}%" : rv.ToString();
+            string v = r > 0 ? $"+{r}%" : $"{r}%";
             StartCoroutine(ViewUpdatePlayerStat(v, updateReliability));
         }
     }
