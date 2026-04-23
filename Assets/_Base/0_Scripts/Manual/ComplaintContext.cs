@@ -7,7 +7,7 @@ public class ComplaintContext
     public enum ComplaintType  { FullID, AddressChange, NewID }
     public enum ApplicantType  { Self, Proxy }
     public enum DeliveryType   { None, Print, Mobile }
-    public enum NuisanceType   { None, Rudely }
+    public enum NuisanceType   { None, Rudely, Talkative }
 
     // ── 민원 기본 정보 ────────────────────────────────────────────────────
     [Header("민원 기본 정보")]

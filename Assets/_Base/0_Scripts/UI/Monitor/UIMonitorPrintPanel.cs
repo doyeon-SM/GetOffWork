@@ -15,6 +15,9 @@ public class UIMonitorPrintPanel : MonoBehaviour
     [SerializeField] private TMP_Text addressText;
     [SerializeField] private TMP_Text birthText;
 
+    [Header("SFX")]
+    [SerializeField] private AudioClip printSFX;
+
     private UIMonitorController controller;
 
     public void Init(UIMonitorController ctrl)
@@ -26,6 +29,8 @@ public class UIMonitorPrintPanel : MonoBehaviour
 
     public void OnClickPrint()
     {
+        if (printSFX != null && SoundSettingsManager.Instance != null)
+            SoundSettingsManager.Instance.PlaySfxOneShot(printSFX);
         controller?.OnPrint();
     }
 

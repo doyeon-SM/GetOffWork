@@ -1309,6 +1309,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueTrigger
   dialogueData: {fileID: 11400000, guid: 0a38d5b921768944dae9ec6154b5b0b9, type: 2}
   requiredTutorialStep: 
+  requiredDay: 1
   triggerOnce: 1
   triggerOnStart: 1
   triggerOnEnter: 0

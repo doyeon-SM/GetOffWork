@@ -61,3 +61,23 @@ MonoBehaviour:
     nuisanceType: 1
     lines:
     - ...
+  - complaintType: 0
+    applicantType: 0
+    nuisanceType: 2
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4. \uC218\uACE0\uD558\uC138\uC694. \uAC74\uAC15\uD558\uC138\uC694."
+  - complaintType: 0
+    applicantType: 1
+    nuisanceType: 2
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4. \uC218\uACE0\uD558\uC138\uC694. \uAC74\uAC15\uD558\uC138\uC694."
+  - complaintType: 1
+    applicantType: 0
+    nuisanceType: 2
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4. \uC218\uACE0\uD558\uC138\uC694. \uAC74\uAC15\uD558\uC138\uC694."
+  - complaintType: 2
+    applicantType: 0
+    nuisanceType: 2
+    lines:
+    - "\uAC10\uC0AC\uD569\uB2C8\uB2E4. \uC218\uACE0\uD558\uC138\uC694. \uAC74\uAC15\uD558\uC138\uC694."

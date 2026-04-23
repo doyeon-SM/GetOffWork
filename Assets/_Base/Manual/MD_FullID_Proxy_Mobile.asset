@@ -16,7 +16,7 @@ MonoBehaviour:
   patienceMin: 50
   patienceMax: 80
   completionReward:
-    Performance: 6
+    Performance: 4
     Kindness: 0
     Reliability: 0
     Pay: 0

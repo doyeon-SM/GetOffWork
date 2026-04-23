@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ManualDataSO
   manualTitle: FullID_Self_Print
   patienceMin: 30
-  patienceMax: 50
+  patienceMax: 45
   completionReward:
-    Performance: 3
+    Performance: 2
     Kindness: 0
     Reliability: 0
     Pay: 0

@@ -13,6 +13,8 @@ public class DialogueTrigger : MonoBehaviour
     [Header("튜토리얼 연동 (선택)")]
     [Tooltip("비워두면 항상 실행. 입력하면 해당 TutorialStep 에서만 발동.")]
     [SerializeField] private string requiredTutorialStep = "";
+    [Tooltip("0이하는 항상 실행. 입력하면 해당 CurrentDay 에서만 발동")]
+    [SerializeField] private int requiredDay=0;
 
     [Header("트리거 설정")]
     [Tooltip("true: 한 번만 발동 / false: 반복 가능")]
@@ -51,6 +53,12 @@ public class DialogueTrigger : MonoBehaviour
         {
             if (TutorialManager.Instance == null) return;
             if (TutorialManager.Instance.CurrentStep != requiredTutorialStep) return;
+        }
+        // 요일별 단계 조건 체크
+        if(requiredDay > 0)
+        {
+            if (GameFlowManager.Instance == null) return;
+            if (GameFlowManager.Instance.CurrentDay != requiredDay) return;
         }
 
         hasTriggered = true;

@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: MD_NewID
   m_EditorClassIdentifier: Assembly-CSharp::ManualDataSO
   manualTitle: NewID
-  patienceMin: 100
-  patienceMax: 120
+  patienceMin: 80
+  patienceMax: 100
   completionReward:
-    Performance: 8
+    Performance: 6
     Kindness: 0
     Reliability: 0
     Pay: 0

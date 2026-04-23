@@ -16,13 +16,26 @@ MonoBehaviour:
   - nuisanceType: 1
     spawnChance: 0.1
     perMessagePenalty:
-      stress: 1
+      stress: 3
       kindness: 0
       reliability: 0
       performance: 0
     patienceMultiplier: 1
     onFinishResult:
-      stress: 3
+      stress: 5
+      kindness: 0
+      reliability: 0
+      performance: 2
+  - nuisanceType: 2
+    spawnChance: 0.1
+    perMessagePenalty:
+      stress: 2
+      kindness: 0
+      reliability: 0
+      performance: 0
+    patienceMultiplier: 1
+    onFinishResult:
+      stress: 5
       kindness: 0
       reliability: 0
       performance: 3

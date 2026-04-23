@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: MD_AddressChange
   m_EditorClassIdentifier: Assembly-CSharp::ManualDataSO
   manualTitle: AddressChange
-  patienceMin: 70
-  patienceMax: 100
+  patienceMin: 65
+  patienceMax: 80
   completionReward:
-    Performance: 5
+    Performance: 3
     Kindness: 0
     Reliability: 0
     Pay: 0

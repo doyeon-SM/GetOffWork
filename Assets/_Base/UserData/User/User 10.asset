@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UserRecordData
   recordId: 40592817
   fullName: "\uB0A8\uAD81\uD601"
-  portrait: {fileID: 1437474589, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
+  portrait: {fileID: 21300000, guid: 19fdfe6c199a87242b38cb1e4847fd1e, type: 3}
   address: "\uC720\uC2AC\uC2DC \uC18C\uB2F4\uAD6C \uB2E4\uB85C 1"
   birthDate: 1982.02.27
   phoneNumber: 010-1637-4920

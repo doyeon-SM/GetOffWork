@@ -984,6 +984,7 @@ MonoBehaviour:
   nameText: {fileID: 2913112210763425299}
   addressText: {fileID: 6032630659956377572}
   birthText: {fileID: 833800036846476648}
+  printSFX: {fileID: 8300000, guid: 0adf34a933bbfa1448ff15f29f9f74c7, type: 3}
 --- !u!1 &8665461605213297874
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 748cdb90396d8d5469da8e25eade6040, type: 3}
   m_Name: _MismatchSetting
   m_EditorClassIdentifier: Assembly-CSharp::AddressMismatchSettingSO
-  AddressspawnChance: 0.05
-  IDspawnChance: 0.05
-  PortraitspawnChance: 0.05
+  AddressspawnChance: 0.07
+  IDspawnChance: 0.07
+  PortraitspawnChance: 0.07

@@ -1019,7 +1019,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0000868036, y: 52.96377}
+  m_AnchoredPosition: {x: -0.0000868036, y: 52.963295}
   m_SizeDelta: {x: 0, y: 480.47998}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &361389607
@@ -1206,15 +1206,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 9e3d1d57e5b11fa4a995724d73ebaebc, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 4.85, y: 4.92}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!4 &435657166
 Transform:
@@ -2862,8 +2862,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 301799489}
   m_HandleRect: {fileID: 301799488}
   m_Direction: 2
-  m_Value: -0.000015557565
-  m_Size: 0.8897573
+  m_Value: -0.0000063382677
+  m_Size: 0.88977075
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4732,7 +4732,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB300\uAE30\uC790: 00"
+  m_text: "\uB300\uAE30\uC790: 00\uBA85"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4d53622612142284691270eec0081568, type: 2}
   m_sharedMaterial: {fileID: -7194432874131732980, guid: 4d53622612142284691270eec0081568, type: 2}
@@ -4828,8 +4828,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.1176, y: 0.4045}
-  m_SizeDelta: {x: 1.8125, y: 0.809}
+  m_AnchoredPosition: {x: -0.0024, y: 0.4045}
+  m_SizeDelta: {x: 1.7219, y: 0.809}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &2056565260
 PrefabInstance:

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortraitListSO
   portraits:
   - {fileID: 21300000, guid: 19ab9824e9a921249973751929d718fa, type: 3}
-  - {fileID: 314897823003437260, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
-  - {fileID: 7400469384750768597, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
-  - {fileID: 1437474589, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
-  - {fileID: 1749564819, guid: 635120f93bac6df4d8772ca9914c433e, type: 3}
+  - {fileID: 21300000, guid: 379ec0bbba301e0408d1f094f5128245, type: 3}
+  - {fileID: 21300000, guid: a80862a2fd40c594e9d2f9654220d3f3, type: 3}
+  - {fileID: 21300000, guid: bbc9d32e3ec8a7548aa2e65ce4152772, type: 3}
+  - {fileID: 21300000, guid: 19fdfe6c199a87242b38cb1e4847fd1e, type: 3}
   - {fileID: 21300000, guid: 9e3d1d57e5b11fa4a995724d73ebaebc, type: 3}
   - {fileID: 21300000, guid: 89a9b0909c192b3408566d83b69d0903, type: 3}
   - {fileID: 21300000, guid: 1923e6675a2632a49b5089a53eefb5d6, type: 3}

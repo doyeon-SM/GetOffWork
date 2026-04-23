@@ -140,7 +140,7 @@ public class UIDayResultView : MonoBehaviour
             _dispPerformance += evt.performanceDelta;
             // 이벤트별 성과 변화에 따른 일급 누적 (음수 성과 변화는 0)
             _pendingWage += Mathf.Max(0, evt.performanceDelta * 10);
-            Debug.Log($"[UIDayResultView] 성과 변화량 {evt.performanceDelta} 일급 결과: {_pendingWage}");
+            //Debug.Log($"[UIDayResultView] 성과 변화량 {evt.performanceDelta} 일급 결과: {_pendingWage}");
             ShowDelta(performanceDeltaText, evt.performanceDelta, isPercent: false);
         }
         if (evt.stressDelta != 0)
@@ -208,8 +208,8 @@ public class UIDayResultView : MonoBehaviour
         int   max      = _data.maxPerformance;
         // 표시값은 0 이하로 내려가지 않도록 방어
         int   dispClamped = Mathf.Max(0, _dispPerformance);
-        float pct      = max > 0 ? (float)dispClamped / max : 0f;
-        performanceText.text = $"{dispClamped} / {max} ({pct:F0}%)";
+        float pct      = max > 0 ? ((float)dispClamped / max)*100f : 0f;
+        performanceText.text = $"{dispClamped} / {max} ({pct}%)";
     }
 
     private void RefreshStatTexts()
