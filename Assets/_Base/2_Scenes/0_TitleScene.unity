@@ -1585,6 +1585,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: SoundManager
       objectReference: {fileID: 0}
+    - target: {fileID: 7069141959042162579, guid: f4f536855deeb8044b71d44a40b3040a, type: 3}
+      propertyPath: bgmMixerGroup
+      value: 
+      objectReference: {fileID: -3931586855213836618, guid: 1d14334c01ff53349b2fe474c8a1490e, type: 2}
+    - target: {fileID: 7069141959042162579, guid: f4f536855deeb8044b71d44a40b3040a, type: 3}
+      propertyPath: sfxMixerGroup
+      value: 
+      objectReference: {fileID: -9201705691344948043, guid: 1d14334c01ff53349b2fe474c8a1490e, type: 2}
     - target: {fileID: 8506655107285455343, guid: f4f536855deeb8044b71d44a40b3040a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.5581

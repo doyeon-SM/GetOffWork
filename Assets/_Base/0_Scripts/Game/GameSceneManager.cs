@@ -11,7 +11,7 @@ public class GameSceneManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // �� ���� �� ����
+            DontDestroyOnLoad(gameObject); 
         }
         else
         {
@@ -40,7 +40,6 @@ public class GameSceneManager : MonoBehaviour
 
     /// <summary>
     /// -> TitleScene(0)
-    /// ���� ���� or ���� ����
     /// </summary>
     /// <summary>
     /// -> TitleScene(0)
@@ -56,13 +55,16 @@ public class GameSceneManager : MonoBehaviour
     /// </summary>
     public void GoToEndingScene()
     {
+        const int ENDING_SCENE_INDEX = 3;
         int sceneCount = UnitySceneManager.sceneCountInBuildSettings;
-        if (sceneCount > 3)
-            UnitySceneManager.LoadScene(3);
+        if (sceneCount > ENDING_SCENE_INDEX)
+        {
+            UnitySceneManager.LoadScene(ENDING_SCENE_INDEX);
+        }
         else
         {
-            Debug.LogWarning("[GameSceneManager] EndingScene(3) 미등록 — TitleScene으로 폴백");
-            UnitySceneManager.LoadScene(0);
+            Debug.LogWarning($"[GameSceneManager] EndingScene(인덱스 {ENDING_SCENE_INDEX}) 미등록 — TitleScene으로 폴백 (등록된 씬: {sceneCount}개)");
+            UnitySceneManager.LoadScene(0); // 0_TitleScene 
         }
     }
 }

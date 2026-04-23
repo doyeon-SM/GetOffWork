@@ -145,9 +145,13 @@ public bool AddPerformance(int amount)
         if (promotions == null || promotions.Length == 0)
             return;
 
+        bool promoted = false;
+
         while (promotionIndex < promotions.Length &&
                baseStats.Performance >= promotions[promotionIndex])
         {
+            promoted = true;
+
             // 승진 보너스: 5일 사이클에서 남은 일수 × 1000원
             int currentDay  = GameFlowManager.Instance != null ? GameFlowManager.Instance.CurrentDay : cycleStartDay;
             int dayInCycle  = Mathf.Clamp(currentDay - cycleStartDay + 1, 1, 5);
@@ -175,6 +179,13 @@ public bool AddPerformance(int amount)
             );
             Debug.Log($"[PlayerBase] 승진! 레벨={playerLevel} 다음사이클시작일={cycleStartDay} / 스탯초기화(스트레스 유지)");
         }
+
+        // 승진이 일어났으면 → NormalEnding으로 엔딩씬 이동
+        if (promoted)
+        {
+            Debug.Log("[PlayerBase] 승진 확정 → NormalEnding 트리거");
+            CheckEnding(PlayerEnding.NormalEnding);
+        }
     }
 
 /// <summary>
@@ -195,20 +206,22 @@ public bool AddPerformance(int amount)
 
     private void ValidateImmediateEndingByStat(Stat stat)
     {
+        // 부동소수점 오차 대응: Clamp01 후 엡실론 여유를 둔 경계 판정
+        const float EPSILON = 0.0001f;
         switch (stat)
         {
             case Stat.Kindness:
-                if (baseStats.Kindness <= 0.0f)
+                if (baseStats.Kindness <= EPSILON)
                     CheckEnding(PlayerEnding.Unkindness);
                 break;
 
             case Stat.Stress:
-                if (baseStats.Stress >= 1.0f)
+                if (baseStats.Stress >= 1.0f - EPSILON)
                     CheckEnding(PlayerEnding.Stressfull);
                 break;
 
             case Stat.Reliability:
-                if (baseStats.Reliability <= 0.0f)
+                if (baseStats.Reliability <= EPSILON)
                     CheckEnding(PlayerEnding.PerformanceLess);
                 break;
         }
@@ -231,12 +244,13 @@ public bool AddPerformance(int amount)
         switch (endingType)
         {
             case PlayerEnding.NormalEnding:
-                // 정상 클리어는 WorkDayManager.FinishDay()에서 처리
+                // 승진 → GameFlowManager 경유로 EndingScene(해피엔딩)
+                GameFlowManager.Instance?.TriggerGameOver(endingType);
                 break;
             case PlayerEnding.PerformanceLess:
             case PlayerEnding.Stressfull:
             case PlayerEnding.Unkindness:
-                // 즉시 게임오버 → GameFlowManager 경유로 EndingScene(현재는 TitleScene)
+                // 즉시 게임오버 → GameFlowManager 경유로 EndingScene
                 GameFlowManager.Instance?.TriggerGameOver(endingType);
                 break;
         }

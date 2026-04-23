@@ -23,8 +23,8 @@ public class EndingSceneManager : MonoBehaviour
     [SerializeField] private Button happyToTitleButton;
     [SerializeField] private Button continueButton;
 
-    private const int TITLE_SCENE_INDEX = 1;
-    private const int HOME_SCENE_INDEX  = 2;
+    private const int TITLE_SCENE_INDEX = 0;
+    private const int HOME_SCENE_INDEX  = 1;
 
     private void Start()
     {
