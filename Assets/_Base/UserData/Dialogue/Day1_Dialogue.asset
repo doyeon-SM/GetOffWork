@@ -15,10 +15,10 @@ MonoBehaviour:
   dialogueId: 
   lines:
   - speakerName: 
-    speakerPortrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+    speakerPortrait: {fileID: 21300000, guid: 19ab9824e9a921249973751929d718fa, type: 3}
     dialogueText: "\uC720\uC2AC\uC2DC \uC2DC\uCCAD \uACF5\uBB34\uC6D0\uC73C\uB85C
       \uCCAB \uCD9C\uADFC\uD558\uB294 \uB0A0\uC774\uB2E4. "
   - speakerName: 
-    speakerPortrait: {fileID: -6102451206531921958, guid: 19ab9824e9a921249973751929d718fa, type: 3}
+    speakerPortrait: {fileID: 21300000, guid: 19ab9824e9a921249973751929d718fa, type: 3}
     dialogueText: "\uBC8C\uC368 \uD1F4\uADFC\uD558\uACE0 \uC2F6\uC9C0\uB9CC \uC5F4\uC2EC\uD788
       \uC77C\uD574\uBCF4\uC790. "

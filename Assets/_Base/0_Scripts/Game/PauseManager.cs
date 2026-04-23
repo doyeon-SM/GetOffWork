@@ -7,7 +7,6 @@ using UnityEngine.InputSystem;
 /// DontDestroyOnLoad 싱글턴으로, 모든 씬에서 동작한다.
 ///
 /// Input System InputAction 콜백 방식 사용:
-///   - Update() 폴링 없음
 ///   - Time.timeScale = 0 상태에서도 입력 수신 가능 (Input System은 timeScale 영향 없음)
 ///   - OnEnable/OnDisable에서 Action Enable/Disable 관리
 /// </summary>
