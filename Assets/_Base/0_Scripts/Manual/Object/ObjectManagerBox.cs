@@ -307,8 +307,10 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         if (paperView == null)
             Debug.LogWarning($"{TAG} {complaint.complaintType}에 대응하는 UIPaperView가 없습니다.");
 
+        // UIMonitorController.CurrentRecord = 인쇄 시점 플레이어가 조회 중인 레코드
+        string printedId = UIMonitorController.Instance?.CurrentRecord?.recordId;
         paper.SetData(complaint, serviceDeskManager, paperView, serviceDeskManager.UserDatabase, this,
-            printedRecordId: complaint?.printedDocRecordId);
+            printedRecordId: printedId);
 
         playerspawnedItems.Add(paper);
         spawnedPaper = paper;
@@ -453,42 +455,40 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
                 ? ctx.targetRecordId      // Proxy: 대리 대상자 RecordId
                 : ctx.applicantRecordId;  // Self:  방문객 RecordId
 
-            // 가장 마지막으로 반납된(TakeZone에 있는) paper를 찾는다.
-            // 여러 장일 때는 올바른 paper가 하나라도 TakeZone에 있으면 정상.
-            // TakeZone 밖에 있는 paper는 count만 세어 불필요절차로 처리.
-            PaperItem correctPaperInZone = null;
-            int extraPaperCount = 0;  // TakeZone 밖에 있는 종이 수 (불필요절차용)
-
+            // TakeZone 안 paper 목록 수집
+            var papersInZone = new System.Collections.Generic.List<PaperItem>();
             foreach (var item in playerspawnedItems)
+                if (item is PaperItem p && item.IsInTakeZone)
+                    papersInZone.Add(p);
+
+            if (papersInZone.Count > 0)
             {
-                if (item is PaperItem paper)
+                // paper가 2장 이상이면 비정상반려
+                if (papersInZone.Count > 1)
                 {
-                    if (item.IsInTakeZone)
+                    Log($"{TAG} [FullID] TakeZone paper {papersInZone.Count}장 → 비정상반려");
+                    ctx.rejected = true;
+                    isRejection  = true;
+                }
+                else
+                {
+                    // 1장: id 비교
+                    string printed = papersInZone[0].PrintedRecordId;
+                    bool isCorrect = !string.IsNullOrEmpty(printed) && printed == expected;
+                    if (!isCorrect)
                     {
-                        string printed = paper.PrintedRecordId;
-                        bool isCorrect = !string.IsNullOrEmpty(printed) && printed == expected;
-                        if (isCorrect && correctPaperInZone == null)
-                            correctPaperInZone = paper;  // 올바른 paper 발견
+                        string reason = string.IsNullOrEmpty(printed) ? "빈 종이" : $"잘못된 ID({printed})≠{expected}";
+                        Log($"{TAG} [FullID] paper ID 불일치({reason}) → 비정상반려");
+                        ctx.rejected = true;
+                        isRejection  = true;
                     }
                     else
                     {
-                        extraPaperCount++;  // TakeZone 밖 = 반납 안 된 종이
+                        Log($"{TAG} [FullID] paper ID 일치 ✅ ({printed})");
                     }
                 }
             }
-
-            if (correctPaperInZone == null)
-            {
-                // 올바른 paper가 TakeZone에 없음 → 비정상반려
-                Log($"{TAG} [FullID] 올바른 paper 미반납 → 비정상반려 패널티");
-                ctx.rejected = true;
-                isRejection  = true;
-            }
-            else
-            {
-                Log($"{TAG} [FullID] 올바른 paper 반납 확인 ✅ (extraPaper={extraPaperCount})");
-            }
-            // extraPaperCount는 ServiceEvaluator가 불필요절차를 별도 집계하므로 여기서 처리 불필요
+            // paper가 없으면 판정 없음 — fakeid 정상반려 등 다른 경로로 처리
         }
 
         // ── AddressChange 전용 반납 검사 ──────────────────────────────

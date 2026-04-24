@@ -230,7 +230,8 @@ public static class ServiceEvaluator
         if (eval.PayDelta         != 0) { playerBase.AddPay(eval.PayDelta);                              evt.payDelta         += eval.PayDelta; }
 
         bool isSuccess = false;
-        if (isCompleted && eval.IsClean)
+        // isAbnormal(비정상반려/정상응대실패)인 경우 completionReward를 적용하지 않는다.
+        if (!isAbnormal && isCompleted && eval.IsClean)
         {
             var soData = GetManualData(manual);
             if (soData != null && !soData.completionReward.IsEmpty)

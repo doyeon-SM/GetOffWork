@@ -198,24 +198,30 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
 
     private ResponseResult HandlePrintDocument()
     {
-        RecordAction(ManualCommandIds.PrintDocument);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
             return WrongOrder("인쇄를 부탁드린적 없는데요.");
 
-        // 이미 완료 후 재인쇄 → 불필요절차 누적 + 새 종이 발행
+        // 조회 없이 인쇄 시도 → 불필요절차 +1, 인쇄물 미생성
+        if (!context.searchedByInputId)
+        {
+            RecordAction(ManualCommandIds.PrintDocument);
+            Debug.Log("[M_FullID_Self] 조회 없이 인쇄 시도 → 불필요절차 +1, 인쇄물 미생성");
+            return WrongOrderFromSO(ManualCommandIds.PrintDocument,
+                fallback: "먼저 ID를 조회해 주세요.");
+        }
+
+        // 재인쇄 → 불필요절차 +1 (isCompleted=true 이후)
         if (isCompleted)
         {
-             // 불필요절차 +1
-            context.printedDocRecordId = context.searchedByInputId ? context.searchedInputId : null;
+            RecordAction(ManualCommandIds.PrintDocument);
             Debug.Log("[M_FullID_Self] 재인쇄 → 불필요절차 +1");
             return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
         }
 
-        // searchedByInputId가 false이면 조회 없이 인쇄 → 빈 종이(null)
-        context.printedDocRecordId = context.searchedByInputId ? context.searchedInputId : null;
-
+        RecordAction(ManualCommandIds.PrintDocument);
         isCompleted       = true;
         context.completed = true;
+        // printedDocRecordId는 OMB가 UIMonitorController.Instance.CurrentRecord로 세팅한다.
         return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
     }
 

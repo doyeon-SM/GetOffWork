@@ -13,6 +13,12 @@ using UnityEngine;
 /// </summary>
 public class UIMonitorController : MonoBehaviour
 {
+    /// <summary>OMB 등 외부에서 인쇄 시점의 currentRecord를 읽기 위한 싱글톤 참조.</summary>
+    public static UIMonitorController Instance { get; private set; }
+
+    /// <summary>현재 모니터에서 조회 중인 레코드. 인쇄 시 이 값이 paper에 기록된다.</summary>
+    public UserRecordData CurrentRecord => currentRecord;
+
     [Header("패널 프리팹 (각 화면을 프리팹으로 등록)")]
     [SerializeField] private UIMonitorMainPanel   mainPanelPrefab;
     [SerializeField] private UIMonitorPrintPanel  printPanelPrefab;
@@ -33,6 +39,7 @@ public class UIMonitorController : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         serviceDeskManager = FindFirstObjectByType<ServiceDeskManager>();
         if (panelRoot == null)
             panelRoot = GetComponent<RectTransform>();
