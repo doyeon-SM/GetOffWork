@@ -208,7 +208,8 @@ public class UIDayResultView : MonoBehaviour
         int   max      = _data.maxPerformance;
         // 표시값은 0 이하로 내려가지 않도록 방어
         int   dispClamped = Mathf.Max(0, _dispPerformance);
-        float pct      = max > 0 ? ((float)dispClamped / max)*100f : 0f;
+        float pct      = max > 0 ? ((float)dispClamped / max) : 0f;
+        Debug.Log($"[UIDayResultView] 성과 수치 표기 확인 디버그 pct={pct}| {dispClamped} / {max}");
         performanceText.text = $"{dispClamped} / {max} ({pct}%)";
     }
 

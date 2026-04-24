@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
@@ -73,5 +73,20 @@ public class EndingSceneManager : MonoBehaviour
     }
 
     private void GoToTitle() { SceneManager.LoadScene(TITLE_SCENE_INDEX); }
-    private void GoToHome()  { SceneManager.LoadScene(HOME_SCENE_INDEX); }
+
+    private void GoToHome()
+    {
+        // NormalEnding(승진) Continue → GameFlowManager를 통해 다음날로 이동
+        // (day++, PromotionIndex 증가 후 저장된 상태, SetGoalPerformance 포함)
+        if (GameFlowManager.Instance != null &&
+            GameFlowManager.Instance.LastEnding == PlayerBase.PlayerEnding.NormalEnding)
+        {
+            Debug.Log("[EndingSceneManager] 승진 Continue → FinishDayAndGoNext 호출");
+            GameFlowManager.Instance.FinishDayAndGoNext();
+        }
+        else
+        {
+            SceneManager.LoadScene(HOME_SCENE_INDEX);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -519,12 +519,29 @@ private void Start()
 
         if (success)
         {
-            // 성과 달성 → 정산 UI → 확인 → 다음날(HomeScene)
-            OpenDayResultUI(() =>
+            // 성과 달성 → 승진 여부 확인 후 EndingScene 또는 다음날로 분기
+            bool promoted = playerBase != null && playerBase.CheckPromotion();
+
+            if (promoted)
             {
-                Debug.Log("[WorkDayManager] 성과 달성 → HomeScene으로 이동");
-                GameFlowManager.Instance?.FinishDayAndGoNext();
-            });
+                // 승진 → 정산 UI → 확인 → EndingScene(해피엔딩)
+                // Continue 이후 다음날 진행을 위해 현재 상태를 저장한다.
+                GameFlowManager.Instance?.SavePlayerState(playerBase);
+                OpenDayResultUI(() =>
+                {
+                    Debug.Log("[WorkDayManager] 승진 달성 → EndingScene(NormalEnding)으로 이동");
+                    GameFlowManager.Instance?.TriggerGameOver(PlayerBase.PlayerEnding.NormalEnding);
+                });
+            }
+            else
+            {
+                // 승진 아님 → 정산 UI → 확인 → 다음날(HomeScene)
+                OpenDayResultUI(() =>
+                {
+                    Debug.Log("[WorkDayManager] 성과 달성 → HomeScene으로 이동");
+                    GameFlowManager.Instance?.FinishDayAndGoNext();
+                });
+            }
         }
         else
         {

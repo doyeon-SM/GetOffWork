@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 public enum Stat
 {
     Kindness,
@@ -110,7 +110,7 @@ public bool AddPerformance(int amount)
         }
 
         baseStats = baseStats.WithAddedPerformance(amount);
-        CheckPromotion();
+        // 승진 체크는 하루 정산(WorkDayManager.FinishDay) 시점에만 수행한다.
         return true;
     }
 
@@ -140,10 +140,11 @@ public bool AddPerformance(int amount)
         Debug.Log($"[PlayerBase] SetGoal day={value} cycleStart={cycleStartDay} dayInCycle={dayInCycle} goal={goalPerformance}");
     }
 
-    public void CheckPromotion()
+    /// <summary>승진 조건 충족 시 스탯/레벨을 갱신하고 true를 반환한다. 엔딩 트리거는 호출측에서 처리한다.</summary>
+    public bool CheckPromotion()
     {
         if (promotions == null || promotions.Length == 0)
-            return;
+            return false;
 
         bool promoted = false;
 
@@ -180,12 +181,8 @@ public bool AddPerformance(int amount)
             Debug.Log($"[PlayerBase] 승진! 레벨={playerLevel} 다음사이클시작일={cycleStartDay} / 스탯초기화(스트레스 유지)");
         }
 
-        // 승진이 일어났으면 → NormalEnding으로 엔딩씬 이동
-        if (promoted)
-        {
-            Debug.Log("[PlayerBase] 승진 확정 → NormalEnding 트리거");
-            CheckEnding(PlayerEnding.NormalEnding);
-        }
+        Debug.Log($"[PlayerBase] CheckPromotion 결과: {promoted}");
+        return promoted;
     }
 
 /// <summary>
