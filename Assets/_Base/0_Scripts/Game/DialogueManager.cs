@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
@@ -75,7 +75,9 @@ public class DialogueManager : MonoBehaviour
     {
         if (data == null || data.lines == null || data.lines.Length == 0)
         {
-            Debug.LogWarning("[DialogueManager] 대화 데이터가 비어 있습니다.");
+            // 대사가 없어도 리스너(MorningHomeController 등)에 완료를 알려야 시퀀스가 진행된다.
+            Debug.LogWarning("[DialogueManager] 대화 데이터가 비어 있음 → OnDialogueEnd 발동 후 스킵");
+            OnDialogueEnd?.Invoke();
             return;
         }
 

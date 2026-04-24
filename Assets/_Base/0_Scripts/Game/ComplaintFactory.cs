@@ -158,8 +158,6 @@ public static class ComplaintFactory
 
         // 중요: ID카드는 aRec(방문객) 데이터를 표시한다.
         // mismatch 여부는 실제 ID카드에 표시되는 aRec에 fake 데이터가 있는지만 보아야 한다.
-        // 수정 전: OR 조건으로 tRec만 fake가 있어도 mismatch=true로 설정되어,
-        // ID카드에는 정상 정보가 표시되지만 플레이어가 난처없는 패널티를 받는 버그가 있었음.
         c.isAddressMismatch = UnityEngine.Random.value < addrChance
             && aRec != null && aRec.HasAddressMismatch;
 

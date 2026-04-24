@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// HomeScene 진입 시 실행되는 아침 시퀀스 관리자.
@@ -70,17 +70,25 @@ public class MorningHomeController : MonoBehaviour
 
     private void TryStartIntroDialogue()
     {
-        if (introDiaTrigger != null)
+        if (introDiaTrigger != null && DialogueManager.Instance != null)
         {
-            // 대화 종료 이벤트에 완료 콜백 등록
-            if (DialogueManager.Instance != null)
-                DialogueManager.Instance.OnDialogueEnd.AddListener(OnIntroDialogueEnd);
-
+            // 리스너를 먼저 등록한 뒤 대화를 시작해야
+            // 대사가 없어 즉시 OnDialogueEnd가 발동되어도 콜백이 잡힌다.
+            DialogueManager.Instance.OnDialogueEnd.AddListener(OnIntroDialogueEnd);
             introDiaTrigger.TryStartDialogue();
+
+            // TryStartDialogue가 아무것도 시작하지 않은 경우
+            // (triggerOnce 중복, requiredDay 불일치 등) 직접 완료 처리.
+            if (!DialogueManager.Instance.IsPlaying)
+            {
+                DialogueManager.Instance.OnDialogueEnd.RemoveListener(OnIntroDialogueEnd);
+                Debug.LogWarning("[MorningHomeController] DialogueTrigger가 대화를 시작하지 않음 → 시퀀스 완료");
+                OnSequenceCompleted();
+            }
         }
         else
         {
-            // 대화 트리거 없으면 바로 완료
+            // 트리거 자체가 없으면 바로 완료
             Debug.LogWarning("[MorningHomeController] DialogueTrigger 없음 → 시퀀스 완료");
             OnSequenceCompleted();
         }

@@ -1,28 +1,29 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
 /// 인벤토리 슬롯 버튼 하나를 담당.
-/// - 아이템 있음 → 버튼 활성화, 아이콘/이름 표시
-/// - 아이템 없음 → 버튼 비활성화, 비어있음 표시
-/// - 버튼 클릭 → PlayerInventory.UseItem(slotIndex)
+/// 호버 시 UIItemTooltip.ShowTooltip(item, slotRectTransform) 호출.
 /// </summary>
-public class UIInventorySlot : MonoBehaviour
+public class UIInventorySlot : MonoBehaviour,
+    IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI")]
-    [SerializeField] private Button   button;
-    [SerializeField] private Image    iconImage;
-    //[SerializeField] private TMP_Text nameText;
+    [SerializeField] private Button button;
+    [SerializeField] private Image  iconImage;
 
     [Header("슬롯 인덱스 (0~2)")]
     [SerializeField] private int slotIndex;
 
     private PlayerInventory inventory;
+    private RectTransform   _rect;
 
     private void Awake()
     {
         inventory = PlayerInventory.Instance;
+        _rect     = GetComponent<RectTransform>();
 
         if (button != null)
         {
@@ -33,10 +34,14 @@ public class UIInventorySlot : MonoBehaviour
 
     private void OnEnable()
     {
-        // 씬 복귀 등으로 활성화될 때 Instance를 다시 잡음
-        if (inventory == null)
-            inventory = PlayerInventory.Instance;
+        if (inventory == null) inventory = PlayerInventory.Instance;
+        if (_rect     == null) _rect     = GetComponent<RectTransform>();
         Refresh();
+    }
+
+    private void OnDisable()
+    {
+        UIItemTooltip.Instance?.HideTooltip();
     }
 
     // ── 갱신 ─────────────────────────────────────────────────────────────
@@ -52,20 +57,14 @@ public class UIInventorySlot : MonoBehaviour
         ItemBase item = inventory.GetSlot(slotIndex);
         bool hasItem  = item != null;
 
-        // 버튼 활성/비활성
         if (button != null)
             button.interactable = hasItem;
 
-        // 아이콘
         if (iconImage != null)
         {
             iconImage.sprite  = hasItem ? item.icon : null;
             iconImage.enabled = hasItem && item.icon != null;
         }
-
-        // 이름 텍스트
-        //if (nameText != null)
-        //    nameText.text = hasItem ? item.itemName : "-";
     }
 
     // ── 클릭 ─────────────────────────────────────────────────────────────
@@ -73,9 +72,28 @@ public class UIInventorySlot : MonoBehaviour
     private void OnClickUse()
     {
         if (inventory == null) return;
-
         bool success = inventory.UseItem(slotIndex);
         if (success)
+        {
+            UIItemTooltip.Instance?.HideTooltip();
             Refresh();
+        }
+    }
+
+    // ── 호버 툴팁 ────────────────────────────────────────────────────────
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (inventory == null) return;
+        ItemBase item = inventory.GetSlot(slotIndex);
+        if (item == null) return;
+
+        // 슬롯 자신의 RectTransform을 넘긴다 → 툴팁이 슬롯 y-100 에 위치
+        UIItemTooltip.Instance?.ShowTooltip(item);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        UIItemTooltip.Instance?.HideTooltip();
     }
 }

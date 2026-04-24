@@ -453,7 +453,7 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         {
             isRejection  = true;
             ctx.rejected = true;
-            Log($"{TAG} 반려 처리 판정 — 주소불일치={ctx.isAddressMismatch}");
+            Log($"{TAG} 반려 처리 판정 — 주소불일치={ctx.isAddressMismatch} | ID불일치={ctx.isIdMismatch} | 프로필불일치={ctx.isPortraitMismatch}");
         }
 
         Log($"{TAG} 반납 완료 → 응대종료 진행");
