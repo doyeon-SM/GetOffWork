@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -123,6 +123,15 @@ public class UIDayResultView : MonoBehaviour
             yield return new WaitForSeconds(eventInterval);
         }
 
+        // Phase 1.5: 누적 오차 보정 — 실제 end 스냅샷으로 최종값 고정
+        // PlayerStat은 Clamp01을 거치므로 start+Σdelta 누적값과 차이가 생길 수 있다.
+        _dispStress      = Mathf.RoundToInt(_data.endStress      * 100f);
+        _dispKindness    = Mathf.RoundToInt(_data.endKindness    * 100f);
+        _dispReliability = Mathf.RoundToInt(_data.endReliability * 100f);
+        _dispPerformance = _data.endPerformance;
+        RefreshStatTexts();
+        RefreshPerformanceText();
+
         // Phase 2: 일급 합치기 연출
         yield return StartCoroutine(PlayWageMerge());
 
@@ -145,17 +154,17 @@ public class UIDayResultView : MonoBehaviour
         }
         if (evt.stressDelta != 0)
         {
-            _dispStress += evt.stressDelta; // int % 단위 그대로 누적
+            _dispStress = Mathf.Clamp(_dispStress + evt.stressDelta, 0f, 100f);
             ShowDelta(stressDeltaText, evt.stressDelta, isPercent: true);
         }
         if (evt.kindnessDelta != 0)
         {
-            _dispKindness += evt.kindnessDelta;
+            _dispKindness = Mathf.Clamp(_dispKindness + evt.kindnessDelta, 0f, 100f);
             ShowDelta(kindnessDeltaText, evt.kindnessDelta, isPercent: true);
         }
         if (evt.reliabilityDelta != 0)
         {
-            _dispReliability += evt.reliabilityDelta;
+            _dispReliability = Mathf.Clamp(_dispReliability + evt.reliabilityDelta, 0f, 100f);
             ShowDelta(reliabilityDeltaText, evt.reliabilityDelta, isPercent: true);
         }
 
