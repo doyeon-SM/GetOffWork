@@ -51,7 +51,15 @@ public class UIMonitorMainPanel : MonoBehaviour
 
     public void RefreshView(UserRecordData record)
     {
-        if (record == null) { ClearView(); return; }
+        if (record == null) 
+        {
+            if (idText != null) idText.text = "정보없음";
+            if (nameText != null) nameText.text = "정보없음";
+            if (addressText != null) addressText.text = "정보없음";
+
+            //ClearView(); 
+            return; 
+        }
 
         if (portraitImage != null) portraitImage.sprite = record.portrait;
         if (idText        != null) idText.text          = record.recordId;
