@@ -60,11 +60,11 @@ MonoBehaviour:
     afternoonDuration: 300
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
-      spawnWeight: 0.35
+      spawnWeight: 0
     - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
-      spawnWeight: 0.35
+      spawnWeight: 0
     - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
-      spawnWeight: 0.3
+      spawnWeight: 1
   - targetDay: 3
     maxCustomerPerDay: 10
     morningDuration: 300

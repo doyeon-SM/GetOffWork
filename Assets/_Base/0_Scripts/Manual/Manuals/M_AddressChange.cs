@@ -116,7 +116,7 @@ public class M_AddressChange : Manual
     {
         context.idCardSpawned = true;
         // 기존 ID카드는 응대 종료 시 자동 삭제 — RequiredReturnItems에 등록하지 않음
-        AddRequiredReturnItem(DeskObjectType.IDCard);
+        //AddRequiredReturnItem(DeskObjectType.IDCard);
         return CorrectResponse();
     }
 
@@ -204,7 +204,7 @@ public class M_AddressChange : Manual
         
         context.newIdCardPrinted = true;
 
-        ClearRequiredReturnItems();
+        //ClearRequiredReturnItems();
         // 새 ID카드를 필수 반납 항목으로 등록
         AddRequiredReturnItem(DeskObjectType.NewIDCard);
 

@@ -448,14 +448,25 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         // 비정상 케이스 1: 기존 ID카드(원본)가 TakeZone에 반납된 경우 차단
         if (ctx != null && ctx.complaintType == ComplaintContext.ComplaintType.AddressChange)
         {
+            // IDCard가 TakeZone에 반납된 경우 fake 여부로 분기:
+            // → fake 있음(HasAnyMismatch): 정상반려 허용
+            // → fake 없음              : 비정상반려 패널티 부여 (대사 출력 후 반려 처리로 이어짐)
             foreach (var item in userspawnedItems)
             {
                 if (item != null && item.ObjectType == DeskObjectType.IDCard && item.IsInTakeZone)
                 {
-                    string line = GetRandomLine(returnReminderLines, "기존 신분증은 반납하지 않으셔도 됩니다.");
-                    Log($"{TAG} [AddressChange] 기존 ID카드 반납 시도 → 호출 방어: {line}");
-                    serviceDeskManager?.BroadcastCustomerText(line);
-                    return false;
+                    if (ctx.HasAnyMismatch)
+                    {
+                        Log($"{TAG} [AddressChange] 기존 ID카드 + fake 감지 → 정상반려 허용");
+                    }
+                    else
+                    {
+                        // 비정상반려: 업류 대사 출력 후 반려 판정으로 이어짐 (차단 해제)
+                        string line = GetRandomLine(returnReminderLines, "기존 신분증은 반납하지 않으셔도 됩니다.");
+                        Log($"{TAG} [AddressChange] 기존 ID카드 반납(fake 없음) → 비정상반려 패널티 부여");
+                        serviceDeskManager?.BroadcastCustomerText(line);
+                    }
+                    break;
                 }
             }
 
@@ -468,10 +479,10 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
                     string requested = ctx.requestedNewAddress ?? string.Empty;
                     if (!entered.Equals(requested, System.StringComparison.OrdinalIgnoreCase))
                     {
+                        // 비정상반려: 업류 대사 출력 후 반려 판정으로 이어짐 (차단 해제)
                         string line = GetRandomLine(returnReminderLines, "입력하신 주소가 요청하신 주소와 다릅니다.");
-                        Log($"{TAG} [AddressChange] 주소 불일치 반납 시도 → 호출 방어: {line}");
+                        Log($"{TAG} [AddressChange] 주소 불일치 반납 → 비정상반려 패널티 부여");
                         serviceDeskManager?.BroadcastCustomerText(line);
-                        return false;
                     }
                 }
             }
