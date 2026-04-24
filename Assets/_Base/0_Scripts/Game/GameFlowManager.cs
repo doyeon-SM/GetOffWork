@@ -19,6 +19,7 @@ public class GameFlowManager : MonoBehaviour
     [Header("플레이어 저장 데이터")]
     [SerializeField] private PlayerStat savedPlayerStats = new PlayerStat(0, 0.5f, 0.5f, 0.5f, 0);
     [SerializeField] private int PlayerLevel = 1;
+    [SerializeField] private int PromotionIndex = 0;
     [SerializeField] private int DayGoalPerformance = 20;
 
     [Header("해금된 메뉴얼 목록")]
@@ -29,6 +30,7 @@ public class GameFlowManager : MonoBehaviour
     public MorningAction SelectedMorningAction => selectedMorningAction;
     public PlayerStat SavedPlayerStats => savedPlayerStats;
     public int SavedPlayerLevel => PlayerLevel;
+    public int SavedPromotionIndex => PromotionIndex;
     public int SavedGoalPerformance => DayGoalPerformance;
 
     /// <summary>현재까지 해금된 메뉴얼 목록 (읽기 전용)</summary>
@@ -103,12 +105,13 @@ public class GameFlowManager : MonoBehaviour
         );
 
         PlayerLevel = 1;
+        PromotionIndex = 0;
         DayGoalPerformance = 20; // 초기값, 이후 SetGoalPerformance(1)로 덮어씌워짐
 
         // PlayerBase의 승진 사이클 초기화 후 1일차 목표 계산
         if (PlayerBase.Instance != null)
         {
-            PlayerBase.Instance.InitializeForNewGame(savedPlayerStats, PlayerLevel, DayGoalPerformance);
+            PlayerBase.Instance.InitializeForNewGame(savedPlayerStats, PlayerLevel, PromotionIndex, DayGoalPerformance);
             PlayerBase.Instance.SetGoalPerformance(1);
             DayGoalPerformance = PlayerBase.Instance.GoalPerformance;
         }
@@ -194,6 +197,7 @@ public class GameFlowManager : MonoBehaviour
 
         savedPlayerStats = playerBase.CurrentStats;
         PlayerLevel = playerBase.PlayerLevel;
+        PromotionIndex = playerBase.PromotionIndex;
         DayGoalPerformance = playerBase.GoalPerformance;
     }
 
@@ -202,6 +206,6 @@ public class GameFlowManager : MonoBehaviour
         if (playerBase == null)
             return;
 
-        playerBase.InitializeForNewGame(savedPlayerStats, PlayerLevel, DayGoalPerformance);
+        playerBase.InitializeForNewGame(savedPlayerStats, PlayerLevel, PromotionIndex, DayGoalPerformance);
     }
 }

@@ -47,8 +47,8 @@ MonoBehaviour:
   dayLevels:
   - targetDay: 1
     maxCustomerPerDay: 10
-    morningDuration: 300
-    afternoonDuration: 300
+    morningDuration: 180
+    afternoonDuration: 180
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
       spawnWeight: 0.7
@@ -56,19 +56,19 @@ MonoBehaviour:
       spawnWeight: 0.3
   - targetDay: 2
     maxCustomerPerDay: 10
-    morningDuration: 300
-    afternoonDuration: 300
+    morningDuration: 180
+    afternoonDuration: 180
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
-      spawnWeight: 0
+      spawnWeight: 0.35
     - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
-      spawnWeight: 0
+      spawnWeight: 0.35
     - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
-      spawnWeight: 1
+      spawnWeight: 0.3
   - targetDay: 3
     maxCustomerPerDay: 10
-    morningDuration: 300
-    afternoonDuration: 300
+    morningDuration: 180
+    afternoonDuration: 180
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
       spawnWeight: 0.3
@@ -82,8 +82,8 @@ MonoBehaviour:
       spawnWeight: 0.1
   - targetDay: 4
     maxCustomerPerDay: 10
-    morningDuration: 300
-    afternoonDuration: 300
+    morningDuration: 180
+    afternoonDuration: 180
     manualEntries:
     - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
       spawnWeight: 0.3
@@ -101,7 +101,7 @@ MonoBehaviour:
   - eventType: 0
     minDay: 5
     maxCustomerPerDay: 20
-    morningDuration: 400
+    morningDuration: 300
     afternoonDuration: 0
     useAllUnlockedEqualWeight: 1
     manualEntries: []

@@ -26,6 +26,7 @@ public class PlayerBase : MonoBehaviour
 
     public string PlayerName => playerName;
     public int PlayerLevel => playerLevel;
+    public int PromotionIndex => promotionIndex;
     public int Performance => baseStats.Performance;
     public float Kindness => baseStats.Kindness;
     public float Stress => baseStats.Stress;
@@ -55,10 +56,10 @@ public class PlayerBase : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void InitializeForNewGame(PlayerStat initialStats, int startLevel = 1, int startGoalPerformance = 0)
+    public void InitializeForNewGame(PlayerStat initialStats, int startLevel = 1, int startpromotion=0, int startGoalPerformance = 0)
     {
         playerLevel = startLevel;
-        promotionIndex = 0;
+        promotionIndex = startpromotion;
         cycleStartDay = 1;
         goalPerformance = Mathf.Max(0, startGoalPerformance);
         baseStats = initialStats;
@@ -137,7 +138,8 @@ public bool AddPerformance(int amount)
         int index      = Mathf.Clamp(promotionIndex, 0, promotions.Length - 1);
         int dayInCycle = Mathf.Clamp(value - cycleStartDay + 1, 1, 5);
         goalPerformance = Mathf.RoundToInt(promotions[index] / 5f * dayInCycle);
-        Debug.Log($"[PlayerBase] SetGoal day={value} cycleStart={cycleStartDay} dayInCycle={dayInCycle} goal={goalPerformance}");
+        Debug.Log($"[PlayerBase] SetGoal day={value} cycleStart={cycleStartDay} dayInCycle={dayInCycle} " +
+            $"goal={goalPerformance} / {promotions[index]} | promotion_index = {promotionIndex}");
     }
 
     /// <summary>승진 조건 충족 시 스탯/레벨을 갱신하고 true를 반환한다. 엔딩 트리거는 호출측에서 처리한다.</summary>
