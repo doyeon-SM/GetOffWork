@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -407,7 +407,7 @@ public void StopWorkPhase()
         if (result.ShouldRefreshMonitorData) OnMonitorRefreshRequested?.Invoke(currentComplaint);
     }
 
-    private void ApplyNuisancePerMessagePenalty()
+        private void ApplyNuisancePerMessagePenalty()
     {
         if (currentComplaint == null) return;
         if (currentComplaint.nuisanceType == ComplaintContext.NuisanceType.None) return;
@@ -419,7 +419,6 @@ public void StopWorkPhase()
         var entry = nuisanceSO.GetEntry(currentComplaint.nuisanceType);
         if (entry.perMessagePenalty.IsEmpty) return;
 
-        // 메시지당 진상 패널티는 응대 종료 시 이벤트에 누적되지 않으르로 직접 적용
         var p = entry.perMessagePenalty;
         if (p.stress      != 0) playerBase.AddStat(Stat.Stress,      p.stress);
         if (p.kindness    != 0) playerBase.AddStat(Stat.Kindness,    p.kindness);
@@ -427,13 +426,18 @@ public void StopWorkPhase()
         if (p.performance != 0) playerBase.AddPerformance(-p.performance);
         Log(TAG + " [NuisancePenalty/msg] type:" + currentComplaint.nuisanceType);
 
-        // 메시지당 스탯 변화를 UI에 즉시 반영
-        _workDayManager?.NotifyStatChangedUI(
-            performanceDelta: p.performance != 0 ? -p.performance : 0,
-            stressDelta:      p.stress,
-            kindnessDelta:    p.kindness,
-            reliabilityDelta: p.reliability
-        );
+        // 대화마다 진상 패널티를 StatChangeEvent 큐에 기록한다.
+        // CommitAndClose의 응대 결과 이벤트와 별도 이벤트로 쿠에 쌓여서
+        // 결과지에서 "대화 패널티 → 응대 결과" 순서로 시각효과가 재생된다.
+        var msgEvt = new StatChangeEvent
+        {
+            source           = StatChangeSource.ServiceFail,  // 진상 패널티
+            performanceDelta = p.performance != 0 ? -p.performance : 0,
+            stressDelta      = p.stress,
+            kindnessDelta    = p.kindness,
+            reliabilityDelta = p.reliability,
+        };
+        _workDayManager?.EnqueueStatChangeEvent(msgEvt);
     }
 
 
