@@ -4,10 +4,10 @@ using UnityEngine;
 /// 프린터에서 출력된 서류 DeskObjectItem.
 /// ObjectManagerBox가 Spawn 시 SetData()로 참조를 주입한다.
 ///
-/// 동작:
-///   - 클릭 → 민원 유형에 맞는 UIPaperView(paperView)를 열어 내용 표시
-///   - TakeZone에 드롭 → ObjectManagerBox에서 자신을 해제한 뒤 Destroy
-///     ※ 반납 필수 절차 검사는 추후 수정 예정
+/// [printedRecordId]
+///   인쇄 시점에 어떤 RecordId로 발급됐는지 기록한다.
+///   null 또는 빈 문자열 = 조회 없이 인쇄한 빈 종이.
+///   TryFinishAndReturn()에서 이 값을 읽어 올바른 발급 여부를 판단한다.
 /// </summary>
 public class PaperItem : DeskObjectItem
 {
@@ -15,7 +15,13 @@ public class PaperItem : DeskObjectItem
     private ServiceDeskManager serviceDeskManager;
     private UIPaperView        paperView;
     private UserRecordDatabase database;
-    private ObjectManagerBox   managerBoxRef;  // UnregisterItem 호출용
+    private ObjectManagerBox   managerBoxRef;
+
+    /// <summary>
+    /// 인쇄 시점에 기록된 RecordId.
+    /// null/빈 문자열이면 조회 없이 인쇄한 빈 종이.
+    /// </summary>
+    public string PrintedRecordId { get; private set; }
 
     /// <summary>
     /// ObjectManagerBox가 Spawn 직후 호출.
@@ -25,13 +31,17 @@ public class PaperItem : DeskObjectItem
         ServiceDeskManager manager,
         UIPaperView        view,
         UserRecordDatabase db,
-        ObjectManagerBox   box)
+        ObjectManagerBox   box,
+        string             printedRecordId = null)
     {
-        complaint       = ctx;
+        complaint          = ctx;
         serviceDeskManager = manager;
-        paperView       = view;
-        database        = db;
-        managerBoxRef   = box;
+        paperView          = view;
+        database           = db;
+        managerBoxRef      = box;
+        PrintedRecordId    = printedRecordId;
+
+        Debug.Log($"[PaperItem] SetData — printedRecordId={printedRecordId ?? "(null=빈종이)"}  ");
     }
 
     protected override void OnItemClicked()
@@ -46,17 +56,9 @@ public class PaperItem : DeskObjectItem
         Debug.Log("[PaperItem] 서류 상세 표시");
     }
 
-protected override void OnItemDropped()
+    protected override void OnItemDropped()
     {
-        //if (!IsInTakeZone) return;
-
         Debug.Log($"[PaperItem] TakeZone={IsInTakeZone} → 반납 대기");
-        //paperView?.Hide();
-
-        // 평가에서 제외되는 시스템 커맨드지만, 반납 확인을 위해 실행
         serviceDeskManager?.ExecuteCommand(ManualCommandIds.ReturnPrintedDoc);
-
-        //managerBoxRef?.UnregisterItem(this);
-        //Destroy(gameObject);
     }
 }

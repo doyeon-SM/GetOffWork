@@ -199,7 +199,11 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
         RecordAction(ManualCommandIds.PrintDocument);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
             return WrongOrder();
-        
+
+        // searchedByInputId가 false이면 조회 없이 인쇄 → 빈 종이(null)
+        // context에 인쇄된 RecordId를 기록해 OMB가 PaperItem에 전달한다.
+        context.printedDocRecordId = context.searchedByInputId ? context.searchedInputId : null;
+
         isCompleted       = true;
         context.completed = true;
         return CorrectResponseFromSO(ManualCommandIds.PrintDocument);

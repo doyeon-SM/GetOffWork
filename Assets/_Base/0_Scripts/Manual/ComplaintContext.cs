@@ -32,6 +32,13 @@ public class ComplaintContext
     public string searchedInputId;        // 방문객 ID 조회에 사용한 문자열
     public bool   proxySearched;          // 대리인 ID 조회를 수행했는가
     public string proxySearchedInputId;   // 대리인 ID 조회에 사용한 문자열
+
+    /// <summary>
+    /// 인쇄된 서류에 기록된 RecordId.
+    /// null 또는 빈 문자열 = 조회 없이 인쇄한 빈 종이.
+    /// TryFinishAndReturn()에서 paper 판정에 사용한다.
+    /// </summary>
+    public string printedDocRecordId;
     public bool   deliveryAsked;          // 전달 방식을 물어봤는가
     public bool   completed;              // 민원이 정상 종료됐는가
     public bool   rejected;               // 반려됐는가

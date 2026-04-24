@@ -238,6 +238,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
         if (isCorrectId)
         {
             // 대리인 ID로 정상 인쇄
+            context.printedDocRecordId = printId;
             isCompleted       = true;
             context.completed = true;
             return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
@@ -251,10 +252,12 @@ public override ResponseResult Execute(string commandId, string payload = null)
         }
         else
         {
-            // ID 조회 없이 인쇄 시도
-            
-            isCompleted       = true;
+            // 조회 없이 인쇄 → 빈 종이. printedDocRecordId=null, isCompleted=false.
+            // TryFinishAndReturn에서 null 판정 → 비정상반려.
+            context.printedDocRecordId = null;
+            isCompleted       = true;  // 물리적 인쇄는 완료 (OMB에서 paper 스폰 필요)
             context.completed = true;
+            Debug.Log("[M_FullID_Proxy] 조회 없이 인쇄 → 빈 종이 (printedDocRecordId=null)");
             return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
         }
     }
