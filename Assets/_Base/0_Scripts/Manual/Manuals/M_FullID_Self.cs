@@ -79,9 +79,10 @@ public class M_FullID_Self : Manual
 
     private ResponseResult HandleAskSubmitId()
     {
+        RecordAction(ManualCommandIds.AskSubmitId);
         if (context.idCardSpawned)
             return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");
-        RecordAction(ManualCommandIds.AskSubmitId);
+        
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitId, fallback: "네, 여기 있습니다.", shouldSpawnIdCard: true);
     }
 
@@ -148,9 +149,10 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
 
     private ResponseResult HandleAskMobileNumber()
     {
-        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
-            return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
         RecordAction(ManualCommandIds.AskMobileNumber);
+        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
+            return WrongOrder("전자 발송을 선택하지 않았는데요.");
+        
         context.mobileNumberAsked = true;
         string phone    = GetCustomerPhoneNumber();
         string fallback = string.IsNullOrEmpty(phone) ? "010-0000-0000 입니다." : $"{phone} 입니다.";
@@ -166,15 +168,15 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
     /// </summary>
     private ResponseResult HandleMobileNumberByInput(string inputPhone)
     {
+        RecordAction(ManualCommandIds.MobileNumberByInput);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
-            return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
+            return WrongOrder("전자 발송을 선택하지 않았는데요.");
         string correctPhone = GetCustomerPhoneNumber();
         bool matched = !string.IsNullOrEmpty(correctPhone)
                        && NormalizePhone(inputPhone) == NormalizePhone(correctPhone);
         var placeholders = new System.Collections.Generic.Dictionary<string, string> { { "phone", correctPhone } };
         if (matched)
-        {
-            RecordAction(ManualCommandIds.MobileNumberByInput);
+        {            
             context.mobileNumberVerified = true;
             isCompleted       = true;
             context.completed = true;
@@ -194,9 +196,10 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
 
     private ResponseResult HandlePrintDocument()
     {
+        RecordAction(ManualCommandIds.PrintDocument);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
             return WrongOrder();
-        RecordAction(ManualCommandIds.PrintDocument);
+        
         isCompleted       = true;
         context.completed = true;
         return CorrectResponseFromSO(ManualCommandIds.PrintDocument);

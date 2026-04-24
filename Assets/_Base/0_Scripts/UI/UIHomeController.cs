@@ -25,7 +25,7 @@ public class UIHomeController : MonoBehaviour
     [Header("버튼 비활성화 시각 효과")]
     [SerializeField, Range(0f, 1f)] private float disabledButtonAlpha = 0.5f;
 
-    private GameObject currentStoreUIInstance;
+    //private GameObject currentStoreUIInstance;
     private bool hasVisitedStoreToday = false;
 
     private void Awake()
@@ -41,6 +41,8 @@ public class UIHomeController : MonoBehaviour
             backgroundImage.sprite = background_morning;
 
         hasVisitedStoreToday = false;
+
+        convenienceStoreUIPrefab.SetActive(false);
 
         // 신문+대화 완료 전까지 양쪽 버튼 모두 잠금
         SetButtonActive(goToWorkButton, false);
@@ -92,7 +94,7 @@ public class UIHomeController : MonoBehaviour
     public void OnClickConvenienceStore()
     {
         if (hasVisitedStoreToday) return;
-        if (currentStoreUIInstance != null) return;
+        //if (currentStoreUIInstance != null) return;
 
         // 배경 morning → store
         if (backgroundImage != null && background_store != null)
@@ -104,10 +106,12 @@ public class UIHomeController : MonoBehaviour
             return;
         }
 
-        Transform parent = uiSpawnRoot != null ? uiSpawnRoot : transform;
-        currentStoreUIInstance = Instantiate(convenienceStoreUIPrefab, parent);
+        //Transform parent = uiSpawnRoot != null ? uiSpawnRoot : transform;
+        //currentStoreUIInstance = Instantiate(convenienceStoreUIPrefab, parent);
+        convenienceStoreUIPrefab.SetActive(true);
 
-        UIStore storeUI = currentStoreUIInstance.GetComponent<UIStore>();
+        //UIStore storeUI = currentStoreUIInstance.GetComponent<UIStore>();
+        UIStore storeUI = convenienceStoreUIPrefab.GetComponent<UIStore>();
         playerBase = FindFirstObjectByType<PlayerBase>().GetComponent<PlayerBase>();
         playerInventory = FindFirstObjectByType<PlayerInventory>().GetComponent<PlayerInventory>();
 
@@ -125,10 +129,14 @@ public class UIHomeController : MonoBehaviour
     {
         hasVisitedStoreToday = true;
 
-        if (currentStoreUIInstance != null)
+        /*if (currentStoreUIInstance != null)
         {
             Destroy(currentStoreUIInstance);
             currentStoreUIInstance = null;
+        }*/
+        if(convenienceStoreUIPrefab != null)
+        {
+            convenienceStoreUIPrefab.SetActive(false);
         }
 
         // 배경 store → street

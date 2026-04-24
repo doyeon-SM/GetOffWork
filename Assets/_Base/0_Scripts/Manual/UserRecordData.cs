@@ -38,26 +38,18 @@ public class UserRecordData : ScriptableObject
     /// <summary>fakePortrait가 있으면 사진 불일치 케이스.</summary>
     public bool HasPortraitMismatch => fakePortrait != null;
 
-    // ── ID카드 표시용 프로퍼티 ──────────────────────────────────────────────
+    // ── Spawn 시점 표시값 계산 헬퍼 ────────────────────────────────────────
 
-    /// <summary>ID카드에 표시할 가짜정보.</summary>
-    public string IdCardAddress;
-    public string IdCardId;
-    public Sprite IdCardPortrait;
+    /// <summary>
+    /// Spawn 시점에 신분증에 표시할 ID를 반환한다.
+    /// SO에 쓰지 않으므로 공유 오염이 없다.
+    /// </summary>
+    public string ResolveDisplayId(bool useFake)
+        => (useFake && !string.IsNullOrEmpty(fakeID)) ? fakeID : recordId;
 
-    public void SetIdCard(bool isAddressFake, bool isIdFake, bool isPortraitFake)
-    {
-        // 항목별로 독립 초기화: portrait==null 이어도 address·ID는 정상 세팅한다.
-        if (!string.IsNullOrWhiteSpace(address))
-            IdCardAddress = (isAddressFake && !string.IsNullOrEmpty(fakeAddress))
-                ? fakeAddress : address;
+    public string ResolveDisplayAddress(bool useFake)
+        => (useFake && !string.IsNullOrEmpty(fakeAddress)) ? fakeAddress : address;
 
-        if (!string.IsNullOrWhiteSpace(recordId))
-            IdCardId = (isIdFake && !string.IsNullOrEmpty(fakeID))
-                ? fakeID : recordId;
-
-        IdCardPortrait = (isPortraitFake && fakePortrait != null)
-            ? fakePortrait : portrait;
-    }
-
+    public Sprite ResolveDisplayPortrait(bool useFake)
+        => (useFake && fakePortrait != null) ? fakePortrait : portrait;
 }

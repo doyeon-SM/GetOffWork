@@ -103,9 +103,10 @@ public class M_AddressChange : Manual
 
     private ResponseResult HandleAskSubmitId()
     {
+        RecordAction(ManualCommandIds.AskSubmitId);
         if (context.idCardSpawned)
             return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");
-        RecordAction(ManualCommandIds.AskSubmitId);
+        
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitId,
             fallback: "네, 여기 있습니다.",
             shouldSpawnIdCard: true);
@@ -115,6 +116,7 @@ public class M_AddressChange : Manual
     {
         context.idCardSpawned = true;
         // 기존 ID카드는 응대 종료 시 자동 삭제 — RequiredReturnItems에 등록하지 않음
+        AddRequiredReturnItem(DeskObjectType.IDCard);
         return CorrectResponse();
     }
 
@@ -145,8 +147,8 @@ public class M_AddressChange : Manual
     /// </summary>
     private ResponseResult HandleAskCurrentAddress()
     {
-        if (!context.searchedByInputId)
-            return WrongOrder("먼저 ID를 확인해 주세요.");
+        //if (!context.searchedByInputId)
+        //    return WrongOrder("먼저 ID를 확인해 주세요.");
 
         RecordAction(ManualCommandIds.AskCurrentAddress);
         context.newAddressAsked = true;
@@ -172,12 +174,13 @@ public class M_AddressChange : Manual
     /// </summary>
     private ResponseResult HandleSubmitNewAddress(string inputAddress)
     {
+        RecordAction(ManualCommandIds.SubmitNewAddress);
         if (!context.newAddressAsked)
             return WrongOrder("먼저 주소를 확인해 주세요.");
         if (string.IsNullOrWhiteSpace(inputAddress))
             return WrongOrder("주소를 입력해 주세요.");
 
-        RecordAction(ManualCommandIds.SubmitNewAddress);
+        
         context.enteredAddress          = inputAddress;
         context.isAddressChangeCommitted = true;
         _runtimeNewAddress              = inputAddress;
@@ -194,12 +197,14 @@ public class M_AddressChange : Manual
     /// </summary>
     private ResponseResult HandlePrintNewIdCard()
     {
+        RecordAction(ManualCommandIds.PrintNewIdCard);
         if (string.IsNullOrEmpty(context.enteredAddress))
             return WrongOrder("먼저 주소를 입력해 주세요.");
 
-        RecordAction(ManualCommandIds.PrintNewIdCard);
+        
         context.newIdCardPrinted = true;
 
+        ClearRequiredReturnItems();
         // 새 ID카드를 필수 반납 항목으로 등록
         AddRequiredReturnItem(DeskObjectType.NewIDCard);
 

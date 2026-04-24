@@ -77,10 +77,10 @@ public override void Initialize(ComplaintContext newContext)
 
         // 실제 IdCard에 fake가 적용됐는지를 기준으로 mismatch 세팅
         // (단순히 fakePortrait가 존재하는지가 아니라 IdCardPortrait가 fake인지 확인)
-        context.isPortraitMismatch = _runtimeData.IdCardPortrait != null
-                                     && _runtimeData.IdCardPortrait != _runtimeData.portrait;
-        context.isIdMismatch       = _runtimeData.IdCardId != _runtimeData.recordId;
-        context.isAddressMismatch  = _runtimeData.IdCardAddress != _runtimeData.address;
+        //context.isPortraitMismatch = _runtimeData.IdCardPortrait != null
+        //                             && _runtimeData.IdCardPortrait != _runtimeData.portrait;
+        //context.isIdMismatch       = _runtimeData.IdCardId != _runtimeData.recordId;
+        //context.isAddressMismatch  = _runtimeData.IdCardAddress != _runtimeData.address;
 
         if (_isDuplicateId)
             context.wasUnregistered = false;
@@ -145,11 +145,9 @@ public override ResponseResult Execute(string commandId, string payload = null)
 
     private ResponseResult HandleAskSubmitId()
     {
-        if (context.idCardSpawned)
-            return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");
-
         RecordAction(ManualCommandIds.AskSubmitId);
-        
+        if (context.idCardSpawned)
+            return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");        
 
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitId,
             fallback: "네, 여기 있습니다.",
@@ -187,8 +185,8 @@ public override ResponseResult Execute(string commandId, string payload = null)
 
     private ResponseResult HandleSearchNewId(string inputId)
     {
-        if (!context.searchedByInputId)
-            return WrongOrder("ID를 먼저 조회해 주세요");
+        //if (!context.searchedByInputId)
+        //    return WrongOrder("ID를 먼저 조회해 주세요");
         if (string.IsNullOrWhiteSpace(inputId))
             return WrongOrder("ID를 입력해 주세요.");
 

@@ -94,26 +94,9 @@ public static UserRecordData Generate(
         // ── 가짜 ID ────────────────────────────────────────────────────────
         data.fakeID = GenerateFakeId(data.recordId);
 
-        // ── MismatchSettingSO 확률 기반으로 IdCard 불일치 판정 ───────────────────────
-        // 각 항목은 독립적으로 확률 롤, fakePortrait/fakeID/fakeAddress 가 있어야
-        // 해당 항목이 활성화됨 (fake 데이터가 없으면 롭발 불가)
-        var mismatch = ServiceDataManager.Instance?.MismatchSetting;
-        float addrChance     = mismatch != null ? mismatch.AddressspawnChance   : 0f;
-        float idChance       = mismatch != null ? mismatch.IDspawnChance        : 0f;
-        float portraitChance = mismatch != null ? mismatch.PortraitspawnChance  : 0f;
 
-        bool usesFakeAddress = !string.IsNullOrEmpty(data.fakeAddress)
-                               && UnityEngine.Random.value < addrChance;
-        bool usesFakeId      = UnityEngine.Random.value < idChance;
-        bool usesFakePortrait = data.fakePortrait != null
-                               && UnityEngine.Random.value < portraitChance;
-
-        data.IdCardAddress  = usesFakeAddress  ? data.fakeAddress : data.address;
-        data.IdCardId       = usesFakeId       ? data.fakeID      : data.recordId;
-        data.IdCardPortrait = usesFakePortrait ? data.fakePortrait : data.portrait;
-
-        Debug.Log(TAG + $" 방문객 생성 완료 — ID:{data.recordId} / 이름:{data.fullName}" +
-                  $" / fakeAddr:{usesFakeAddress} / fakeId:{usesFakeId} / fakePortrait:{usesFakePortrait}");
+        // IdCard* 필드 제거됨: 표시값은 Spawn 시점(ObjectManagerBox)에 직접 계산한다.
+        Debug.Log(TAG + $" 방문객 생성 완료 — ID:{data.recordId} / 이름:{data.fullName}");
         return data;
     }
 

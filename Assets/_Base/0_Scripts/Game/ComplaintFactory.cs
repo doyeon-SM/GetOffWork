@@ -81,7 +81,7 @@ public static class ComplaintFactory
             c.complaintType         = ComplaintContext.ComplaintType.AddressChange;
             c.applicantType         = ComplaintContext.ApplicantType.Self;
             c.requestedDeliveryType = ComplaintContext.DeliveryType.None;
-            c.requestedNewAddress   = DequeueAddress();
+            c.requestedNewAddress   = DequeueAddress(); 
         }
         else if (title.IndexOf("NewID", StringComparison.OrdinalIgnoreCase) >= 0)
         {
@@ -169,17 +169,18 @@ public static class ComplaintFactory
         c.isPortraitMismatch = UnityEngine.Random.value < portraitChance
             && aRec != null && aRec.HasPortraitMismatch;
 
-        if (aRec != null)
-            aRec.SetIdCard(c.isAddressMismatch, c.isIdMismatch, c.isPortraitMismatch);
+        // SetIdCard() 제거 — 표시값은 Spawn 시점(ObjectManagerBox)에 직접 계산한다.
+        // SO에 아무것도 쓰지 않으므로 대기열 내 동일 SO 공유로 인한 오염이 없다.
 
         // 대상자 신분증(tRec) 불일치 판정 — Proxy 전용
         if (isProxy && tRec != null)
         {
-            bool tAddrMismatch    = UnityEngine.Random.value < addrChance    && tRec.HasAddressMismatch;
-            bool tIdMismatch      = UnityEngine.Random.value < idChance      && tRec.HasIdMismatch;
+            bool tAddrMismatch     = UnityEngine.Random.value < addrChance     && tRec.HasAddressMismatch;
+            bool tIdMismatch       = UnityEngine.Random.value < idChance       && tRec.HasIdMismatch;
             bool tPortraitMismatch = UnityEngine.Random.value < portraitChance && tRec.HasPortraitMismatch;
-            tRec.SetIdCard(tAddrMismatch, tIdMismatch, tPortraitMismatch);
-            Debug.Log(TAG + $" [Proxy] 대상자 불일치: addr={tAddrMismatch} id={tIdMismatch} portrait={tPortraitMismatch}");
+            // Proxy mismatch 플래그는 ComplaintContext에 별도 저장 필요 시 추가 가능
+            // 현재는 tRec 플래그를 Spawn 시점에 직접 참조한다.
+            Debug.Log(TAG + $" [Proxy] 대상자 불일치 롤: addr={tAddrMismatch} id={tIdMismatch} portrait={tPortraitMismatch}");
         }
 
         Debug.Log(TAG + $" 불일치: addr={c.isAddressMismatch} id={c.isIdMismatch} portrait={c.isPortraitMismatch}");

@@ -234,7 +234,7 @@ public class TutorialManager : MonoBehaviour
         {
             c.applicantRecordId = ub.Records[0].recordId;
             c.targetRecordId    = ub.Records[0].recordId;
-            ub.Records[0].SetIdCard(false, false, false);
+            //ub.Records[0].SetIdCard(false, false, false);
         }
 
         // ManualData 배정 (delivery에 맞는 ManualDataSO 탐색)

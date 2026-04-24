@@ -205,9 +205,17 @@ private void HandleSpawnIdCard(ComplaintContext complaint)
         item.Initialize(this, takeZone, targetCamera);
 
         if (item is IDCardItem idItem)
-            // 방문객(창구에 온 사람)의 신분증 — applicantRecordId
+        {
+            // Spawn 시점에 표시값을 계산해서 직접 전달 — SO에 아무것도 쓰지 않음
+            serviceDeskManager.TryGetResidentRecord(complaint.applicantRecordId, out var aRec);
+            string dispId   = aRec?.ResolveDisplayId(complaint.isIdMismatch)       ?? complaint.applicantRecordId;
+            string dispAddr = aRec?.ResolveDisplayAddress(complaint.isAddressMismatch) ?? string.Empty;
+            Sprite dispPort = aRec?.ResolveDisplayPortrait(complaint.isPortraitMismatch);
+            string name     = aRec?.fullName ?? string.Empty;
             idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
-                displayId: complaint.applicantRecordId);
+                dispId, dispAddr, dispPort, name,
+                recordIdForNewCard: complaint.applicantRecordId);
+        }
 
         userspawnedItems.Add(item);
         idCardSpawned = true;
@@ -242,9 +250,22 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         item.SetObjectType(DeskObjectType.ProxyIDCard);
 
         if (item is IDCardItem idItem)
-            // 대리인 신분증 — 대리 요청 대상자(targetRecordId)의 정보 표시
+        {
+            // 대상자(tRec) 기준으로 Spawn 시점에 표시값 계산 — SO에 아무것도 쓰지 않음
+            serviceDeskManager.TryGetResidentRecord(complaint.targetRecordId, out var tRec);
+            // Proxy 대상자의 불일치는 RollMismatches에서 tRec 기준으로 이미 롤됨
+            // tRec의 fake 필드 존재 여부와 ComplaintContext 플래그를 함께 확인
+            bool tIdMismatch      = complaint.isIdMismatch      && (tRec?.HasIdMismatch      ?? false);
+            bool tAddrMismatch    = complaint.isAddressMismatch  && (tRec?.HasAddressMismatch  ?? false);
+            bool tPortMismatch    = complaint.isPortraitMismatch && (tRec?.HasPortraitMismatch ?? false);
+            string dispId   = tRec?.ResolveDisplayId(tIdMismatch)       ?? complaint.targetRecordId;
+            string dispAddr = tRec?.ResolveDisplayAddress(tAddrMismatch) ?? string.Empty;
+            Sprite dispPort = tRec?.ResolveDisplayPortrait(tPortMismatch);
+            string name     = tRec?.fullName ?? string.Empty;
             idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
-                displayId: complaint.targetRecordId);
+                dispId, dispAddr, dispPort, name,
+                recordIdForNewCard: complaint.targetRecordId);
+        }
 
         userspawnedItems.Add(item);
         Log($"{TAG} ProxyIDCard Spawn 완료 — 대상자 recordId={complaint.targetRecordId}");
@@ -331,8 +352,15 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         item.SetObjectType(DeskObjectType.NewIDCard);
 
         if (item is IDCardItem idItem)
+        {
+            // NewIDCard: 클릭 시 DB에서 직접 읽으므로 표시값은 임시값으로 전달
+            serviceDeskManager.TryGetResidentRecord(complaint.applicantRecordId, out var rec);
             idItem.SetComplaint(complaint, serviceDeskManager, runtimeCardView,
-                displayId: complaint.applicantRecordId);
+                rec?.recordId ?? string.Empty,
+                rec?.address  ?? string.Empty,
+                rec?.portrait, rec?.fullName ?? string.Empty,
+                recordIdForNewCard: complaint.applicantRecordId);
+        }
 
         // 필수 반납 목록 등록: 새 ID카드를 듌러줘야 함
         playerspawnedItems.Add(item);

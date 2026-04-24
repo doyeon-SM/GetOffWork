@@ -94,7 +94,7 @@ public class UIPlayerStat : MonoBehaviour
 
     private void UpdatePerformanceUI()
     {
-        int cur  = Mathf.Clamp(playerbase.Performance, 0, playerbase.GetMaxPerformance());
+        int cur  = playerbase.Performance;
         int max  = playerbase.GetMaxPerformance();
         int goal = Mathf.Clamp(playerbase.GoalPerformance, 0, max);
 
@@ -102,7 +102,7 @@ public class UIPlayerStat : MonoBehaviour
         {
             performanceSlider.minValue = 0;
             performanceSlider.maxValue = max;
-            performanceSlider.value    = cur;
+            performanceSlider.value    = Mathf.Clamp(cur, 0, playerbase.GetMaxPerformance());
         }
 
         if (performanceText != null)

@@ -93,9 +93,10 @@ public override ResponseResult Execute(string commandId, string payload = null)
     /// <summary>방문객(대리인 본인) 신분증 요청</summary>
     private ResponseResult HandleAskSubmitId()
     {
+        RecordAction(ManualCommandIds.AskSubmitId);
         if (context.idCardSpawned)
             return WrongOrderFromSO(ManualCommandIds.AskSubmitId, "이미 제출했습니다.");
-        RecordAction(ManualCommandIds.AskSubmitId);
+        
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitId, fallback: "네, 여기 있습니다.", shouldSpawnIdCard: true);
     }
 
@@ -109,9 +110,10 @@ public override ResponseResult Execute(string commandId, string payload = null)
     /// <summary>대리인(발급 대상자) 신분증 요청 — IsOrdered=false 자유 단계</summary>
     private ResponseResult HandleAskSubmitProxyId()
     {
+        RecordAction(ManualCommandIds.AskSubmitProxyId);
         if (context.proxyIdCardSpawned)
             return WrongOrderFromSO(ManualCommandIds.AskSubmitProxyId, "이미 제출했습니다.");
-        RecordAction(ManualCommandIds.AskSubmitProxyId);
+        
         return CorrectResponseFromSO(ManualCommandIds.AskSubmitProxyId, fallback: "네, 여기 있습니다.", shouldSpawnProxyIdCard: true);
     }
 
@@ -219,6 +221,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
     /// </summary>
     private ResponseResult HandlePrintDocument(string inputId = null)
     {
+        RecordAction(ManualCommandIds.PrintDocument);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
             return WrongOrder();
 
@@ -235,7 +238,6 @@ public override ResponseResult Execute(string commandId, string payload = null)
         if (isCorrectId)
         {
             // 대리인 ID로 정상 인쇄
-            RecordAction(ManualCommandIds.PrintDocument);
             isCompleted       = true;
             context.completed = true;
             return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
@@ -250,7 +252,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
         else
         {
             // ID 조회 없이 인쇄 시도
-            RecordAction(ManualCommandIds.PrintDocument);
+            
             isCompleted       = true;
             context.completed = true;
             return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
@@ -259,9 +261,10 @@ public override ResponseResult Execute(string commandId, string payload = null)
 
     private ResponseResult HandleAskMobileNumber()
     {
-        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
-            return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
         RecordAction(ManualCommandIds.AskMobileNumber);
+        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
+            return WrongOrder("전자 발송을 선택하지 않았는데요.");
+        
         context.mobileNumberAsked = true;
 
         // 전화번호는 방문객(창구에 온 사람)의 번호
@@ -279,8 +282,9 @@ public override ResponseResult Execute(string commandId, string payload = null)
     /// </summary>
     private ResponseResult HandleMobileNumberByInput(string inputPhone)
     {
+        RecordAction(ManualCommandIds.MobileNumberByInput);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Mobile)
-            return WrongOrder("전자 발송을 선택하지 않으셨는데요.");
+            return WrongOrder("전자 발송을 선택하지 않았는데요.");
 
         // 전화번호는 방문객 번호와 대조
         string correctPhone = GetApplicantPhoneNumber();
@@ -290,7 +294,7 @@ public override ResponseResult Execute(string commandId, string payload = null)
 
         if (matched)
         {
-            RecordAction(ManualCommandIds.MobileNumberByInput);
+            
             context.mobileNumberVerified = true;
             isCompleted       = true;
             context.completed = true;
