@@ -16,7 +16,6 @@ MonoBehaviour:
   steps:
   - {fileID: 11400000, guid: 4b684f1c0090c864daee5c9ca8f79d25, type: 2}
   - {fileID: 11400000, guid: 33f60dcff8d376a419c14446008bdbce, type: 2}
-  - {fileID: 11400000, guid: 6336efe522c4d2c4aaf174a817e85669, type: 2}
   - {fileID: 11400000, guid: d21bac32463e1074ebe75a5d63e56b72, type: 2}
   - {fileID: 11400000, guid: a5f591710ae01cf47820ddf1526aa6e8, type: 2}
   - {fileID: 11400000, guid: 72f4174df825d434bbe4054e90a752df, type: 2}
