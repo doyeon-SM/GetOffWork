@@ -97,6 +97,23 @@ MonoBehaviour:
       spawnWeight: 0.15
     - manualData: {fileID: 11400000, guid: fc357dc046827604f82952ac1d2894fb, type: 2}
       spawnWeight: 0.1
+  - targetDay: 5
+    maxCustomerPerDay: 12
+    morningDuration: 180
+    afternoonDuration: 180
+    manualEntries:
+    - manualData: {fileID: 11400000, guid: fa301e4b583470d428deccf31fbda766, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 86e9b00161540fd47bcc8c0c995017c2, type: 2}
+      spawnWeight: 0.3
+    - manualData: {fileID: 11400000, guid: 254a1ba758e08504b975a1662a24000b, type: 2}
+      spawnWeight: 0.2
+    - manualData: {fileID: 11400000, guid: 48ff5dff832090b44a0f8e07e7cc13fc, type: 2}
+      spawnWeight: 0.15
+    - manualData: {fileID: 11400000, guid: f84888692ae2ab54ab14b0070bf22917, type: 2}
+      spawnWeight: 0.15
+    - manualData: {fileID: 11400000, guid: fc357dc046827604f82952ac1d2894fb, type: 2}
+      spawnWeight: 0.1
   eventLevels:
   - eventType: 0
     minDay: 5
