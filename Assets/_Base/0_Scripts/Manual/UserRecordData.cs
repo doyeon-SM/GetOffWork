@@ -47,23 +47,17 @@ public class UserRecordData : ScriptableObject
 
     public void SetIdCard(bool isAddressFake, bool isIdFake, bool isPortraitFake)
     {
-        if (string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(recordId) || portrait == null)
-            return;
+        // 항목별로 독립 초기화: portrait==null 이어도 address·ID는 정상 세팅한다.
+        if (!string.IsNullOrWhiteSpace(address))
+            IdCardAddress = (isAddressFake && !string.IsNullOrEmpty(fakeAddress))
+                ? fakeAddress : address;
 
-        if (fakeAddress == null)
-            IdCardAddress = address;
-        else
-            IdCardAddress = !isAddressFake ? address : fakeAddress;
+        if (!string.IsNullOrWhiteSpace(recordId))
+            IdCardId = (isIdFake && !string.IsNullOrEmpty(fakeID))
+                ? fakeID : recordId;
 
-        if (fakeID == null)
-            IdCardId = recordId;
-        else
-            IdCardId = !isIdFake ? recordId : fakeID;
-
-        if (fakePortrait == null)
-            IdCardPortrait = portrait;
-        else
-            IdCardPortrait = !isPortraitFake ? portrait : fakePortrait;
+        IdCardPortrait = (isPortraitFake && fakePortrait != null)
+            ? fakePortrait : portrait;
     }
 
 }

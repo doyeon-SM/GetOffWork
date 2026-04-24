@@ -156,19 +156,31 @@ public static class ComplaintFactory
         ub.TryGetRecord(c.applicantRecordId, out UserRecordData aRec);
         ub.TryGetRecord(c.targetRecordId,    out UserRecordData tRec);
 
-        // 중요: ID카드는 aRec(방문객) 데이터를 표시한다.
-        // mismatch 여부는 실제 ID카드에 표시되는 aRec에 fake 데이터가 있는지만 보아야 한다.
-        c.isAddressMismatch = UnityEngine.Random.value < addrChance
+        // Self: 방문객(aRec) 신분증만 존재 → aRec 기준으로 mismatch 판정 및 SetIdCard
+        // Proxy: 방문객(aRec)과 대상자(tRec) 신분증 모두 존재
+        //        → 방문객 신분증은 aRec, 대상자 신분증은 tRec 기준으로 각각 판정 및 SetIdCard
+        bool isProxy = c.applicantType == ComplaintContext.ApplicantType.Proxy;
+
+        // 방문객 신분증(aRec) 불일치 판정 — Self/Proxy 공통
+        c.isAddressMismatch  = UnityEngine.Random.value < addrChance
             && aRec != null && aRec.HasAddressMismatch;
-
-        c.isIdMismatch = UnityEngine.Random.value < idChance
+        c.isIdMismatch       = UnityEngine.Random.value < idChance
             && aRec != null && aRec.HasIdMismatch;
-
         c.isPortraitMismatch = UnityEngine.Random.value < portraitChance
             && aRec != null && aRec.HasPortraitMismatch;
 
         if (aRec != null)
             aRec.SetIdCard(c.isAddressMismatch, c.isIdMismatch, c.isPortraitMismatch);
+
+        // 대상자 신분증(tRec) 불일치 판정 — Proxy 전용
+        if (isProxy && tRec != null)
+        {
+            bool tAddrMismatch    = UnityEngine.Random.value < addrChance    && tRec.HasAddressMismatch;
+            bool tIdMismatch      = UnityEngine.Random.value < idChance      && tRec.HasIdMismatch;
+            bool tPortraitMismatch = UnityEngine.Random.value < portraitChance && tRec.HasPortraitMismatch;
+            tRec.SetIdCard(tAddrMismatch, tIdMismatch, tPortraitMismatch);
+            Debug.Log(TAG + $" [Proxy] 대상자 불일치: addr={tAddrMismatch} id={tIdMismatch} portrait={tPortraitMismatch}");
+        }
 
         Debug.Log(TAG + $" 불일치: addr={c.isAddressMismatch} id={c.isIdMismatch} portrait={c.isPortraitMismatch}");
     }

@@ -20,9 +20,10 @@ public class UIIDCard : MonoBehaviour
 
         serviceDeskManager.ExecuteCommand(ManualCommandIds.OpenIdCardDetail);
 
-        string recordId = complaint.applicantRecordId;
-        if (complaint.applicantType == ComplaintContext.ApplicantType.Proxy)
-            recordId = complaint.applicantRecordId;
+        // Self: 방문객 본인 레코드 / Proxy: 대리 대상자 레코드
+        string recordId = complaint.applicantType == ComplaintContext.ApplicantType.Proxy
+            ? complaint.targetRecordId
+            : complaint.applicantRecordId;
 
         if (serviceDeskManager.TryGetResidentRecord(recordId, out UserRecordData record))
         {
