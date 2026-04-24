@@ -53,6 +53,8 @@ public class UIMonitorMainPanel : MonoBehaviour
     {
         if (record == null) 
         {
+            if(idInputField != null) idInputField.text = string.Empty;
+            if (portraitImage != null) portraitImage.sprite = null;
             if (idText != null) idText.text = "정보없음";
             if (nameText != null) nameText.text = "정보없음";
             if (addressText != null) addressText.text = "정보없음";
@@ -67,14 +69,14 @@ public class UIMonitorMainPanel : MonoBehaviour
         if (addressText   != null) addressText.text     = record.address;
     }
 
-    public void ClearView()
+    /*public void ClearView()
     {
         if (idInputField  != null) idInputField.text    = string.Empty;
         if (portraitImage != null) portraitImage.sprite = null;
         if (idText        != null) idText.text          = string.Empty;
         if (nameText      != null) nameText.text        = string.Empty;
         if (addressText   != null) addressText.text     = string.Empty;
-    }
+    }*/
 
 
 /// <summary>

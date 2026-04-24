@@ -175,7 +175,7 @@ public class UIMonitorController : MonoBehaviour
         else
         {
             currentRecord = null;
-            currentPanelInstance?.GetComponent<UIMonitorMainPanel>()?.ClearView();
+            currentPanelInstance?.GetComponent<UIMonitorMainPanel>()?.RefreshView(null);
         }
     }
 
