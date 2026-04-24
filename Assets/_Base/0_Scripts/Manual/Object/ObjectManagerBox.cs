@@ -447,37 +447,48 @@ private void HandleSpawnProxyIdCard(ComplaintContext complaint)
         }
         // ── FullID_Self / FullID_Proxy 전용 paper 판정 ─────────────────
         if (ctx != null &&
-            (ctx.complaintType == ComplaintContext.ComplaintType.FullID_Self ||
-             ctx.complaintType == ComplaintContext.ComplaintType.FullID_Proxy))
+            (ctx.complaintType == ComplaintContext.ComplaintType.FullID))
         {
+            string expected = ctx.applicantType == ComplaintContext.ApplicantType.Proxy
+                ? ctx.targetRecordId      // Proxy: 대리 대상자 RecordId
+                : ctx.applicantRecordId;  // Self:  방문객 RecordId
+
+            // 가장 마지막으로 반납된(TakeZone에 있는) paper를 찾는다.
+            // 여러 장일 때는 올바른 paper가 하나라도 TakeZone에 있으면 정상.
+            // TakeZone 밖에 있는 paper는 count만 세어 불필요절차로 처리.
+            PaperItem correctPaperInZone = null;
+            int extraPaperCount = 0;  // TakeZone 밖에 있는 종이 수 (불필요절차용)
+
             foreach (var item in playerspawnedItems)
             {
-                if (item is PaperItem paper && item.IsInTakeZone)
+                if (item is PaperItem paper)
                 {
-                    string printed  = paper.PrintedRecordId;
-                    string expected = ctx.complaintType == ComplaintContext.ComplaintType.FullID_Proxy
-                        ? ctx.targetRecordId      // Proxy: 대리 대상자 RecordId
-                        : ctx.applicantRecordId;  // Self:  방문객 RecordId
-
-                    bool isBlankPaper  = string.IsNullOrEmpty(printed);
-                    bool isWrongRecord = !isBlankPaper && printed != expected;
-
-                    if (isBlankPaper || isWrongRecord)
+                    if (item.IsInTakeZone)
                     {
-                        // 빈 종이 또는 잘못된 ID 종이 → 비정상반려
-                        string reason = isBlankPaper ? "빈 종이" : $"잘못된 ID({printed})";
-                        Log($"{TAG} [FullID] paper 판정 실패({reason}) → 비정상반려 패널티");
-                        // isRejection=true로 진행하면 ServiceEvaluator에서 비정상반려 패널티 부여
-                        // 별도 차단 없이 아래 isRejection 판정으로 이어진다.
-                        if (ctx != null && manual != null)
-                        {
-                            ctx.rejected = true;
-                            isRejection  = true;
-                        }
+                        string printed = paper.PrintedRecordId;
+                        bool isCorrect = !string.IsNullOrEmpty(printed) && printed == expected;
+                        if (isCorrect && correctPaperInZone == null)
+                            correctPaperInZone = paper;  // 올바른 paper 발견
                     }
-                    break;
+                    else
+                    {
+                        extraPaperCount++;  // TakeZone 밖 = 반납 안 된 종이
+                    }
                 }
             }
+
+            if (correctPaperInZone == null)
+            {
+                // 올바른 paper가 TakeZone에 없음 → 비정상반려
+                Log($"{TAG} [FullID] 올바른 paper 미반납 → 비정상반려 패널티");
+                ctx.rejected = true;
+                isRejection  = true;
+            }
+            else
+            {
+                Log($"{TAG} [FullID] 올바른 paper 반납 확인 ✅ (extraPaper={extraPaperCount})");
+            }
+            // extraPaperCount는 ServiceEvaluator가 불필요절차를 별도 집계하므로 여기서 처리 불필요
         }
 
         // ── AddressChange 전용 반납 검사 ──────────────────────────────

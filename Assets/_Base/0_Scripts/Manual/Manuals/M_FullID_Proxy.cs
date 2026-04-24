@@ -66,7 +66,9 @@ protected override void BuildSteps()
     // ── Execute ──────────────────────────────────────────────────────────
 public override ResponseResult Execute(string commandId, string payload = null)
     {
-        if (isCompleted && commandId != ManualCommandIds.OpenMonitor)
+        // PrintDocument는 isCompleted 이후에도 허용 — 추가 인쇄 시 불필요절차만 누적
+        if (isCompleted && commandId != ManualCommandIds.OpenMonitor
+                        && commandId != ManualCommandIds.PrintDocument)
             return WrongOrderFromSO(commandId, "이미 처리가 완료된 민원입니다.");
 
         switch (commandId)
@@ -222,6 +224,20 @@ public override ResponseResult Execute(string commandId, string payload = null)
     private ResponseResult HandlePrintDocument(string inputId = null)
     {
         RecordAction(ManualCommandIds.PrintDocument);
+        if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
+            return WrongOrder();
+
+        // 이미 완료 후 재인쇄 → 불필요절차 누적 + 새 종이 발행
+        if (isCompleted)
+        {
+            // 불필요절차 +1
+            string reprintId = string.IsNullOrEmpty(inputId) ? context.proxySearchedInputId : inputId;
+            context.printedDocRecordId = reprintId;
+            Debug.Log($"[M_FullID_Proxy] 재인쇄 → 불필요절차 +1 id={reprintId}");
+            return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
+        }
+
+        
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
             return WrongOrder();
 

@@ -55,7 +55,9 @@ public class M_FullID_Self : Manual
     // ── Execute ──────────────────────────────────────────────────────────
     public override ResponseResult Execute(string commandId, string payload = null)
     {
-        if (isCompleted && commandId != ManualCommandIds.OpenMonitor)
+        // PrintDocument는 isCompleted 이후에도 허용 — 추가 인쇄 시 불필요절차만 누적
+        if (isCompleted && commandId != ManualCommandIds.OpenMonitor
+                        && commandId != ManualCommandIds.PrintDocument)
             return WrongOrderFromSO(commandId, "이미 처리가 완료된 민원입니다.");
 
         switch (commandId)
@@ -198,10 +200,18 @@ private ResponseResult HandleSearchRecordByInput(string inputId)
     {
         RecordAction(ManualCommandIds.PrintDocument);
         if (context.requestedDeliveryType != ComplaintContext.DeliveryType.Print)
-            return WrongOrder();
+            return WrongOrder("인쇄를 부탁드린적 없는데요.");
+
+        // 이미 완료 후 재인쇄 → 불필요절차 누적 + 새 종이 발행
+        if (isCompleted)
+        {
+             // 불필요절차 +1
+            context.printedDocRecordId = context.searchedByInputId ? context.searchedInputId : null;
+            Debug.Log("[M_FullID_Self] 재인쇄 → 불필요절차 +1");
+            return CorrectResponseFromSO(ManualCommandIds.PrintDocument);
+        }
 
         // searchedByInputId가 false이면 조회 없이 인쇄 → 빈 종이(null)
-        // context에 인쇄된 RecordId를 기록해 OMB가 PaperItem에 전달한다.
         context.printedDocRecordId = context.searchedByInputId ? context.searchedInputId : null;
 
         isCompleted       = true;
