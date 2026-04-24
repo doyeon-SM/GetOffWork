@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -45,6 +45,18 @@ public class TutorialManager : MonoBehaviour
 
     private bool _printCompleted;
     private bool _mobileCompleted;
+
+    /// <summary>
+    /// ApplyCurrentStep()이 호출된 프레임 번호.
+    /// 핸들러에서 동일 프레임 재진입을 막는다.
+    /// </summary>
+    private int    _stepActivatedFrame = -1;
+
+    /// <summary>
+    /// autoAdvance step 중 발생한 커맨드를 임시 보관.
+    /// step 전환 후 새 step의 조건과 재비교한다.
+    /// </summary>
+    private string _pendingCommandId;
 
     private Coroutine _autoAdvanceCoroutine;
 
@@ -303,7 +315,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (!_isActive) return;
 
-        // 분기 결정
+        // 분기 결정 (select_print / select_mobile)
         if (!_flowDecided)
         {
             if (commandId == BranchCommandPrint)  { SwitchFlow(tutorialFlowPrint,  commandId); return; }
@@ -311,7 +323,17 @@ public class TutorialManager : MonoBehaviour
         }
 
         var step = GetCurrentStep();
-        if (step == null || step.completedByCall || step.completedByPostit || step.autoAdvance) return;
+        if (step == null || step.completedByCall || step.completedByPostit) return;
+
+        // autoAdvance step 중 발생한 커맨드 → 버퍼에 보관 후 step 전환 후 재처리
+        if (step.autoAdvance)
+        {
+            _pendingCommandId = commandId;
+            return;
+        }
+
+        // 동일 프레임 재진입 방지 (step 전환 직후 이전 커맨드 이벤트가 재진입하는 경우)
+        if (Time.frameCount <= _stepActivatedFrame) return;
 
         if (step.expectedCommandId == commandId)
             AdvanceStep();
@@ -320,6 +342,7 @@ public class TutorialManager : MonoBehaviour
     private void HandleCustomerCalled(ComplaintContext complaint)
     {
         if (!_isActive) return;
+        if (Time.frameCount <= _stepActivatedFrame) return;
         var step = GetCurrentStep();
         if (step == null || !step.completedByCall) return;
         AdvanceStep();
@@ -328,6 +351,7 @@ public class TutorialManager : MonoBehaviour
     private void HandlePostitClicked()
     {
         if (!_isActive) return;
+        if (Time.frameCount <= _stepActivatedFrame) return;
         var step = GetCurrentStep();
         if (step == null || !step.completedByPostit) return;
         AdvanceStep();
@@ -336,6 +360,7 @@ public class TutorialManager : MonoBehaviour
     private void HandleMonitorClicked()
     {
         if (!_isActive) return;
+        if (Time.frameCount <= _stepActivatedFrame) return;
         var step = GetCurrentStep();
         if (step == null) return;
         // Monitor 클릭으로 완료되는 단계: expectedCommandId가 open_monitor인 경우
@@ -465,6 +490,17 @@ public class TutorialManager : MonoBehaviour
         TutorialHighlighter.Instance?.Highlight(step);
         TutorialHintUI.Instance?.Show(step.hintText);
         OnStepChanged?.Invoke(step.stepId);
+
+        // step이 활성화된 프레임을 기록 — 핸들러에서 동일 프레임 재진입 방지
+        _stepActivatedFrame = Time.frameCount;
+
+        // autoAdvance step이 아닌 경우, 이전 step에서 보관된 커맨드를 재처리
+        if (!step.autoAdvance && _pendingCommandId != null)
+        {
+            string cmd = _pendingCommandId;
+            _pendingCommandId = null;
+            HandleCommandExecuted(cmd);
+        }
 
         // 자동 진행
         if (step.autoAdvance)
